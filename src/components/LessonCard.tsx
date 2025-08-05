@@ -23,7 +23,7 @@ export default function LessonCard({ lesson, onView, onPractice, onDelete }: Pro
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
           onClick={() => onView(lesson.id)}
         >
-          Xem
+          Học
         </button>
         <button
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
