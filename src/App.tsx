@@ -4,6 +4,8 @@ import Header from './components/common/Header';
 import CreateLesson from './pages/CreateLesson';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Study from './pages/Study';
+import MyLessons from './pages/users/MyLessons';
 
 function App() {
   return (
@@ -12,8 +14,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create-lesson" element={<CreateLesson />} />
+        <Route path="/study" element={<Study />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/my-lessons" element={<MyLessons />} />
       </Routes>
     </div>
   );

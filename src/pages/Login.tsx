@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../service/loginService';
+import { getUserInfo } from '../service/userService';
 
 export default function Login() {
   const [email, setEmail] = useState<string>('');
@@ -14,7 +15,13 @@ export default function Login() {
 
     const result = await loginUser({ email, password });
 
-    if (result.success) {
+    if (result.success && result.user) {
+      const userInfo = await getUserInfo(result.user);
+      sessionStorage.setItem('user', JSON.stringify({
+        username: userInfo.username,
+        email: result.user.email,
+        isLoggedIn: true,
+      }));
       navigate('/');
     } else {
       setError(result.message || 'Đã có lỗi xảy ra!');
@@ -49,6 +56,11 @@ export default function Login() {
           Đăng nhập
         </button>
       </form>
+      <div>
+        <p className="mt-4 text-center">
+          Chưa có tài khoản? <a href="/register" className="text-blue-600 hover:underline">Đăng ký</a>
+        </p>
+      </div>
     </div>
   );
 }

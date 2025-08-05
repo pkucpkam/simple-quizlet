@@ -78,6 +78,11 @@ export default function Register() {
           Đăng ký
         </button>
       </form>
+      <div>
+        <p className="mt-4 text-center">
+          Đã có tài khoản? <a href="/login" className="text-blue-600 hover:underline">Đăng nhập ngay</a>
+        </p>
+      </div>
     </div>
   );
 }

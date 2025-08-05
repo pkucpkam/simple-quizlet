@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, type User } from 'firebase/auth';
 import { auth } from './firebase_setup';
 
 interface LoginData {
@@ -8,13 +8,18 @@ interface LoginData {
 
 interface LoginResult {
   success: boolean;
+  user?: User; 
   message?: string;
 }
 
 export const loginUser = async ({ email, password }: LoginData): Promise<LoginResult> => {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    return { success: true, message: 'Đăng nhập thành công!' };
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    return {
+      success: true,
+      user: userCredential.user, 
+      message: 'Đăng nhập thành công!',
+    };
   } catch (err: any) {
     switch (err.code) {
       case 'auth/user-not-found':

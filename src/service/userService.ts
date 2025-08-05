@@ -8,14 +8,19 @@ interface UserInfo {
 
 export const getUserInfo = async (user: User): Promise<UserInfo> => {
   try {
+    console.log('[getUserInfo] Đang lấy thông tin user với UID:', user.uid);
+
     const userDoc = await getDoc(doc(db, 'users', user.uid));
+    console.log('[getUserInfo] Document snapshot:', userDoc.exists() ? userDoc.data() : 'Không tồn tại');
+
     if (userDoc.exists()) {
-      return { username: userDoc.data().username };
+      const data = userDoc.data();
+      return { username: data.username || 'Không có username' };
     } else {
       return { username: user.email || 'Người dùng' };
     }
   } catch (err) {
-    console.error('Lỗi khi lấy thông tin người dùng:', err);
+    console.error('[getUserInfo] Lỗi khi lấy thông tin người dùng:', err);
     return { username: user.email || 'Người dùng' };
   }
 };
