@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import LessonCard from "../components/LessonCard";
-import { lessonService } from "../service/lessonService"; // Điều chỉnh đường dẫn đến lessonService
+import { lessonService } from "../service/lessonService"; 
 
 interface Lesson {
   id: string;

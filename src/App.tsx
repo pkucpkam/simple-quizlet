@@ -14,10 +14,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create-lesson" element={<CreateLesson />} />
-        <Route path="/study" element={<Study />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/my-lessons" element={<MyLessons />} />
+        <Route path="/study/:lessonId" element={<Study />} />
       </Routes>
     </div>
   );

@@ -8,15 +8,14 @@ export default function CreateLesson() {
   const [parsedWords, setParsedWords] = useState<
     { word: string; definition: string }[]
   >([]);
-  const [loading, setLoading] = useState(false); // Thêm state để xử lý loading
-  const [error, setError] = useState(""); // Thêm state để xử lý lỗi
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleCreate = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Parse danh sách từ vựng
       const lines = rawVocab.split("\n");
       const words = lines
         .map((line) => {
@@ -32,8 +31,7 @@ export default function CreateLesson() {
 
       setParsedWords(words);
 
-      // Gọi service để lưu bài học
-      const creator = "user@example.com"; // Thay bằng user ID hoặc email từ auth context
+      const creator = "user@example.com";
       await lessonService.createLesson(title, creator, words);
 
       alert(`Đã tạo bài học "${title}" với ${words.length} từ`);

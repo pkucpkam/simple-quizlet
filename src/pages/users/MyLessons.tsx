@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import LessonCard from "../../components/LessonCard";
-import { lessonService } from "../../service/lessonService"; // Điều chỉnh đường dẫn đến lessonService
-
+import { lessonService } from "../../service/lessonService"; 
 interface Lesson {
   id: string;
   title: string;
@@ -20,7 +19,7 @@ export default function MyLessons() {
   useEffect(() => {
     const fetchMyLessons = async () => {
       const storedUser = sessionStorage.getItem("user");
-      console.log("[MyLessons] Found user in sessionStorage:", storedUser); // Debug
+      console.log("[MyLessons] Found user in sessionStorage:", storedUser); 
 
       if (!storedUser) {
         setError("Vui lòng đăng nhập để xem bài học của bạn.");
@@ -32,9 +31,7 @@ export default function MyLessons() {
       try {
         const userData = JSON.parse(storedUser);
         userEmail = userData.email || "anonymous";
-        console.log("[MyLessons] Parsed user email:", userEmail); // Debug
       } catch (err) {
-        console.error("[MyLessons] Error parsing user data:", err); // Debug
         setError("Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.");
         setLoading(false);
         return;
@@ -43,10 +40,8 @@ export default function MyLessons() {
       try {
         setLoading(true);
         const fetchedLessons = await lessonService.getMyLessons(userEmail);
-        console.log("[MyLessons] Fetched lessons:", fetchedLessons); // Debug
         setLessons(fetchedLessons);
       } catch (err) {
-        console.error("[MyLessons] Error fetching lessons:", err); // Debug
         setError("Không thể tải danh sách bài học. Vui lòng thử lại.");
       } finally {
         setLoading(false);
@@ -58,7 +53,6 @@ export default function MyLessons() {
 
   const handleView = (id: string) => {
     alert(`Xem bài học ${id}`);
-    // navigate(`/lesson/${id}`) nếu bạn có routing
   };
 
   const handlePractice = (id: string) => {
@@ -74,7 +68,6 @@ export default function MyLessons() {
         alert(`Đã xóa bài học ${id}`);
       }
     } catch (err) {
-      console.error("[MyLessons] Error deleting lesson:", err); // Debug
       setError("Không thể xóa bài học. Vui lòng thử lại.");
     }
   };

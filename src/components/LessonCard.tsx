@@ -1,25 +1,33 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; 
 import type { Lesson } from "../types/lesson";
 
 interface Props {
   lesson: Lesson;
-  onView: (id: string) => void;
-  onPractice: (id: string) => void;
+  onView?: (id: string) => void; 
+  onPractice?: (id: string) => void; 
   onDelete: (id: string) => void;
-  onSave?: (id: string) => void; // Optional, vì hiện là TODO
-  onEdit?: (id: string) => void; // Optional, vì hiện là TODO
+  onSave?: (id: string) => void;
+  onEdit?: (id: string) => void;
 }
 
-export default function LessonCard({ lesson, onView, onPractice, onDelete, onSave, onEdit }: Props) {
+export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate(); 
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleCardClick = () => {
+    navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
+  };
+
   return (
-    <div className="w-full max-w-3xl bg-white shadow-md rounded-xl px-6 py-5 mx-auto flex flex-col sm:flex-row sm:items-center gap-4">
-      {/* Thông tin bài học */}
+    <div
+      className="w-full max-w-3xl bg-white shadow-md rounded-xl px-6 py-5 mx-auto flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:bg-blue-50"
+      onClick={handleCardClick} 
+    >
       <div className="flex-1">
         <h2 className="text-xl font-semibold text-blue-600">{lesson.title}</h2>
         <p className="text-gray-600 mt-1">{lesson.description}</p>
@@ -27,22 +35,7 @@ export default function LessonCard({ lesson, onView, onPractice, onDelete, onSav
         <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
       </div>
 
-      {/* Các nút hành động */}
-      <div className="flex items-center gap-2 justify-end relative">
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-          onClick={() => onView(lesson.id)}
-          title="Xem và học bài học"
-        >
-          Học
-        </button>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-          onClick={() => onPractice(lesson.id)}
-          title="Luyện tập từ vựng"
-        >
-          Luyện tập
-        </button>
+      <div className="flex items-center gap-2 justify-end relative" onClick={(e) => e.stopPropagation()}>
         <div className="relative">
           <button
             className="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition"

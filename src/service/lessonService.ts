@@ -1,13 +1,11 @@
 import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, where } from "firebase/firestore";
 import { db } from "./firebase_setup";
 
-// Định nghĩa interface cho từ vựng
 interface VocabItem {
   word: string;
   definition: string;
 }
 
-// Định nghĩa interface cho bài học
 interface Lesson {
   id: string;
   title: string;

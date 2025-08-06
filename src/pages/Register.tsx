@@ -23,7 +23,6 @@ export default function Register() {
 
     if (result.success) {
       setSuccess(result.message ?? null);
-      // Reset form
       setEmail('');
       setUsername('');
       setPassword('');
