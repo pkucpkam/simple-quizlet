@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { lessonService } from "../service/lessonService"; 
-
+import { lessonService } from "../service/lessonService";
+import WordPreview from "../components/create/WordPreview";
 
 export default function CreateLesson() {
   const [title, setTitle] = useState("");
@@ -11,30 +11,34 @@ export default function CreateLesson() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleRawVocabChange = (value: string) => {
+    setRawVocab(value);
+
+    const lines = value.split("\n");
+    const words = lines
+      .map((line) => {
+        const [word, definition] = line.split(",").map((s) => s.trim());
+        if (!word || !definition) return null;
+        return { word, definition };
+      })
+      .filter(Boolean) as { word: string; definition: string }[];
+
+    setParsedWords(words);
+  };
+
   const handleCreate = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const lines = rawVocab.split("\n");
-      const words = lines
-        .map((line) => {
-          const [word, definition] = line.split(",").map((s) => s.trim());
-          if (!word || !definition) return null;
-          return { word, definition };
-        })
-        .filter(Boolean) as { word: string; definition: string }[];
-
-      if (!title || words.length === 0) {
+      if (!title || parsedWords.length === 0) {
         throw new Error("Vui lòng nhập tiêu đề và ít nhất một từ vựng.");
       }
 
-      setParsedWords(words);
-
       const creator = "user@example.com";
-      await lessonService.createLesson(title, creator, words);
+      await lessonService.createLesson(title, creator, parsedWords);
 
-      alert(`Đã tạo bài học "${title}" với ${words.length} từ`);
+      alert(`Đã tạo bài học "${title}" với ${parsedWords.length} từ`);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -62,13 +66,15 @@ export default function CreateLesson() {
         disabled={loading}
       />
 
-      <label className="block mb-2 font-semibold">Từ vựng (1 dòng 1 từ, cách nhau bởi dấu phẩy)</label>
+      <label className="block mb-2 font-semibold">
+        Từ vựng (1 dòng 1 từ, cách nhau bởi dấu phẩy)
+      </label>
       <textarea
         rows={8}
         className="w-full border border-gray-300 rounded px-3 py-2 mb-4 font-mono"
         placeholder={`abandon, bỏ rơi\nbeneficial, có lợi`}
         value={rawVocab}
-        onChange={(e) => setRawVocab(e.target.value)}
+        onChange={(e) => handleRawVocabChange(e.target.value)}
         disabled={loading}
       ></textarea>
 
@@ -82,18 +88,7 @@ export default function CreateLesson() {
         {loading ? "Đang tạo..." : "Tạo bài học"}
       </button>
 
-      {parsedWords.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">Xem trước:</h2>
-          <ul className="list-disc list-inside text-gray-700">
-            {parsedWords.map((item, idx) => (
-              <li key={idx}>
-                <span className="font-medium">{item.word}</span>: {item.definition}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <WordPreview words={parsedWords} />
     </div>
   );
 }

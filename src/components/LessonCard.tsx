@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; 
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../service/firebase_setup"; 
 import type { Lesson } from "../types/lesson";
+import { lessonService } from "../service/lessonService"; 
 
 interface Props {
   lesson: Lesson;
@@ -13,13 +16,21 @@ interface Props {
 
 export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const [user] = useAuthState(auth); 
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleCardClick = () => {
+  const handleCardClick = async () => {
+    if (user) {
+      try {
+        await lessonService.saveStudyHistory(user.uid, lesson.id, lesson.title);
+      } catch (error) {
+        console.error("Lỗi khi lưu lịch sử học tập:", error);
+      }
+    }
     navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
   };
 

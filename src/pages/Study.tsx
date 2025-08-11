@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Flashcard from "../components/Flashcard";
-import { lessonService } from "../service/lessonService"; 
+import { lessonService } from "../service/lessonService";
+import { historyService } from "../service/historyService";
 
 interface FlashcardData {
   id: string;
@@ -60,7 +61,6 @@ const Study: React.FC = () => {
   useEffect(() => {
     const fetchVocab = async () => {
       if (!vocabId) {
-        console.log("[Study] No vocabId provided, using initial flashcards");
         setFlashcards([
           { id: "1", term: "Apple", definition: "Táo", status: null },
           { id: "2", term: "Book", definition: "Sách", status: null },
@@ -71,7 +71,6 @@ const Study: React.FC = () => {
       }
 
       try {
-        console.log("[Study] Fetching vocabulary for vocabId:", vocabId);
         const vocabList = await lessonService.getVocabulary(vocabId);
         const formattedFlashcards: FlashcardData[] = vocabList.map((vocab, index) => ({
           id: `${vocabId}-${index}`,
@@ -81,9 +80,7 @@ const Study: React.FC = () => {
         }));
         setFlashcards(formattedFlashcards);
         sessionStorage.setItem("flashcards", JSON.stringify(formattedFlashcards));
-        console.log("[Study] Loaded flashcards:", formattedFlashcards);
-      } catch (err) {
-        console.error("[Study] Error fetching vocabulary:", err);
+      } catch {
         setError("Không thể tải từ vựng. Vui lòng thử lại.");
       } finally {
         setLoading(false);
@@ -93,21 +90,51 @@ const Study: React.FC = () => {
     fetchVocab();
   }, [vocabId]);
 
+
   useEffect(() => {
     if (flashcards.length > 0) {
-      console.log("[Study] Saving flashcards to sessionStorage:", flashcards);
       sessionStorage.setItem("flashcards", JSON.stringify(flashcards));
     }
   }, [flashcards]);
 
+  useEffect(() => {
+    if (isCompleted && flashcards.length > 0) {
+      const userId = "fake_user_123"; // TODO: lấy từ auth context
+      const lessonTitle = location.state?.lessonTitle || "Bài học không tên";
+      const lessonId = location.state?.lessonId || "";
+
+      historyService.saveStudySession(userId, {
+        setId: vocabId || "",
+        setName: lessonTitle,
+        lessonId,
+        lessonTitle,
+        timeSpent: Math.floor((Date.now() - startTime) / 1000), // giây
+        score: 0, // mode study thì 0
+        totalQuestions: flashcards.length,
+        correctAnswers: knowCount, // ở study mode coi knowCount là đúng
+        completedAt: new Date(),
+        knowCount,
+        stillLearningCount,
+        userId,
+        studyMode: "flashcard",
+        difficulty: "easy"
+      });
+    }
+  }, [isCompleted]);
+
+  const [startTime] = useState(Date.now());
+
+
+
   const handleMarkKnow = (id: string) => {
     setFlashcards((prev) =>
       prev.map((card) =>
-        card.id === id ? { ...card, status: "know" } : card
+        card.id === id && card.status !== "know"
+          ? { ...card, status: "know" }
+          : card
       )
     );
     goToNextCard();
-    console.log("[Study] Marked card as know:", id);
   };
 
   const handleMarkStillLearning = (id: string) => {
@@ -117,77 +144,46 @@ const Study: React.FC = () => {
       )
     );
     goToNextCard();
-    console.log("[Study] Marked card as still_learning:", id);
   };
 
   const goToNextCard = () => {
-    if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      console.log("[Study] Moved to next card, index:", currentIndex + 1);
-    } else {
-      console.log("[Study] Reached end of flashcards");
-      setIsCompleted(true);
-    }
+    setTimeout(() => {
+      if (currentIndex < flashcards.length - 1) {
+        setCurrentIndex((prev) => prev + 1);
+      } else {
+        setIsCompleted(true);
+      }
+    }, 200);
   };
 
-
   const handleReviewAgain = () => {
+    setFlashcards((prev) =>
+      prev.map((card) => ({ ...card, status: null }))
+    );
     setCurrentIndex(0);
     setIsCompleted(false);
-    console.log("[Study] Reviewing again");
   };
 
   const handleTest = () => {
     console.log("[Study] Navigating to test mode");
-  
   };
 
   const handleAddNew = () => {
     console.log("[Study] Adding new flashcards");
   };
 
-  if (loading) {
-    return (
-      <div className="max-w-screen-xl mx-auto p-4 text-center">
-        <p className="text-lg text-gray-600">Đang tải thẻ...</p>
-      </div>
-    );
-  }
+  const knowCount = flashcards.filter((card) => card.status === "know").length;
+  const stillLearningCount = flashcards.filter((card) => card.status === "still_learning").length;
+  const progressPercent = (knowCount / flashcards.length) * 100;
 
-  if (error) {
-    return (
-      <div className="max-w-screen-xl mx-auto p-4 text-center">
-        <p className="text-lg text-red-600">{error}</p>
-      </div>
-    );
-  }
-
-  if (flashcards.length === 0) {
-    return (
-      <div className="max-w-screen-xl mx-auto p-4 text-center">
-        <p className="text-lg text-gray-600">Không có thẻ để hiển thị.</p>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center">Đang tải thẻ...</div>;
+  if (error) return <div className="text-center text-red-600">{error}</div>;
+  if (flashcards.length === 0) return <div className="text-center">Không có thẻ để hiển thị.</div>;
 
   return (
     <div className="max-w-screen-xl mx-auto p-4">
       <h1 className="text-3xl font-bold text-center mb-6">Học Từ Mới</h1>
-      <div className="grid grid-cols-3 gap-4 mb-6 max-w-md mx-auto">
-        {["Thẻ ghi nhớ", "Học", "Kiểm tra", "Blocks", "Blast", "Ghép thẻ"].map((option) => (
-          <button
-            key={option}
-            className={`py-2 px-2 h-16 rounded-lg font-medium text-white transition-colors flex justify-center items-center ${
-              option === "Học"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-600 hover:bg-gray-700"
-            }`}
-            onClick={() => console.log(`Chuyển đến chế độ: ${option}`)}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
+
       {isCompleted ? (
         <CompletionScreen
           flashcards={flashcards}
@@ -205,19 +201,15 @@ const Study: React.FC = () => {
           />
           <div className="mt-6 text-center">
             <div className="w-full max-w-md mx-auto">
-              <div className="bg-gray-200 rounded-full h-4">
+              <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-blue-600 h-4 rounded-full transition-all duration-300"
-                  style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
-              <p className="mt-2 text-sm text-gray-600">
-                {currentIndex + 1} / {flashcards.length}
-              </p>
             </div>
-            <p>
-              Đã thuộc: {flashcards.filter((card) => card.status === "know").length} | Chưa thuộc:{" "}
-              {flashcards.filter((card) => card.status === "still_learning").length}
+            <p className="mt-2">
+              Đã thuộc: {knowCount} | Chưa thuộc: {stillLearningCount}
             </p>
           </div>
         </>

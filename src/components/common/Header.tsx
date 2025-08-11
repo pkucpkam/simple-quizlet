@@ -88,6 +88,9 @@ const Header: React.FC = () => {
               <li>
                 <a className="text-black text-base font-medium transition hover:text-blue-700" href="create-lesson"> Tạo bài học </a>
               </li>
+              <li>
+                <a className="text-black text-base font-medium transition hover:text-blue-700" href="study-history"> Lịch sử </a>
+              </li>
             </ul>
           </nav>
 

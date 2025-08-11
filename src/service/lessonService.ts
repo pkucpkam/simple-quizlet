@@ -116,4 +116,18 @@ export const lessonService = {
       throw new Error("Không thể lấy danh sách bài học. Vui lòng thử lại.");
     }
   },
+
+  async saveStudyHistory(userId: string, lessonId: string, lessonTitle: string): Promise<void> {
+    console.log("Saving study history for user:", userId, "lesson:", lessonId);
+    try {
+      await addDoc(collection(db, `history/${userId}/sessions`), {
+        lessonId,
+        lessonTitle,
+        studyTime: new Date(),
+      });
+    } catch (error) {
+      console.error("Lỗi khi lưu lịch sử học tập:", error);
+      throw new Error("Không thể lưu lịch sử học tập. Vui lòng thử lại.");
+    }
+  },
 };

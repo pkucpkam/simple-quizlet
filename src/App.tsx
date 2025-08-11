@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Study from './pages/Study';
 import MyLessons from './pages/users/MyLessons';
+import StudyHistory from './pages/StudyHistory';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/my-lessons" element={<MyLessons />} />
         <Route path="/study/:lessonId" element={<Study />} />
+        <Route path="/study-history" element={<StudyHistory />} />
       </Routes>
     </div>
   );
