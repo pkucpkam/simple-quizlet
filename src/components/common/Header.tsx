@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../service/firebase_setup';
 import { logoutUser } from '../../service/authService';
@@ -68,28 +68,28 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white w-full shadow">
       <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
-        <a className="block text-teal-600" href="/">
+        <Link className="block text-teal-600" to="/">
           <span className="sr-only">Home</span>
           <img src="/logo/brain.png" alt="Logo" className="h-10 w-10 object-contain" />
-        </a>
+        </Link>
         <div className="flex flex-1 items-center justify-end md:justify-between">
           <nav aria-label="Global" className="hidden md:block">
             <ul className="flex items-center gap-6 text-sm">
               <li>
-                <a className="text-black text-base font-medium transition hover:text-blue-700" href="/"> Trang chủ </a>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="/"> Trang chủ </Link>
               </li>
               
               <li>
-                <a className="text-black text-base font-medium transition hover:text-blue-700" href="my-lessons"> Bài học của tôi </a>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="my-lessons"> Bài học của tôi </Link>
               </li>
               <li>
-                <a className="text-black text-base font-medium transition hover:text-blue-700" href="#"> Bài học đã lưu </a>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="#"> Bài học đã lưu </Link>
               </li>
               <li>
-                <a className="text-black text-base font-medium transition hover:text-blue-700" href="create-lesson"> Tạo bài học </a>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="create-lesson"> Tạo bài học </Link>
               </li>
               <li>
-                <a className="text-black text-base font-medium transition hover:text-blue-700" href="study-history"> Lịch sử </a>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="study-history"> Lịch sử </Link>
               </li>
             </ul>
           </nav>

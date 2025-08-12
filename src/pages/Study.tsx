@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { auth } from "../service/firebase_setup"; // Import auth từ firebase_setup
 import Flashcard from "../components/Flashcard";
 import { lessonService } from "../service/lessonService";
 import { historyService } from "../service/historyService";
@@ -57,6 +58,9 @@ const Study: React.FC = () => {
   const [error, setError] = useState("");
   const location = useLocation();
   const vocabId = location.state?.vocabId;
+  const lessonId = location.state?.lessonId;
+  const lessonTitle = location.state?.lessonTitle;
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
     const fetchVocab = async () => {
@@ -90,7 +94,6 @@ const Study: React.FC = () => {
     fetchVocab();
   }, [vocabId]);
 
-
   useEffect(() => {
     if (flashcards.length > 0) {
       sessionStorage.setItem("flashcards", JSON.stringify(flashcards));
@@ -99,32 +102,37 @@ const Study: React.FC = () => {
 
   useEffect(() => {
     if (isCompleted && flashcards.length > 0) {
-      const userId = "fake_user_123"; // TODO: lấy từ auth context
-      const lessonTitle = location.state?.lessonTitle || "Bài học không tên";
-      const lessonId = location.state?.lessonId || "";
+      const userId = auth.currentUser?.uid || "anonymous_user"; // Lấy userId từ Firebase Auth
+      const knowCount = flashcards.filter((card) => card.status === "know").length;
+      const timeSpent = Math.floor((Date.now() - startTime) / 1000); // Tính thời gian học (giây)
+
+      console.log("[Study] Saving study session:", {
+        userId,
+        setId: vocabId || "",
+        setName: lessonTitle || "Bài học không tên",
+        lessonId: lessonId || "",
+        lessonTitle: lessonTitle || "Bài học không tên",
+        timeSpent,
+        knowCount,
+        studyMode: "flashcard",
+      });
+
+      if (!userId || userId === "anonymous_user") {
+        console.warn("[Study] No authenticated user found, skipping save.");
+        return;
+      }
 
       historyService.saveStudySession(userId, {
         setId: vocabId || "",
-        setName: lessonTitle,
-        lessonId,
-        lessonTitle,
-        timeSpent: Math.floor((Date.now() - startTime) / 1000), // giây
-        score: 0, // mode study thì 0
-        totalQuestions: flashcards.length,
-        correctAnswers: knowCount, // ở study mode coi knowCount là đúng
-        completedAt: new Date(),
+        setName: lessonTitle || "Bài học không tên",
+        lessonId: lessonId || "",
+        lessonTitle: lessonTitle || "Bài học không tên",
+        timeSpent,
         knowCount,
-        stillLearningCount,
-        userId,
         studyMode: "flashcard",
-        difficulty: "easy"
       });
     }
-  }, [isCompleted]);
-
-  const [startTime] = useState(Date.now());
-
-
+  }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime]);
 
   const handleMarkKnow = (id: string) => {
     setFlashcards((prev) =>
@@ -140,7 +148,9 @@ const Study: React.FC = () => {
   const handleMarkStillLearning = (id: string) => {
     setFlashcards((prev) =>
       prev.map((card) =>
-        card.id === id ? { ...card, status: "still_learning" } : card
+        card.id === id && card.status !== "still_learning"
+          ? { ...card, status: "still_learning" }
+          : card
       )
     );
     goToNextCard();
@@ -173,8 +183,11 @@ const Study: React.FC = () => {
   };
 
   const knowCount = flashcards.filter((card) => card.status === "know").length;
-  const stillLearningCount = flashcards.filter((card) => card.status === "still_learning").length;
-  const progressPercent = (knowCount / flashcards.length) * 100;
+  const stillLearningCount = flashcards.filter(
+    (card) => card.status !== "know"
+  ).length;
+
+  const progressPercent = ((knowCount) / flashcards.length) * 100;
 
   if (loading) return <div className="text-center">Đang tải thẻ...</div>;
   if (error) return <div className="text-center text-red-600">{error}</div>;

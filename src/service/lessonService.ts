@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, where, updateDoc } from "firebase/firestore";
 import { db } from "./firebase_setup";
 
 interface VocabItem {
@@ -61,7 +61,7 @@ export const lessonService = {
           vocabId: data.vocabId,
           createdAt: data.createdAt.toDate(),
           description: data.description || "",
-          wordCount: data.wordCount || 0, 
+          wordCount: data.wordCount || 0,
         };
       });
       return lessons;
@@ -117,17 +117,59 @@ export const lessonService = {
     }
   },
 
-  async saveStudyHistory(userId: string, lessonId: string, lessonTitle: string): Promise<void> {
-    console.log("Saving study history for user:", userId, "lesson:", lessonId);
+  async getLesson(lessonId: string) {
     try {
-      await addDoc(collection(db, `history/${userId}/sessions`), {
-        lessonId,
-        lessonTitle,
-        studyTime: new Date(),
-      });
+      const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
+      if (!lessonDoc.exists()) {
+        throw new Error("Không tìm thấy bài học.");
+      }
+      const lessonData = lessonDoc.data();
+
+      // Lấy vocab từ vocabId
+      const vocab = await this.getVocabulary(lessonData.vocabId);
+
+      return {
+        id: lessonDoc.id,
+        title: lessonData.title,
+        creator: lessonData.creator,
+        vocabId: lessonData.vocabId,
+        createdAt: lessonData.createdAt.toDate(),
+        description: lessonData.description || "",
+        wordCount: lessonData.wordCount || vocab.length,
+        vocabulary: vocab,
+      };
     } catch (error) {
-      console.error("Lỗi khi lưu lịch sử học tập:", error);
-      throw new Error("Không thể lưu lịch sử học tập. Vui lòng thử lại.");
+      console.error("Lỗi khi lấy bài học:", error);
+      throw new Error("Không thể lấy bài học. Vui lòng thử lại.");
     }
   },
+
+  async updateLesson(lessonId: string, title: string, vocabList: VocabItem[], description: string = "") {
+    try {
+      const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
+      if (!lessonDoc.exists()) {
+        throw new Error("Không tìm thấy bài học.");
+      }
+      const { vocabId } = lessonDoc.data();
+
+      await updateDoc(doc(db, "vocabularies", vocabId), {
+        words: vocabList,
+        updatedAt: new Date(),
+      });
+
+      await updateDoc(doc(db, "lessons", lessonId), {
+        title,
+        description,
+        wordCount: vocabList.length,
+        updatedAt: new Date(),
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi cập nhật bài học:", error);
+      throw new Error("Không thể cập nhật bài học. Vui lòng thử lại.");
+    }
+  },
+
+
 };
