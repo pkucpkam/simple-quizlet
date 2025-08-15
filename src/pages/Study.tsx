@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { auth } from "../service/firebase_setup"; // Import auth từ firebase_setup
 import Flashcard from "../components/Flashcard";
 import { lessonService } from "../service/lessonService";
-import { historyService } from "../service/historyService";
 
 interface FlashcardData {
   id: string;
@@ -122,15 +121,15 @@ const Study: React.FC = () => {
         return;
       }
 
-      historyService.saveStudySession(userId, {
-        setId: vocabId || "",
-        setName: lessonTitle || "Bài học không tên",
-        lessonId: lessonId || "",
-        lessonTitle: lessonTitle || "Bài học không tên",
-        timeSpent,
-        knowCount,
-        studyMode: "flashcard",
-      });
+      // historyService.saveStudySession(userId, {
+      //   setId: vocabId || "",
+      //   setName: lessonTitle || "Bài học không tên",
+      //   lessonId: lessonId || "",
+      //   lessonTitle: lessonTitle || "Bài học không tên",
+      //   timeSpent,
+      //   knowCount,
+      //   studyMode: "flashcard",
+      // });
     }
   }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime]);
 
