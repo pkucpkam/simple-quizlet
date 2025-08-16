@@ -7,6 +7,10 @@ import Register from './pages/Register';
 import Study from './pages/Study';
 import MyLessons from './pages/users/MyLessons';
 import StudyHistory from './pages/StudyHistory';
+import Practice from './pages/Practice';
+import Quiz from './pages/Quiz';
+import QuizReverse from './pages/QuizReverse';
+import MatchingGame from './pages/MatchingGame';
 
 function App() {
   return (
@@ -20,6 +24,10 @@ function App() {
         <Route path="/my-lessons" element={<MyLessons />} />
         <Route path="/study/:lessonId" element={<Study />} />
         <Route path="/study-history" element={<StudyHistory />} />
+        <Route path="/practice" element={<Practice />} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/quiz-reverse" element={<QuizReverse />} />
+        <Route path="/matching" element={<MatchingGame />} />
       </Routes>
     </div>
   );
