@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface Vocab {
   term: string;
@@ -29,66 +28,11 @@ interface MatchingGameProps {
   showResult: boolean;
 }
 
-const MatchingComplete: React.FC<{
-  stats: MatchingStats;
-  onRestart: () => void;
-  onBackToStudy: () => void;
-}> = ({ stats, onRestart, onBackToStudy }) => {
-  const accuracy = stats.attempts > 0 ? Math.round((stats.matchedPairs / stats.attempts) * 100) : 0;
-  const timeInSeconds = Math.floor(stats.timeSpent / 1000);
-  const minutes = Math.floor(timeInSeconds / 60);
-  const seconds = timeInSeconds % 60;
-
-  return (
-    <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold text-green-600 mb-4">🎉 Hoàn thành!</h2>
-        <p className="text-xl text-gray-600 mb-6">Bạn đã ghép thành công tất cả các cặp từ!</p>
-        
-        <div className="grid grid-cols-2 gap-6 mb-8">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="text-3xl font-bold text-blue-600">{stats.totalPairs}</div>
-            <div className="text-blue-700">Cặp từ</div>
-          </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-600">{stats.attempts}</div>
-            <div className="text-green-700">Lần thử</div>
-          </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="text-3xl font-bold text-yellow-600">{accuracy}%</div>
-            <div className="text-yellow-700">Độ chính xác</div>
-          </div>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <div className="text-3xl font-bold text-purple-600">
-              {minutes}:{seconds.toString().padStart(2, '0')}
-            </div>
-            <div className="text-purple-700">Thời gian</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          onClick={onRestart}
-          className="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
-        >
-          Chơi lại
-        </button>
-        <button
-          onClick={onBackToStudy}
-          className="py-3 px-4 bg-gray-600 hover:bg-gray-700 text-white font-bold rounded-lg transition-colors"
-        >
-          Về trang học
-        </button>
-      </div>
-    </div>
-  );
-};
 
 const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [selectedCards, setSelectedCards] = useState<MatchCard[]>([]);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState<MatchingStats>({
@@ -98,7 +42,6 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
     timeSpent: 0
   });
 
-  const navigate = useNavigate();
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
@@ -146,88 +89,67 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   }, [vocabList]);
 
   const handleCardClick = (clickedCard: MatchCard) => {
-    if (clickedCard.isMatched || clickedCard.isSelected) return;
+  if (clickedCard.isMatched || clickedCard.isSelected || isCompleted) return; // Thêm isCompleted vào điều kiện
 
-    const newSelectedCards = [...selectedCards, clickedCard];
-    
-    setCards(prev => prev.map(card => 
-      card.id === clickedCard.id 
-        ? { ...card, isSelected: true }
+  const newSelectedCards = [...selectedCards, clickedCard];
+  
+  setCards(prev => prev.map(card => 
+    card.id === clickedCard.id 
+      ? { ...card, isSelected: true }
+      : card
+  ));
+
+  if (newSelectedCards.length === 2) {
+    const [firstCard, secondCard] = newSelectedCards;
+    setStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
+
+    if (firstCard.matchId === secondCard.matchId) {
+      setTimeout(() => {
+  setCards(prev => {
+    const newCards = prev.map(card => 
+      card.matchId === firstCard.matchId
+        ? { ...card, isMatched: true, isSelected: false }
         : card
-    ));
+    );
 
-    if (newSelectedCards.length === 2) {
-      const [firstCard, secondCard] = newSelectedCards;
-      setStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
+    const remainingCards = newCards.filter(card => !card.isMatched);
+    console.log("Remaining cards:", remainingCards.length);
 
-      if (firstCard.matchId === secondCard.matchId) {
-        setTimeout(() => {
-          setCards(prev => prev.map(card => 
-            card.matchId === firstCard.matchId
-              ? { ...card, isMatched: true, isSelected: false }
-              : card
-          ));
-          
-          setStats(prev => ({ 
-            ...prev, 
-            matchedPairs: prev.matchedPairs + 1 
-          }));
-          
-          const remainingCards = cards.filter(card => 
-            card.matchId !== firstCard.matchId && !card.isMatched
-          );
-          
-          if (remainingCards.length === 0) {
-            setTimeout(() => {
-              setIsCompleted(true);
-              onAnswer("matching", true); // Report completion as a correct answer
-            }, 500);
-          }
-        }, 1000);
-      } else {
-        setCards(prev => prev.map(card => 
-          (card.id === firstCard.id || card.id === secondCard.id)
-            ? { ...card, isError: true }
-            : card
-        ));
-        
-        setTimeout(() => {
-          setCards(prev => prev.map(card => ({
-            ...card,
-            isSelected: false,
-            isError: false
-          })));
-        }, 1000);
-      }
-      
-      setSelectedCards([]);
-    } else {
-      setSelectedCards(newSelectedCards);
+    if (remainingCards.length === 0) {
+      console.log("Game completed!");
+      onAnswer("matching", true); 
     }
-  };
 
-  const handleRestart = () => {
-    const resetCards = cards.map(card => ({
-      ...card,
-      isSelected: false,
-      isMatched: false,
-      isError: false
-    })).sort(() => Math.random() - 0.5);
+    return newCards;
+  });
+
+  setStats(prev => ({ 
+    ...prev, 
+    matchedPairs: prev.matchedPairs + 1 
+  }));
+}, 1000);
+
+    } else {
+      setCards(prev => prev.map(card => 
+        (card.id === firstCard.id || card.id === secondCard.id)
+          ? { ...card, isError: true }
+          : card
+      ));
+      
+      setTimeout(() => {
+        setCards(prev => prev.map(card => ({
+          ...card,
+          isSelected: false,
+          isError: false
+        })));
+      }, 1000);
+    }
     
-    setCards(resetCards);
     setSelectedCards([]);
-    setIsCompleted(false);
-    setStats({
-      totalPairs: stats.totalPairs,
-      matchedPairs: 0,
-      attempts: 0,
-      timeSpent: 0
-    });
-  };
-
-  const handleBackToStudy = () => {
-    navigate('/study');
-  };
+  } else {
+    setSelectedCards(newSelectedCards);
+  }
+};
 
   useEffect(() => {
     if (!isCompleted) {
@@ -243,14 +165,6 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
     <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-4 mb-4">
       <div className="max-w-6xl mx-auto px-4">  
         <p className="text-center text-gray-600 mb-4">Ghép từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
-
-        {isCompleted ? (
-          <MatchingComplete
-            stats={stats}
-            onRestart={handleRestart}
-            onBackToStudy={handleBackToStudy}
-          />
-        ) : (
           <>
             <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-300">
               <div className="flex justify-between items-center">
@@ -331,7 +245,6 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
               </div>
             </div>
           </>
-        )}
       </div>
     </div>
   );

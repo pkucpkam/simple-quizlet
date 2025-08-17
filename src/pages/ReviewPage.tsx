@@ -9,27 +9,31 @@ import { lessonService } from "../service/lessonService";
 const ReviewPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
 
+  const [fullVocabList, setFullVocabList] = useState<{ term: string; definition: string }[]>([]);
   const [vocabList, setVocabList] = useState<{ term: string; definition: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [sessionCount, setSessionCount] = useState(0);
 
   const quizTypes = ["normal", "reverse", "practice", "matching"] as const;
   type QuizType = (typeof quizTypes)[number];
   const [quizType, setQuizType] = useState<QuizType>("normal");
+
+  const WORDS_PER_SESSION = 5;
 
   useEffect(() => {
     const fetchLesson = async () => {
       try {
         if (!lessonId) return;
         const lesson = await lessonService.getLesson(lessonId);
-        // map lại field để đồng bộ với component
         const vocabData = lesson.vocabulary.map((item: any) => ({
           term: item.word,
           definition: item.definition,
         }));
-        setVocabList(vocabData);
+        setFullVocabList(vocabData);
+        setVocabList(vocabData.slice(0, Math.min(WORDS_PER_SESSION, vocabData.length)));
         setQuizType(quizTypes[Math.floor(Math.random() * quizTypes.length)]);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu bài học:", error);
@@ -46,12 +50,26 @@ const ReviewPage = () => {
 
     setTimeout(() => {
       setShowResult(false);
-      setCurrentIndex((prev) => Math.min(prev + 1, vocabList.length));
+      setCurrentIndex((prev) => prev + 1);
       setQuizType(quizTypes[Math.floor(Math.random() * quizTypes.length)]);
     }, 1500);
   };
 
   const handleRestart = () => {
+    const startIndex = sessionCount * WORDS_PER_SESSION;
+    const nextVocabList = fullVocabList.slice(
+      startIndex,
+      startIndex + Math.min(WORDS_PER_SESSION, fullVocabList.length - startIndex)
+    );
+
+    if (nextVocabList.length === 0) {
+      setVocabList(fullVocabList.slice(0, Math.min(WORDS_PER_SESSION, fullVocabList.length)));
+      setSessionCount(0);
+    } else {
+      setVocabList(nextVocabList);
+      setSessionCount((prev) => prev + 1);
+    }
+
     setCurrentIndex(0);
     setCorrectAnswers(0);
     setShowResult(false);
@@ -79,7 +97,7 @@ const ReviewPage = () => {
             onClick={handleRestart}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
-            Ôn tập lại
+            {fullVocabList.length > vocabList.length ? "Tiếp tục ôn tập" : "Ôn tập lại"}
           </button>
         </div>
       </div>
