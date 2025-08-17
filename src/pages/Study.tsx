@@ -101,20 +101,7 @@ const Study: React.FC = () => {
 
   useEffect(() => {
     if (isCompleted && flashcards.length > 0) {
-      const userId = auth.currentUser?.uid || "anonymous_user"; // Lấy userId từ Firebase Auth
-      const knowCount = flashcards.filter((card) => card.status === "know").length;
-      const timeSpent = Math.floor((Date.now() - startTime) / 1000); // Tính thời gian học (giây)
-
-      console.log("[Study] Saving study session:", {
-        userId,
-        setId: vocabId || "",
-        setName: lessonTitle || "Bài học không tên",
-        lessonId: lessonId || "",
-        lessonTitle: lessonTitle || "Bài học không tên",
-        timeSpent,
-        knowCount,
-        studyMode: "flashcard",
-      });
+      const userId = auth.currentUser?.uid || "anonymous_user"; 
 
       if (!userId || userId === "anonymous_user") {
         console.warn("[Study] No authenticated user found, skipping save.");

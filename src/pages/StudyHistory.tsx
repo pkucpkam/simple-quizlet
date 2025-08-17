@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from '../service/firebase_setup';
 import type { StudySession, StudyStats } from '../types/history';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { historyService } from '../service/historyService';
-import StudyHistoryCard from '../components/StudyHistory/StudyHistoryCard';
 
 
 const StudyHistory: React.FC = () => {
-  const [user] = useAuthState(auth);
+  const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [stats, setStats] = useState<StudyStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'flashcard' | 'quiz' | 'test'>('all');
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -42,8 +53,11 @@ const StudyHistory: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Vui lòng đăng nhập để xem lịch sử học tập</p>
+      <div className="max-w-2xl mx-auto p-6 text-center">
+        <h1 className="text-3xl font-bold text-blue-700 mb-4">Lịch sử học tập</h1>
+        <p className="text-red-500 text-lg">
+          Bạn cần <a href="/login" className="underline text-blue-600">đăng nhập</a> để xem lịch sử học tập.
+        </p>
       </div>
     );
   }
@@ -59,9 +73,9 @@ const StudyHistory: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Lịch sử học tập</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Lịch sử học tập</h1>
+        <p className='text-red-600 mb-4'>* Chức năng này hiện tại chưa được phát triển.</p>
 
-        {/* Stats Overview */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
@@ -74,7 +88,7 @@ const StudyHistory: React.FC = () => {
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Điểm trung bình</h3>
-              <p className="text-3xl font-bold text-yellow-600">{stats.averageScore}%</p>
+              <p className="text-3xl font-bold text-yellow-600">%</p>
             </div>
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Bộ đã học</h3>
@@ -110,9 +124,9 @@ const StudyHistory: React.FC = () => {
         {/* Study Sessions */}
         {filteredSessions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSessions.map((session) => (
+            {/* {filteredSessions.map((session) => (
               <StudyHistoryCard key={session.id} session={session} />
-            ))}
+            ))} */}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow p-12 text-center">

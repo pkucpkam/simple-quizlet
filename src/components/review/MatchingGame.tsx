@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { lessonService } from "../service/lessonService";
+import { useNavigate } from "react-router-dom";
+
+interface Vocab {
+  term: string;
+  definition: string;
+}
 
 interface MatchCard {
   id: string;
   content: string;
   type: 'term' | 'definition';
-  matchId: string; // ID để ghép cặp
+  matchId: string;
   isSelected: boolean;
   isMatched: boolean;
   isError: boolean;
@@ -19,16 +23,22 @@ interface MatchingStats {
   timeSpent: number;
 }
 
+interface MatchingGameProps {
+  vocabList: Vocab[];
+  onAnswer: (answer: string, isCorrect: boolean) => void;
+  showResult: boolean;
+}
+
 const MatchingComplete: React.FC<{
   stats: MatchingStats;
   onRestart: () => void;
   onBackToStudy: () => void;
 }> = ({ stats, onRestart, onBackToStudy }) => {
-  const accuracy = Math.round((stats.matchedPairs / stats.attempts) * 100);
+  const accuracy = stats.attempts > 0 ? Math.round((stats.matchedPairs / stats.attempts) * 100) : 0;
   const timeInSeconds = Math.floor(stats.timeSpent / 1000);
   const minutes = Math.floor(timeInSeconds / 60);
   const seconds = timeInSeconds % 60;
-  
+
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
       <div className="text-center mb-8">
@@ -75,7 +85,7 @@ const MatchingComplete: React.FC<{
   );
 };
 
-const MatchingGame: React.FC = () => {
+const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [selectedCards, setSelectedCards] = useState<MatchCard[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -87,87 +97,59 @@ const MatchingGame: React.FC = () => {
     attempts: 0,
     timeSpent: 0
   });
-  
-  const location = useLocation();
+
   const navigate = useNavigate();
-  
-  const vocabId = location.state?.vocabId;
-  const lessonId = location.state?.lessonId;
-  const lessonTitle = location.state?.lessonTitle;
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
-    const fetchVocab = async () => {
-      if (!vocabId) {
-        // Demo data
-        const demoData = [
-          { word: "Apple", definition: "Táo" },
-          { word: "Book", definition: "Sách" },
-          { word: "House", definition: "Nhà" },
-          { word: "Water", definition: "Nước" },
-          { word: "Computer", definition: "Máy tính" },
-          { word: "Phone", definition: "Điện thoại" }
-        ];
+    const createMatchCards = (vocabData: Vocab[]): MatchCard[] => {
+      const cards: MatchCard[] = [];
+      
+      vocabData.forEach((vocab, index) => {
+        cards.push({
+          id: `term-${index}`,
+          content: vocab.term,
+          type: 'term',
+          matchId: `pair-${index}`,
+          isSelected: false,
+          isMatched: false,
+          isError: false
+        });
         
-        const matchCards = createMatchCards(demoData);
-        setCards(matchCards);
-        setStats(prev => ({ ...prev, totalPairs: demoData.length }));
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const vocabList = await lessonService.getVocabulary(vocabId);
-        const matchCards = createMatchCards(vocabList.map(v => ({ word: v.word, definition: v.definition })));
-        setCards(matchCards);
-        setStats(prev => ({ ...prev, totalPairs: vocabList.length }));
-      } catch {
-        setError("Không thể tải từ vựng. Vui lòng thử lại.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchVocab();
-  }, [vocabId]);
-
-  const createMatchCards = (vocabData: { word: string; definition: string }[]): MatchCard[] => {
-    const cards: MatchCard[] = [];
-    
-    vocabData.forEach((vocab, index) => {
-      // Thẻ từ tiếng Anh
-      cards.push({
-        id: `term-${index}`,
-        content: vocab.word,
-        type: 'term',
-        matchId: `pair-${index}`,
-        isSelected: false,
-        isMatched: false,
-        isError: false
+        cards.push({
+          id: `def-${index}`,
+          content: vocab.definition,
+          type: 'definition',
+          matchId: `pair-${index}`,
+          isSelected: false,
+          isMatched: false,
+          isError: false
+        });
       });
       
-      // Thẻ nghĩa tiếng Việt
-      cards.push({
-        id: `def-${index}`,
-        content: vocab.definition,
-        type: 'definition',
-        matchId: `pair-${index}`,
-        isSelected: false,
-        isMatched: false,
-        isError: false
-      });
-    });
-    
-    // Shuffle cards
-    return cards.sort(() => Math.random() - 0.5);
-  };
+      return cards.sort(() => Math.random() - 0.5);
+    };
+
+    setLoading(true);
+    try {
+      if (vocabList.length === 0) {
+        throw new Error("Không có từ vựng để ghép thẻ.");
+      }
+      const matchCards = createMatchCards(vocabList);
+      setCards(matchCards);
+      setStats(prev => ({ ...prev, totalPairs: vocabList.length }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Không thể tải từ vựng. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  }, [vocabList]);
 
   const handleCardClick = (clickedCard: MatchCard) => {
     if (clickedCard.isMatched || clickedCard.isSelected) return;
 
     const newSelectedCards = [...selectedCards, clickedCard];
     
-    // Update card selection state
     setCards(prev => prev.map(card => 
       card.id === clickedCard.id 
         ? { ...card, isSelected: true }
@@ -179,7 +161,6 @@ const MatchingGame: React.FC = () => {
       setStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
 
       if (firstCard.matchId === secondCard.matchId) {
-        // Correct match
         setTimeout(() => {
           setCards(prev => prev.map(card => 
             card.matchId === firstCard.matchId
@@ -192,7 +173,6 @@ const MatchingGame: React.FC = () => {
             matchedPairs: prev.matchedPairs + 1 
           }));
           
-          // Check if game is completed
           const remainingCards = cards.filter(card => 
             card.matchId !== firstCard.matchId && !card.isMatched
           );
@@ -200,18 +180,17 @@ const MatchingGame: React.FC = () => {
           if (remainingCards.length === 0) {
             setTimeout(() => {
               setIsCompleted(true);
+              onAnswer("matching", true); // Report completion as a correct answer
             }, 500);
           }
         }, 1000);
       } else {
-        // Wrong match - show error
         setCards(prev => prev.map(card => 
           (card.id === firstCard.id || card.id === secondCard.id)
             ? { ...card, isError: true }
             : card
         ));
         
-        // Reset after 1 second
         setTimeout(() => {
           setCards(prev => prev.map(card => ({
             ...card,
@@ -226,7 +205,6 @@ const MatchingGame: React.FC = () => {
       setSelectedCards(newSelectedCards);
     }
   };
-
 
   const handleRestart = () => {
     const resetCards = cards.map(card => ({
@@ -248,9 +226,7 @@ const MatchingGame: React.FC = () => {
   };
 
   const handleBackToStudy = () => {
-    navigate('/study', { 
-      state: { vocabId, lessonId, lessonTitle }
-    });
+    navigate('/study');
   };
 
   useEffect(() => {
@@ -264,10 +240,9 @@ const MatchingGame: React.FC = () => {
   if (cards.length === 0) return <div className="text-center mt-10">Không có từ vựng để ghép thẻ.</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-4xl font-bold text-center mb-2 text-gray-800">Ghép Thẻ Từ Vựng</h1>
-        <p className="text-center text-gray-600 mb-8">Ghép từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
+    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-4 mb-4">
+      <div className="max-w-6xl mx-auto px-4">  
+        <p className="text-center text-gray-600 mb-4">Ghép từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
 
         {isCompleted ? (
           <MatchingComplete
@@ -277,8 +252,7 @@ const MatchingGame: React.FC = () => {
           />
         ) : (
           <>
-            {/* Stats Header */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-300">
               <div className="flex justify-between items-center">
                 <div className="flex space-x-6">
                   <div>
@@ -302,8 +276,7 @@ const MatchingGame: React.FC = () => {
               </div>
             </div>
 
-            {/* Game Board */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {cards.map((card) => (
                 <button
                   key={card.id}
@@ -335,7 +308,6 @@ const MatchingGame: React.FC = () => {
                     </span>
                   </div>
                   
-                  {/* Type indicator */}
                   <div className={`
                     absolute top-1 right-1 w-3 h-3 rounded-full
                     ${card.type === 'term' ? 'bg-blue-400' : 'bg-purple-400'}
@@ -344,8 +316,7 @@ const MatchingGame: React.FC = () => {
               ))}
             </div>
 
-            {/* Instructions */}
-            <div className="mt-8 bg-white rounded-lg shadow-md p-4">
+            <div className="mt-4 bg-white rounded-lg shadow-md p-4">
               <h3 className="font-semibold text-gray-800 mb-2">Hướng dẫn:</h3>
               <div className="text-sm text-gray-600 space-y-1">
                 <div className="flex items-center space-x-2">

@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../service/firebase_setup"; 
-import type { Lesson } from "../types/lesson";
+import type { Lesson } from "../../types/lesson";
+import { auth } from "../../service/firebase_setup";
 
 interface Props {
   lesson: Lesson;
-  onView?: (id: string) => void; 
-  onPractice?: (id: string) => void; 
   onDelete: (id: string) => void;
   onSave?: (id: string) => void;
   onEdit?: (id: string) => void;
 }
 
-export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
+export default function ReviewLessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [user] = useAuthState(auth); 
@@ -24,8 +22,8 @@ export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) 
 
   const handleCardClick = async () => {
     if (user) {
+      navigate(`/review/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
     }
-    navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
   };
 
   return (

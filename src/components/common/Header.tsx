@@ -92,7 +92,7 @@ const Header: React.FC = () => {
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="study-history"> Lịch sử </Link>
               </li>
               <li>
-                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="practice"> Ôn tập </Link>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="review-page"> Ôn tập </Link>
               </li>
             </ul>
           </nav>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { lessonService } from "../service/lessonService";
 import WordPreview from "../components/create/WordPreview";
 
@@ -10,6 +10,19 @@ export default function CreateLesson() {
   >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUserEmail(parsed.email); 
+      } catch {
+        setUserEmail(null);
+      }
+    }
+  }, []);
 
   const handleRawVocabChange = (value: string) => {
     setRawVocab(value);
@@ -35,10 +48,22 @@ export default function CreateLesson() {
         throw new Error("Vui lòng nhập tiêu đề và ít nhất một từ vựng.");
       }
 
-      const creator = "user@example.com";
-      await lessonService.createLesson(title, creator, parsedWords);
+      const storedUser = sessionStorage.getItem("user");
+      let username = userEmail;
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          username = parsed.username || parsed.email;
+        } catch {
+          username = userEmail;
+        }
+      }
+      await lessonService.createLesson(title, username ?? "", parsedWords);
 
       alert(`Đã tạo bài học "${title}" với ${parsedWords.length} từ`);
+      setTitle("");
+      setRawVocab("");
+      setParsedWords([]);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -49,6 +74,17 @@ export default function CreateLesson() {
       setLoading(false);
     }
   };
+
+  if (!userEmail) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 text-center">
+        <h1 className="text-3xl font-bold text-blue-700 mb-4">Tạo bài học mới</h1>
+        <p className="text-red-500 text-lg">
+          Bạn cần <a href="/login" className="underline text-blue-600">đăng nhập</a> để tạo bài học.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
