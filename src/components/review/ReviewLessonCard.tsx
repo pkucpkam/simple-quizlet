@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom"; 
-import { useAuthState } from "react-firebase-hooks/auth";
 import type { Lesson } from "../../types/lesson";
-import { auth } from "../../service/firebase_setup";
 
 interface Props {
   lesson: Lesson;
@@ -12,12 +10,11 @@ interface Props {
 
 export default function ReviewLessonCard({ lesson}: Props) {
   const navigate = useNavigate();
-  const [user] = useAuthState(auth); 
 
   const handleCardClick = async () => {
-    if (user) {
+    
       navigate(`/review/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
-    }
+    
   };
 
   return (
