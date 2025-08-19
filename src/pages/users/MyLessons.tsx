@@ -19,7 +19,7 @@ export default function MyLessons() {
   useEffect(() => {
     const fetchMyLessons = async () => {
       const storedUser = sessionStorage.getItem("user");
-      console.log("[MyLessons] Found user in sessionStorage:", storedUser); 
+      console.log("[MyLessons] Found user in sessionStorage:", storedUser);
 
       if (!storedUser) {
         setError("Vui lòng đăng nhập để xem bài học của bạn.");
@@ -27,10 +27,10 @@ export default function MyLessons() {
         return;
       }
 
-      let userEmail: string;
+      let username: string;
       try {
         const userData = JSON.parse(storedUser);
-        userEmail = userData.email || "anonymous";
+        username = userData.username || "anonymous";
       } catch (err) {
         setError("Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.");
         setLoading(false);
@@ -39,7 +39,7 @@ export default function MyLessons() {
 
       try {
         setLoading(true);
-        const fetchedLessons = await lessonService.getMyLessons(userEmail);
+        const fetchedLessons = await lessonService.getMyLessons(username);
         setLessons(fetchedLessons);
       } catch (err) {
         setError("Không thể tải danh sách bài học. Vui lòng thử lại.");

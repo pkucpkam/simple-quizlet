@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { lessonService } from "../service/lessonService";
 import WordPreview from "../components/create/WordPreview";
+import SuccessModal from "../components/modal/SuccessModal";
 
 export default function CreateLesson() {
   const [title, setTitle] = useState("");
@@ -11,6 +12,7 @@ export default function CreateLesson() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
@@ -60,7 +62,7 @@ export default function CreateLesson() {
       }
       await lessonService.createLesson(title, username ?? "", parsedWords);
 
-      alert(`Đã tạo bài học "${title}" với ${parsedWords.length} từ`);
+      setShowModal(true); 
       setTitle("");
       setRawVocab("");
       setParsedWords([]);
@@ -125,6 +127,12 @@ export default function CreateLesson() {
       </button>
 
       <WordPreview words={parsedWords} />
+      <SuccessModal
+        isOpen={showModal}
+        title={title}
+        wordCount={parsedWords.length}
+        onClose={() => setShowModal(false)}
+      />
     </div>
   );
 }

@@ -1,30 +1,67 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 interface QuizReverseProps {
   vocab: { term: string; definition: string };
   allVocabs: { term: string; definition: string }[];
   onAnswer: (answer: string, isCorrect: boolean) => void;
   showResult: boolean;
+  onNext?: () => void;
 }
 
-const QuizReverse: React.FC<QuizReverseProps> = ({ vocab, allVocabs, onAnswer, showResult }) => {
+const QuizReverse: React.FC<QuizReverseProps> = ({
+  vocab,
+  allVocabs,
+  onAnswer,
+  showResult,
+  onNext,
+}) => {
   const [options, setOptions] = useState<string[]>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
-  useEffect(() => {
-    const wrongOptions = allVocabs
-      .map((v) => v.term)
-      .filter((t) => t !== vocab.term)
+  const generateWrongOptions = (correctAnswer: string, allTerms: string[]) => {
+    const wrongFromList = allTerms
+      .filter((term) => term !== correctAnswer)
       .sort(() => Math.random() - 0.5)
       .slice(0, 3);
 
-    const allOptions = [vocab.term, ...wrongOptions].sort(() => Math.random() - 0.5);
-    setOptions(allOptions);
-  }, [vocab]);
+    const defaults = [
+      "Computer",
+      "Window",
+      "Clothes",
+      "Bicycle",
+      "Phone",
+      "Furniture",
+      "Tree",
+    ];
+    const wrongOptions = [...wrongFromList];
+
+    while (wrongOptions.length < 3) {
+      const opt = defaults[Math.floor(Math.random() * defaults.length)];
+      if (!wrongOptions.includes(opt) && opt !== correctAnswer) {
+        wrongOptions.push(opt);
+      }
+    }
+
+    return wrongOptions.slice(0, 3);
+  };
+
+  useEffect(() => {
+    if (options.length === 0) {
+      const allTerms = allVocabs.map((v) => v.term);
+      const wrongOptions = generateWrongOptions(vocab.term, allTerms);
+      const shuffledOptions = [vocab.term, ...wrongOptions]
+        .map((value) => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+
+      setOptions(shuffledOptions);
+    }
+  }, [vocab, allVocabs]);
 
   const handleSelect = (answer: string) => {
     if (showResult) return;
-    const isCorrect = answer === vocab.term;
-    onAnswer(answer, isCorrect);
+    setSelectedAnswer(answer);
+    onAnswer(answer, answer === vocab.term);
   };
 
   return (
@@ -37,21 +74,48 @@ const QuizReverse: React.FC<QuizReverseProps> = ({ vocab, allVocabs, onAnswer, s
       </div>
 
       <div className="space-y-4">
-        {options.map((option, index) => (
-          <button
-            key={index}
-            onClick={() => handleSelect(option)}
-            className="w-full p-4 text-left rounded-lg border-2 border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-25 hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-medium">{option}</span>
-              <span className="text-gray-400 font-bold text-xl">
-                {String.fromCharCode(65 + index)}
-              </span>
-            </div>
-          </button>
-        ))}
+        {options.map((option, idx) => {
+          let baseClasses =
+            "w-full p-4 text-left rounded-lg border-2 transition-all duration-200";
+          let styleClasses =
+            "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-25 hover:shadow-md";
+
+          if (showResult) {
+            if (option === vocab.term) {
+              styleClasses = "border-green-400 bg-green-100 text-green-800";
+            } else if (option === selectedAnswer && option !== vocab.term) {
+              styleClasses = "border-red-400 bg-red-100 text-red-800";
+            }
+          } 
+
+          return (
+            <button
+              key={idx}
+              onClick={() => handleSelect(option)}
+              className={`${baseClasses} ${styleClasses}`}
+              disabled={showResult}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-medium">{option}</span>
+                <span className="text-gray-400 font-bold text-xl">
+                  {String.fromCharCode(65 + idx)}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
+
+      {showResult && selectedAnswer !== vocab.term && (
+        <div className="mt-6 text-center">
+          <button
+            onClick={onNext}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Tiếp theo
+          </button>
+        </div>
+      )}
     </div>
   );
 };

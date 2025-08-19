@@ -1,4 +1,4 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../service/firebase_setup"; 
@@ -13,14 +13,14 @@ interface Props {
   onEdit?: (id: string) => void;
 }
 
-export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function LessonCard({ lesson }: Props) {
+  // const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const [user] = useAuthState(auth); 
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  // const toggleMenu = () => {
+  //   setIsMenuOpen(!isMenuOpen);
+  // };
 
   const handleCardClick = async () => {
     if (user) {
@@ -40,7 +40,7 @@ export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) 
         <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
       </div>
 
-      <div className="flex items-center gap-2 justify-end relative" onClick={(e) => e.stopPropagation()}>
+      {/* <div className="flex items-center gap-2 justify-end relative" onClick={(e) => e.stopPropagation()}>
         <div className="relative">
           <button
             className="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition"
@@ -94,7 +94,7 @@ export default function LessonCard({ lesson, onDelete, onSave, onEdit }: Props) 
             </div>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

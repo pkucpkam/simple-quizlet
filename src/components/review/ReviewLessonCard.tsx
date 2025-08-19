@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { useAuthState } from "react-firebase-hooks/auth";
 import type { Lesson } from "../../types/lesson";
@@ -11,14 +10,9 @@ interface Props {
   onEdit?: (id: string) => void;
 }
 
-export default function ReviewLessonCard({ lesson, onDelete, onSave, onEdit }: Props) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function ReviewLessonCard({ lesson}: Props) {
   const navigate = useNavigate();
   const [user] = useAuthState(auth); 
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   const handleCardClick = async () => {
     if (user) {
@@ -38,61 +32,7 @@ export default function ReviewLessonCard({ lesson, onDelete, onSave, onEdit }: P
         <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
       </div>
 
-      <div className="flex items-center gap-2 justify-end relative" onClick={(e) => e.stopPropagation()}>
-        <div className="relative">
-          <button
-            className="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition"
-            onClick={toggleMenu}
-            title="Thêm tùy chọn"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              ></path>
-            </svg>
-          </button>
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg z-10">
-              <button
-                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  if (onSave) onSave(lesson.id);
-                  setIsMenuOpen(false);
-                }}
-              >
-                Lưu
-              </button>
-              <button
-                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                onClick={() => {
-                  if (onEdit) onEdit(lesson.id);
-                  setIsMenuOpen(false);
-                }}
-              >
-                Chỉnh sửa
-              </button>
-              <button
-                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                onClick={() => {
-                  onDelete(lesson.id);
-                  setIsMenuOpen(false);
-                }}
-              >
-                Xoá
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      
     </div>
   );
 }

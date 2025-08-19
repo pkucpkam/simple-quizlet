@@ -9,24 +9,39 @@ interface PracticeProps {
   vocab: PracticeCard;
   onAnswer: (answer: string, isCorrect: boolean) => void;
   showResult: boolean;
+  onNext: () => void;
 }
 
-const Practice: React.FC<PracticeProps> = ({ vocab, onAnswer, showResult }) => {
+const Practice: React.FC<PracticeProps> = ({ vocab, onAnswer, showResult, onNext }) => {
   const [userAnswer, setUserAnswer] = useState("");
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current && !showResult) {
       inputRef.current.focus();
+      setUserAnswer(""); // Đặt lại đáp án khi chuyển câu
+      setIsCorrect(null); // Đặt lại trạng thái đúng/sai
     }
-  }, [showResult]);
+  }, [vocab, showResult]);
+
+  useEffect(() => {
+    if (showResult && isCorrect) {
+      // Tự động chuyển câu sau 1 giây nếu trả lời đúng
+      const timer = setTimeout(() => {
+        onNext();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [showResult, isCorrect, onNext]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!userAnswer.trim()) return;
 
-    const isCorrect = userAnswer.trim().toLowerCase() === vocab.term.toLowerCase();
-    onAnswer(userAnswer, isCorrect);
+    const correct = userAnswer.trim().toLowerCase() === vocab.term.toLowerCase();
+    setIsCorrect(correct);
+    onAnswer(userAnswer, correct);
   };
 
   return (
@@ -52,13 +67,30 @@ const Practice: React.FC<PracticeProps> = ({ vocab, onAnswer, showResult }) => {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={!userAnswer.trim() || showResult}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors"
-        >
-          Kiểm tra (Enter)
-        </button>
+        {showResult && isCorrect !== null ? (
+          <div className="text-center">
+            <p className={`text-xl font-bold mb-4 ${isCorrect ? "text-green-600" : "text-red-600"}`}>
+              {isCorrect ? "Chính xác!" : `Sai rồi! Đáp án: ${vocab.term}`}
+            </p>
+            {!isCorrect && (
+              <button
+                type="button"
+                onClick={onNext}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Tiếp theo
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="submit"
+            disabled={!userAnswer.trim()}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            Kiểm tra (Enter)
+          </button>
+        )}
       </form>
     </div>
   );
