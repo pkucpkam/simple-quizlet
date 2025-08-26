@@ -32,7 +32,7 @@ interface MatchingGameProps {
 const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [selectedCards, setSelectedCards] = useState<MatchCard[]>([]);
-  const [isCompleted] = useState(false); 
+  const [isCompleted, setIsCompleted] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState<MatchingStats>({
@@ -45,6 +45,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
+    if (isCompleted) return;
     const createMatchCards = (vocabData: Vocab[]): MatchCard[] => {
       const cards: MatchCard[] = [];
       
@@ -89,7 +90,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   }, [vocabList]);
 
   const handleCardClick = (clickedCard: MatchCard) => {
-  if (clickedCard.isMatched || clickedCard.isSelected || isCompleted) return; // Thêm isCompleted vào điều kiện
+  if (clickedCard.isMatched || clickedCard.isSelected || isCompleted) return; 
 
   const newSelectedCards = [...selectedCards, clickedCard];
   
@@ -117,6 +118,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
 
     if (remainingCards.length === 0) {
       console.log("Game completed!");
+      setIsCompleted(true);
       onAnswer("matching", true); 
     }
 
@@ -127,7 +129,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
     ...prev, 
     matchedPairs: prev.matchedPairs + 1 
   }));
-}, 1000);
+}, 300);
 
     } else {
       setCards(prev => prev.map(card => 

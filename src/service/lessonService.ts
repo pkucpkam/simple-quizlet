@@ -125,7 +125,6 @@ export const lessonService = {
       }
       const lessonData = lessonDoc.data();
 
-      // Lấy vocab từ vocabId
       const vocab = await this.getVocabulary(lessonData.vocabId);
 
       return {

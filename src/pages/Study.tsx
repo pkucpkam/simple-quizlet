@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { auth } from "../service/firebase_setup"; // Import auth từ firebase_setup
+import { auth } from "../service/firebase_setup"; 
 import Flashcard from "../components/Flashcard";
 import { lessonService } from "../service/lessonService";
 

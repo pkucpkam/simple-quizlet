@@ -8,7 +8,6 @@ export const historyService = {
     sessionData: Pick<StudySession, "setId" | "setName" | "lessonId" | "lessonTitle" | "timeSpent" | "knowCount" | "studyMode">
   ) {
     try {
-      // Debug dữ liệu trước khi lưu
       console.log("[HistoryService] Saving data to Firestore:", {
         userId,
         setId: sessionData.setId,

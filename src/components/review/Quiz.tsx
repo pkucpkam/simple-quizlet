@@ -22,43 +22,24 @@ const Quiz: React.FC<QuizProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
   const generateWrongOptions = (correctAnswer: string, allDefs: string[]) => {
-    const wrongFromList = allDefs
-      .filter((def) => def !== correctAnswer)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
+  return allDefs
+    .filter((def) => def !== correctAnswer)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3); 
+};
 
-    const defaults = [
-      "Máy tính",
-      "Cửa sổ",
-      "Quần áo",
-      "Xe đạp",
-      "Điện thoại",
-      "Bàn ghế",
-      "Cây cối",
-    ];
-    const wrongOptions = [...wrongFromList];
-
-    while (wrongOptions.length < 3) {
-      const opt = defaults[Math.floor(Math.random() * defaults.length)];
-      if (!wrongOptions.includes(opt) && opt !== correctAnswer) {
-        wrongOptions.push(opt);
-      }
-    }
-
-    return wrongOptions.slice(0, 3);
-  };
 
   useEffect(() => {
-    if (options.length === 0) {
-      const wrongOptions = generateWrongOptions(definition, allDefinitions);
-      const shuffledOptions = [definition, ...wrongOptions]
-        .map((value) => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
+  const wrongOptions = generateWrongOptions(definition, allDefinitions);
+  const shuffledOptions = [definition, ...wrongOptions]
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
 
-      setOptions(shuffledOptions);
-    }
-  }, [term, definition, allDefinitions]);
+  setOptions(shuffledOptions);
+  setSelectedAnswer(""); 
+}, [term, definition]); 
+
 
   const handleSelect = (answer: string) => {
     if (showResult) return;

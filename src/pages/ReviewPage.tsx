@@ -133,7 +133,7 @@ const ReviewPage = () => {
           vocab={currentWord}
           onAnswer={handleAnswer}
           showResult={showResult}
-          onNext={handleNext} // truyền prop
+          onNext={handleNext} 
         />
       )}
 

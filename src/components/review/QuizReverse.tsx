@@ -18,45 +18,24 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
   const [options, setOptions] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
-  const generateWrongOptions = (correctAnswer: string, allTerms: string[]) => {
-    const wrongFromList = allTerms
-      .filter((term) => term !== correctAnswer)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
-
-    const defaults = [
-      "Computer",
-      "Window",
-      "Clothes",
-      "Bicycle",
-      "Phone",
-      "Furniture",
-      "Tree",
-    ];
-    const wrongOptions = [...wrongFromList];
-
-    while (wrongOptions.length < 3) {
-      const opt = defaults[Math.floor(Math.random() * defaults.length)];
-      if (!wrongOptions.includes(opt) && opt !== correctAnswer) {
-        wrongOptions.push(opt);
-      }
-    }
-
-    return wrongOptions.slice(0, 3);
-  };
-
   useEffect(() => {
-    if (options.length === 0) {
-      const allTerms = allVocabs.map((v) => v.term);
-      const wrongOptions = generateWrongOptions(vocab.term, allTerms);
-      const shuffledOptions = [vocab.term, ...wrongOptions]
-        .map((value) => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value);
+  const allTerms = allVocabs.map((v) => v.term);
 
-      setOptions(shuffledOptions);
-    }
-  }, [vocab, allVocabs]);
+  // Lấy tối đa 3 đáp án sai từ allTerms
+  const wrongOptions = allTerms
+    .filter((term) => term !== vocab.term)
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  const shuffledOptions = [vocab.term, ...wrongOptions]
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+
+  setOptions(shuffledOptions);
+  setSelectedAnswer(""); // reset lựa chọn cũ
+}, [vocab]); // chỉ chạy khi vocab mới
+
 
   const handleSelect = (answer: string) => {
     if (showResult) return;
