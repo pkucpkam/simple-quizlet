@@ -14,10 +14,11 @@ interface Lesson {
   createdAt: Date;
   description: string;
   wordCount: number;
+  isPrivate: boolean;
 }
 
 export const lessonService = {
-  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "") {
+  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false) {
     try {
       const vocabData = vocabList.map(({ word, definition }) => ({
         word,
@@ -36,6 +37,7 @@ export const lessonService = {
         createdAt: new Date(),
         description,
         wordCount: vocabData.length,
+        isPrivate
       });
 
       return {
@@ -51,7 +53,9 @@ export const lessonService = {
 
   async getLessons(): Promise<Lesson[]> {
     try {
-      const lessonsSnapshot = await getDocs(collection(db, "lessons"));
+      const q = query(collection(db, "lessons"), where("isPrivate", "==", false));
+      const lessonsSnapshot = await getDocs(q);
+
       const lessons: Lesson[] = lessonsSnapshot.docs.map((doc) => {
         const data = doc.data();
         return {
@@ -62,14 +66,23 @@ export const lessonService = {
           createdAt: data.createdAt.toDate(),
           description: data.description || "",
           wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
         };
-      });
+      })
+
+        // .filter(
+        //   (lesson) =>
+        //     !lesson.isPrivate || lesson.creator === currentUserEmail
+        // );
+      ;
+
       return lessons;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách bài học:", error);
       throw new Error("Không thể lấy danh sách bài học. Vui lòng thử lại.");
     }
-  },
+  }
+  ,
 
   async getVocabulary(vocabId: string): Promise<VocabItem[]> {
     try {
@@ -84,15 +97,28 @@ export const lessonService = {
     }
   },
 
-  async deleteLesson(lessonId: string, vocabId: string) {
-    try {
-      await deleteDoc(doc(db, "lessons", lessonId));
-      await deleteDoc(doc(db, "vocabularies", vocabId));
-    } catch (error) {
-      console.error("Lỗi khi xóa bài học:", error);
-      throw new Error("Không thể xóa bài học. Vui lòng thử lại.");
+  async deleteLessonById(lessonId: string) {
+  try {
+    const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
+    if (!lessonDoc.exists()) {
+      throw new Error("Không tìm thấy bài học.");
     }
-  },
+
+    const { vocabId } = lessonDoc.data();
+
+    await deleteDoc(doc(db, "lessons", lessonId));
+
+    if (vocabId) {
+      await deleteDoc(doc(db, "vocabularies", vocabId));
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Lỗi khi xóa bài học:", error);
+    throw new Error("Không thể xóa bài học.");
+  }
+},
+
 
   async getMyLessons(creator: string): Promise<Lesson[]> {
     try {
@@ -108,6 +134,7 @@ export const lessonService = {
           createdAt: data.createdAt.toDate(),
           description: data.description || "",
           wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
         };
       });
       return lessons;
@@ -169,6 +196,20 @@ export const lessonService = {
       throw new Error("Không thể cập nhật bài học. Vui lòng thử lại.");
     }
   },
+
+  // Public / Private
+  async togglePrivacyLesson(lessonId: string, isPrivate: boolean) {
+  try {
+    await updateDoc(doc(db, "lessons", lessonId), {
+      isPrivate,
+      updatedAt: new Date(),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Lỗi khi cập nhật quyền riêng tư:", error);
+    throw new Error("Không thể cập nhật trạng thái bài học.");
+  }
+},
 
 
 

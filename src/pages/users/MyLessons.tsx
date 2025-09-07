@@ -9,6 +9,7 @@ interface Lesson {
   createdAt: Date;
   description: string;
   wordCount: number;
+  isPrivate: boolean;
 }
 
 export default function MyLessons() {
@@ -51,21 +52,12 @@ export default function MyLessons() {
     fetchMyLessons();
   }, []);
 
-  const handleView = (id: string) => {
-    alert(`Xem bài học ${id}`);
-  };
-
-  const handlePractice = (id: string) => {
-    alert(`Luyện tập bài học ${id}`);
-  };
-
   const handleDelete = async (id: string) => {
     try {
       const lesson = lessons.find((l) => l.id === id);
       if (lesson) {
-        await lessonService.deleteLesson(lesson.id, lesson.vocabId);
+        await lessonService.deleteLessonById(lesson.id);
         setLessons(lessons.filter((l) => l.id !== id));
-        alert(`Đã xóa bài học ${id}`);
       }
     } catch (err) {
       setError("Không thể xóa bài học. Vui lòng thử lại.");
@@ -87,9 +79,8 @@ export default function MyLessons() {
           <LessonCard
             key={lesson.id}
             lesson={lesson}
-            onView={handleView}
-            onPractice={handlePractice}
             onDelete={handleDelete}
+            onTogglePrivacy={() => Promise.resolve()}
           />
         ))}
       </div>

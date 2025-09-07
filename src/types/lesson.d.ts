@@ -5,4 +5,5 @@ export interface Lesson {
   title: string;
   description: string;
   wordCount: number;
+  isPrivate: boolean;
 }

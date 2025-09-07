@@ -13,13 +13,15 @@ export default function CreateLesson() {
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
+
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        setUserEmail(parsed.email); 
+        setUserEmail(parsed.email);
       } catch {
         setUserEmail(null);
       }
@@ -60,9 +62,15 @@ export default function CreateLesson() {
           username = userEmail;
         }
       }
-      await lessonService.createLesson(title, username ?? "", parsedWords);
+      await lessonService.createLesson(
+        title,
+        username ?? "",
+        parsedWords,
+        "",
+        isPrivate
+      );
 
-      setShowModal(true); 
+      setShowModal(true);
       setTitle("");
       setRawVocab("");
       setParsedWords([]);
@@ -94,6 +102,18 @@ export default function CreateLesson() {
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
+      <label className="flex items-center mb-4">
+        <input
+          type="checkbox"
+          checked={isPrivate}
+          onChange={(e) => setIsPrivate(e.target.checked)}
+          className="mr-2"
+          disabled={loading}
+        />
+        <span className="font-semibold">Đặt bài học ở chế độ riêng tư</span>
+      </label>
+
+
       <label className="block mb-2 font-semibold">Tiêu đề bài học</label>
       <input
         type="text"
@@ -118,9 +138,8 @@ export default function CreateLesson() {
 
       <button
         onClick={handleCreate}
-        className={`bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded ${
-          loading ? "opacity-50 cursor-not-allowed" : ""
-        }`}
+        className={`bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         disabled={loading}
       >
         {loading ? "Đang tạo..." : "Tạo bài học"}

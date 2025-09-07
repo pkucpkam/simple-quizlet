@@ -9,10 +9,12 @@ import MyLessons from './pages/users/MyLessons';
 import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-blue-200">
+      <Toaster position="top-right" reverseOrder={false} />
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />

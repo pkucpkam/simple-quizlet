@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import LessonCard from "../components/LessonCard";
-import { lessonService } from "../service/lessonService"; 
+import { lessonService } from "../service/lessonService";
 
 interface Lesson {
   id: string;
@@ -10,6 +10,7 @@ interface Lesson {
   createdAt: Date;
   description: string;
   wordCount: number;
+  isPrivate: boolean;
 }
 
 export default function Home() {
@@ -33,17 +34,26 @@ export default function Home() {
     fetchLessons();
   }, []);
 
-  const handleView = (id: string) => {
-    alert(`Xem bài học ${id}`);
+  const handleDelete = async (id: string) => {
+    try {
+      await lessonService.deleteLessonById(id);
+      setLessons((prev) => prev.filter((l) => l.id !== id));
+    } catch (error) {
+      setError((error as Error).message);
+    }
   };
 
-  const handlePractice = (id: string) => {
-    alert(`Luyện tập bài học ${id}`);
+  const handleTogglePrivacy = async (id: string, isPrivate: boolean) => {
+    try {
+      await lessonService.togglePrivacyLesson(id, isPrivate);
+      setLessons((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, isPrivate } : l))
+      );
+    } catch (error) {
+      setError((error as Error).message);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    alert(`Xoá bài học ${id}`);
-  };
 
   return (
     <div className="p-8 flex flex-col items-center gap-6">
@@ -60,9 +70,8 @@ export default function Home() {
           <LessonCard
             key={lesson.id}
             lesson={lesson}
-            onView={handleView}
-            onPractice={handlePractice}
             onDelete={handleDelete}
+            onTogglePrivacy={handleTogglePrivacy}
           />
         ))}
       </div>
