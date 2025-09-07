@@ -10,6 +10,7 @@ interface Lesson {
   createdAt: Date;
   description: string;
   wordCount: number;
+  isPrivate: boolean;
 }
 
 export default function ReviewLessonPage() {
@@ -37,7 +38,7 @@ export default function ReviewLessonPage() {
     try {
       const lesson = lessons.find((l) => l.id === id);
       if (lesson) {
-        await lessonService.deleteLesson(lesson.id, lesson.vocabId);
+        await lessonService.deleteLessonById(lesson.id);
         setLessons(lessons.filter((l) => l.id !== id));
         alert(`Đã xóa bài ôn tập ${id}`);
       }
