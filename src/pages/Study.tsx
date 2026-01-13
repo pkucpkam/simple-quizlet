@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { auth } from "../service/firebase_setup"; 
+import { auth } from "../service/firebase_setup";
 import Flashcard from "../components/Flashcard";
 import { lessonService } from "../service/lessonService";
+import { historyService } from "../service/historyService";
 
 interface FlashcardData {
   id: string;
@@ -55,6 +56,7 @@ const Study: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hasSaved, setHasSaved] = useState(false); // Prevent duplicate saves
   const location = useLocation();
   const vocabId = location.state?.vocabId;
   const lessonId = location.state?.lessonId;
@@ -99,26 +101,34 @@ const Study: React.FC = () => {
     }
   }, [flashcards]);
 
+  // Save study session and update leaderboard when completed
   useEffect(() => {
-    if (isCompleted && flashcards.length > 0) {
-      const userId = auth.currentUser?.uid || "anonymous_user"; 
+    if (isCompleted && flashcards.length > 0 && !hasSaved) {
+      const userId = auth.currentUser?.uid;
 
-      if (!userId || userId === "anonymous_user") {
+      if (!userId) {
         console.warn("[Study] No authenticated user found, skipping save.");
         return;
       }
 
-      // historyService.saveStudySession(userId, {
-      //   setId: vocabId || "",
-      //   setName: lessonTitle || "Bài học không tên",
-      //   lessonId: lessonId || "",
-      //   lessonTitle: lessonTitle || "Bài học không tên",
-      //   timeSpent,
-      //   knowCount,
-      //   studyMode: "flashcard",
-      // });
+      const timeSpent = Math.round((Date.now() - startTime) / 1000); // seconds
+      const knowCount = flashcards.filter((card) => card.status === "know").length;
+
+      // Save to study history
+      historyService.saveStudySession(userId, {
+        setId: vocabId || "",
+        setName: lessonTitle || "Bài học không tên",
+        lessonId: lessonId || "",
+        lessonTitle: lessonTitle || "Bài học không tên",
+        timeSpent,
+        knowCount,
+        studyMode: "flashcard",
+      });
+
+      setHasSaved(true);
+      console.log("[Study] Session saved and leaderboard updated!");
     }
-  }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime]);
+  }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime, hasSaved]);
 
   const handleMarkKnow = (id: string) => {
     setFlashcards((prev) =>

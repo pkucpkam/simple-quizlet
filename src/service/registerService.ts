@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from './firebase_setup';
 
@@ -28,13 +28,16 @@ export const registerUser = async ({
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // Send verification email
+    await sendEmailVerification(user);
+
     await setDoc(doc(db, 'users', user.uid), {
       email: email,
       username: username,
       createdAt: new Date().toISOString(),
     });
 
-    return { success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác minh.' };
+    return { success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản trước khi đăng nhập.' };
   } catch (err: any) {
     switch (err.code) {
       case 'auth/email-already-in-use':

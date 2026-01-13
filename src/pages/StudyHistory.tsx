@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { StudySession, StudyStats } from '../types/history';
 import { historyService } from '../service/historyService';
+import StudyHistoryCard from '../components/StudyHistoryCard';
 
 
 const StudyHistory: React.FC = () => {
@@ -12,9 +13,12 @@ const StudyHistory: React.FC = () => {
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
+    console.log("[StudyHistory] Raw sessionStorage:", storedUser);
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
+        console.log("[StudyHistory] Parsed user:", parsed);
+        console.log("[StudyHistory] User UID:", parsed.uid);
         setUser(parsed);
       } catch {
         setUser(null);
@@ -26,10 +30,15 @@ const StudyHistory: React.FC = () => {
 
   useEffect(() => {
     const fetchHistory = async () => {
-      if (!user) return;
-      
+      if (!user) {
+        console.log("[StudyHistory] No user, skipping fetch");
+        return;
+      }
+
+      console.log("[StudyHistory] Fetching history for uid:", user.uid);
       setLoading(true);
       const history = await historyService.getUserStudyHistory(user.uid);
+      console.log("[StudyHistory] Fetched history:", history);
       setSessions(history);
       setStats(historyService.getStudyStats(history));
       setLoading(false);
@@ -38,7 +47,7 @@ const StudyHistory: React.FC = () => {
     fetchHistory();
   }, [user]);
 
-  const filteredSessions = sessions.filter(session => 
+  const filteredSessions = sessions.filter(session =>
     filter === 'all' || session.studyMode === filter
   );
 
@@ -74,7 +83,6 @@ const StudyHistory: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Lịch sử học tập</h1>
-        <p className='text-red-600 mb-4'>* Chức năng này hiện tại chưa được phát triển.</p>
 
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -109,11 +117,10 @@ const StudyHistory: React.FC = () => {
               <button
                 key={filterOption.value}
                 onClick={() => setFilter(filterOption.value as any)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  filter === filterOption.value
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === filterOption.value
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                  }`}
               >
                 {filterOption.label}
               </button>
@@ -124,9 +131,9 @@ const StudyHistory: React.FC = () => {
         {/* Study Sessions */}
         {filteredSessions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* {filteredSessions.map((session) => (
+            {filteredSessions.map((session) => (
               <StudyHistoryCard key={session.id} session={session} />
-            ))} */}
+            ))}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow p-12 text-center">

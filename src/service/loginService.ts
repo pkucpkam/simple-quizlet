@@ -8,16 +8,26 @@ interface LoginData {
 
 interface LoginResult {
   success: boolean;
-  user?: User; 
+  user?: User;
   message?: string;
 }
 
 export const loginUser = async ({ email, password }: LoginData): Promise<LoginResult> => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    if (!user.emailVerified) {
+      await auth.signOut();
+      return {
+        success: false,
+        message: 'EMAIL_NOT_VERIFIED', // Special flag for UI
+      };
+    }
+
     return {
       success: true,
-      user: userCredential.user, 
+      user: user,
       message: 'Đăng nhập thành công!',
     };
   } catch (err: any) {

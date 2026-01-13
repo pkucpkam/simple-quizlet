@@ -1,4 +1,20 @@
-import { collection, addDoc, getDocs, doc, getDoc, deleteDoc, query, where, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  getDoc,
+  deleteDoc,
+  query,
+  where,
+  updateDoc,
+  orderBy,
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
+  getCountFromServer
+} from "firebase/firestore";
+import type { DocumentData } from "firebase/firestore";
 import { db } from "./firebase_setup";
 
 interface VocabItem {
@@ -15,6 +31,13 @@ interface Lesson {
   description: string;
   wordCount: number;
   isPrivate: boolean;
+}
+
+export interface PaginatedLessonsResult {
+  lessons: Lesson[];
+  lastVisible: QueryDocumentSnapshot<DocumentData> | null;
+  hasMore: boolean;
+  total: number;
 }
 
 export const lessonService = {
@@ -51,6 +74,7 @@ export const lessonService = {
     }
   },
 
+  // Legacy method - fetch all lessons (for backward compatibility)
   async getLessons(): Promise<Lesson[]> {
     try {
       const q = query(collection(db, "lessons"), where("isPrivate", "==", false));
@@ -68,21 +92,129 @@ export const lessonService = {
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
         };
-      })
-
-        // .filter(
-        //   (lesson) =>
-        //     !lesson.isPrivate || lesson.creator === currentUserEmail
-        // );
-      ;
+      });
 
       return lessons;
     } catch (error) {
       console.error("Lỗi khi lấy danh sách bài học:", error);
       throw new Error("Không thể lấy danh sách bài học. Vui lòng thử lại.");
     }
-  }
-  ,
+  },
+
+  // NEW: Search across ALL lessons (Firestore constraint workaround)
+  async searchLessons(term: string): Promise<Lesson[]> {
+    try {
+      // Fetch all public lessons first
+      // Note: In a larger app with 10k+ items, you would use Algolia/ElasticSearch here
+      const q = query(
+        collection(db, "lessons"),
+        where("isPrivate", "==", false),
+        orderBy("createdAt", "desc")
+      );
+
+      const snapshot = await getDocs(q);
+      const allLessons = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          creator: data.creator,
+          vocabId: data.vocabId,
+          createdAt: data.createdAt.toDate(),
+          description: data.description || "",
+          wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
+        };
+      });
+
+      // Filter in memory (supports robust fuzzy search including description/creator)
+      const lowerTerm = term.toLowerCase();
+      return allLessons.filter(lesson =>
+        lesson.title.toLowerCase().includes(lowerTerm) ||
+        lesson.description.toLowerCase().includes(lowerTerm) ||
+        lesson.creator.toLowerCase().includes(lowerTerm)
+      );
+    } catch (error) {
+      console.error("Lỗi khi tìm kiếm:", error);
+      throw new Error("Không thể tìm kiếm bài học.");
+    }
+  },
+
+  // NEW: Optimized paginated lessons fetching
+  async getLessonsPaginated(
+    pageSize: number = 10,
+    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null
+  ): Promise<PaginatedLessonsResult> {
+    try {
+      // Build base query
+      let q = query(
+        collection(db, "lessons"),
+        where("isPrivate", "==", false),
+        orderBy("createdAt", "desc"), // Sort by newest first
+        limit(pageSize + 1) // Fetch one extra to check if there are more
+      );
+
+      // If continuing from previous page, add cursor
+      if (lastVisibleDoc) {
+        q = query(
+          collection(db, "lessons"),
+          where("isPrivate", "==", false),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisibleDoc),
+          limit(pageSize + 1)
+        );
+      }
+
+      const lessonsSnapshot = await getDocs(q);
+      const docs = lessonsSnapshot.docs;
+
+      // Check if there are more results
+      const hasMore = docs.length > pageSize;
+      const actualDocs = hasMore ? docs.slice(0, pageSize) : docs;
+
+      const lessons: Lesson[] = actualDocs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          creator: data.creator,
+          vocabId: data.vocabId,
+          createdAt: data.createdAt.toDate(),
+          description: data.description || "",
+          wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
+        };
+      });
+
+      // Get total count (cached by Firestore)
+      const total = await this.getTotalLessonsCount();
+
+      return {
+        lessons,
+        lastVisible: actualDocs.length > 0 ? actualDocs[actualDocs.length - 1] : null,
+        hasMore,
+        total,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách bài học phân trang:", error);
+      throw new Error("Không thể lấy danh sách bài học. Vui lòng thử lại.");
+    }
+  },
+
+  // Get total count of public lessons (for pagination info)
+  async getTotalLessonsCount(): Promise<number> {
+    try {
+      const q = query(
+        collection(db, "lessons"),
+        where("isPrivate", "==", false)
+      );
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Lỗi khi đếm số bài học:", error);
+      return 0; // Return 0 on error to prevent UI break
+    }
+  },
 
   async getVocabulary(vocabId: string): Promise<VocabItem[]> {
     try {
@@ -98,26 +230,26 @@ export const lessonService = {
   },
 
   async deleteLessonById(lessonId: string) {
-  try {
-    const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
-    if (!lessonDoc.exists()) {
-      throw new Error("Không tìm thấy bài học.");
+    try {
+      const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
+      if (!lessonDoc.exists()) {
+        throw new Error("Không tìm thấy bài học.");
+      }
+
+      const { vocabId } = lessonDoc.data();
+
+      await deleteDoc(doc(db, "lessons", lessonId));
+
+      if (vocabId) {
+        await deleteDoc(doc(db, "vocabularies", vocabId));
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi xóa bài học:", error);
+      throw new Error("Không thể xóa bài học.");
     }
-
-    const { vocabId } = lessonDoc.data();
-
-    await deleteDoc(doc(db, "lessons", lessonId));
-
-    if (vocabId) {
-      await deleteDoc(doc(db, "vocabularies", vocabId));
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Lỗi khi xóa bài học:", error);
-    throw new Error("Không thể xóa bài học.");
-  }
-},
+  },
 
 
   async getMyLessons(creator: string): Promise<Lesson[]> {
@@ -199,17 +331,17 @@ export const lessonService = {
 
   // Public / Private
   async togglePrivacyLesson(lessonId: string, isPrivate: boolean) {
-  try {
-    await updateDoc(doc(db, "lessons", lessonId), {
-      isPrivate,
-      updatedAt: new Date(),
-    });
-    return { success: true };
-  } catch (error) {
-    console.error("Lỗi khi cập nhật quyền riêng tư:", error);
-    throw new Error("Không thể cập nhật trạng thái bài học.");
-  }
-},
+    try {
+      await updateDoc(doc(db, "lessons", lessonId), {
+        isPrivate,
+        updatedAt: new Date(),
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi cập nhật quyền riêng tư:", error);
+      throw new Error("Không thể cập nhật trạng thái bài học.");
+    }
+  },
 
 
 

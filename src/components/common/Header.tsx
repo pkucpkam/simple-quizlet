@@ -21,7 +21,7 @@ const Header: React.FC = () => {
       setIsLoggedIn(userData.isLoggedIn);
       setUsername(userData.username);
       setLoading(false);
-      return; 
+      return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -56,7 +56,7 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     const result = await logoutUser();
     if (result.success) {
-      sessionStorage.removeItem('user'); 
+      sessionStorage.removeItem('user');
       setIsLoggedIn(false);
       setUsername(null);
       navigate('/login');
@@ -78,7 +78,7 @@ const Header: React.FC = () => {
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="/"> Trang chủ </Link>
               </li>
-              
+
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="my-lessons"> Bài học của tôi </Link>
               </li>
@@ -93,6 +93,9 @@ const Header: React.FC = () => {
               </li>
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="review-page"> Ôn tập </Link>
+              </li>
+              <li>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="leaderboard"> 🏆 Xếp hạng </Link>
               </li>
             </ul>
           </nav>

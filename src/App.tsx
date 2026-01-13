@@ -9,7 +9,10 @@ import MyLessons from './pages/users/MyLessons';
 import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
+import VerifyEmail from './pages/VerifyEmail';
 import { Toaster } from 'react-hot-toast';
+
+import PrivateRoute from './components/common/PrivateRoute';
 
 function App() {
   return (
@@ -17,16 +20,21 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
       <Header />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/create-lesson" element={<CreateLesson />} />
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/my-lessons" element={<MyLessons />} />
-        <Route path="/study/:lessonId" element={<Study />} />
-        <Route path="/study-history" element={<StudyHistory />} />
-        <Route path="/review-page" element={<ReviewLessonPage />} />
-        <Route path="/review/:lessonId" element={<ReviewPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
+        {/* Protected Routes - Login Required */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/create-lesson" element={<CreateLesson />} />
+          <Route path="/my-lessons" element={<MyLessons />} />
+          <Route path="/study/:lessonId" element={<Study />} />
+          <Route path="/study-history" element={<StudyHistory />} />
+          <Route path="/review-page" element={<ReviewLessonPage />} />
+          <Route path="/review/:lessonId" element={<ReviewPage />} />
+        </Route>
       </Routes>
     </div>
   );

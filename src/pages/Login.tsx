@@ -18,12 +18,17 @@ export default function Login() {
     if (result.success && result.user) {
       const userInfo = await getUserInfo(result.user);
       sessionStorage.setItem('user', JSON.stringify({
+        uid: result.user.uid, // Add uid for history feature
         username: userInfo.username,
         email: result.user.email,
         isLoggedIn: true,
       }));
       navigate('/');
     } else {
+      if (result.message === 'EMAIL_NOT_VERIFIED') {
+        navigate('/verify-email');
+        return;
+      }
       setError(result.message || 'Đã có lỗi xảy ra!');
     }
   };
