@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSpeechSynthesis } from 'react-speech-kit';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 
 interface FlashcardData {
   id: string;
