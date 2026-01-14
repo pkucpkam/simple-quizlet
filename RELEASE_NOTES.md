@@ -4,6 +4,17 @@ Bản cập nhật này tập trung vào việc hoàn thiện trải nghiệm ng
 
 ## ✨ Tính năng Mới (New Features)
 
+### 0. 🔊 Phát âm Flashcard (Text-to-Speech)
+- **Nút loa tích hợp**: Mỗi flashcard giờ đây có nút loa 🔊 ở góc trên bên phải.
+- **Hỗ trợ 2 ngôn ngữ**:
+  - Mặt trước (Thuật ngữ): Phát âm tiếng Anh với giọng chuẩn.
+  - Mặt sau (Định nghĩa): Phát âm tiếng Việt.
+- **Tốc độ tối ưu**: Phát âm ở tốc độ 0.9x để dễ nghe và hiểu hơn.
+- **Giao diện thân thiện**: 
+  - Icon loa màu xanh dương cho mặt trước.
+  - Icon loa màu xanh lá cho mặt sau.
+  - Hiệu ứng hover mượt mà.
+
 ### 1. 🔐 Hệ thống Xác thực & Bảo mật (Authentication)
 - **Login Wall**: Tất cả các tính năng chính (Học, Tạo bài, Lịch sử) giờ đây yêu cầu đăng nhập mới được truy cập.
 - **Xác thực Email**: Người dùng mới đăng ký phải xác thực email trước khi sử dụng tài khoản.

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSpeechSynthesis } from 'react-speech-kit';
 
 interface FlashcardData {
   id: string;
@@ -15,6 +16,22 @@ interface FlashcardProps {
 
 const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLearning }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const { speak } = useSpeechSynthesis();
+
+  const handleSpeak = (text: string, isFront: boolean) => {
+    const lang = isFront ? 'en' : 'vi';
+
+    const voices = window.speechSynthesis.getVoices();
+
+    const selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(lang));
+
+    speak({
+      text,
+      voice: selectedVoice,
+      rate: 0.9,
+      pitch: 1
+    });
+  };
 
   useEffect(() => {
     console.log('[Flashcard] Card changed, resetting isFlipped. Card ID:', card.id);
@@ -38,17 +55,62 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
         onClick={handleFlip}
       >
         <div
-          className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${
-            isFlipped ? '[transform:rotateY(180deg)]' : ''
-          }`}
+          className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''
+            }`}
         >
-          {/* Mặt trước (Thuật ngữ) */}
           <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] z-10">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{card.term}</h2>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSpeak(card.term, true);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors group"
+              title="Phát âm"
+              aria-label="Phát âm thuật ngữ"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 group-hover:text-blue-700"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
+                />
+              </svg>
+            </button>
           </div>
-          {/* Mặt sau (Định nghĩa) */}
           <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]">
             <p className="text-lg sm:text-xl md:text-2xl text-gray-600">{card.definition}</p>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSpeak(card.definition, false);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-green-100 hover:bg-green-200 transition-colors group"
+              title="Phát âm"
+              aria-label="Phát âm định nghĩa"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 group-hover:text-green-700"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
