@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Study from './pages/Study';
 import MyLessons from './pages/users/MyLessons';
+import FolderDetailPage from './pages/users/FolderDetailPage';
+import EditLesson from './pages/users/EditLesson';
 import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
@@ -30,6 +32,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/create-lesson" element={<CreateLesson />} />
           <Route path="/my-lessons" element={<MyLessons />} />
+          <Route path="/folder/:folderId" element={<FolderDetailPage />} />
+          <Route path="/edit/:lessonId" element={<EditLesson />} />
           <Route path="/study/:lessonId" element={<Study />} />
           <Route path="/study-history" element={<StudyHistory />} />
           <Route path="/review-page" element={<ReviewLessonPage />} />

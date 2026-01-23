@@ -41,7 +41,7 @@ export interface PaginatedLessonsResult {
 }
 
 export const lessonService = {
-  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false) {
+  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string) {
     try {
       const vocabData = vocabList.map(({ word, definition }) => ({
         word,
@@ -60,7 +60,8 @@ export const lessonService = {
         createdAt: new Date(),
         description,
         wordCount: vocabData.length,
-        isPrivate
+        isPrivate,
+        folderId: folderId || null
       });
 
       return {
@@ -252,9 +253,28 @@ export const lessonService = {
   },
 
 
-  async getMyLessons(creator: string): Promise<Lesson[]> {
+  async getMyLessons(creator: string, folderId?: string | null): Promise<Lesson[]> {
     try {
-      const q = query(collection(db, "lessons"), where("creator", "==", creator));
+      let q;
+      if (folderId === undefined) {
+        // Get all lessons
+        q = query(collection(db, "lessons"), where("creator", "==", creator));
+      } else if (folderId === null) {
+        // Get lessons without folder
+        q = query(
+          collection(db, "lessons"),
+          where("creator", "==", creator),
+          where("folderId", "==", null)
+        );
+      } else {
+        // Get lessons in specific folder
+        q = query(
+          collection(db, "lessons"),
+          where("creator", "==", creator),
+          where("folderId", "==", folderId)
+        );
+      }
+
       const lessonsSnapshot = await getDocs(q);
       const lessons: Lesson[] = lessonsSnapshot.docs.map((doc) => {
         const data = doc.data();
@@ -267,6 +287,7 @@ export const lessonService = {
           description: data.description || "",
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
+          folderId: data.folderId || null,
         };
       });
       return lessons;
@@ -343,7 +364,33 @@ export const lessonService = {
     }
   },
 
+  // Move lesson to folder
+  async moveLessonToFolder(lessonId: string, folderId: string | null) {
+    try {
+      await updateDoc(doc(db, "lessons", lessonId), {
+        folderId: folderId,
+        updatedAt: new Date(),
+      });
+      return { success: true };
+    } catch (error) {
+      console.error("Lỗi khi di chuyển bài học:", error);
+      throw new Error("Không thể di chuyển bài học.");
+    }
+  },
 
-
-
+  // Count lessons in folder
+  async countLessonsInFolder(creator: string, folderId: string): Promise<number> {
+    try {
+      const q = query(
+        collection(db, "lessons"),
+        where("creator", "==", creator),
+        where("folderId", "==", folderId)
+      );
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Lỗi khi đếm bài học trong thư mục:", error);
+      return 0;
+    }
+  },
 };

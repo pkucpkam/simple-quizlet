@@ -6,4 +6,5 @@ export interface Lesson {
   description: string;
   wordCount: number;
   isPrivate: boolean;
+  folderId?: string | null; // ID của thư mục chứa bài học (optional)
 }

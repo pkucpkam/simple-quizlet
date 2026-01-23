@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { lessonService } from "../service/lessonService";
+import { folderService } from "../service/folderService";
 import WordPreview from "../components/create/WordPreview";
 import SuccessModal from "../components/modal/SuccessModal";
+import type { Folder } from "../types/folder";
 
 export default function CreateLesson() {
   const [title, setTitle] = useState("");
@@ -14,6 +16,8 @@ export default function CreateLesson() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<Folder[]>([]);
 
 
   useEffect(() => {
@@ -22,11 +26,22 @@ export default function CreateLesson() {
       try {
         const parsed = JSON.parse(storedUser);
         setUserEmail(parsed.email);
+        // Load folders
+        loadFolders(parsed.username || parsed.email);
       } catch {
         setUserEmail(null);
       }
     }
   }, []);
+
+  const loadFolders = async (username: string) => {
+    try {
+      const fetchedFolders = await folderService.getMyFolders(username);
+      setFolders(fetchedFolders);
+    } catch (error) {
+      console.error("Error loading folders:", error);
+    }
+  };
 
   const handleRawVocabChange = (value: string) => {
     setRawVocab(value);
@@ -67,7 +82,8 @@ export default function CreateLesson() {
         username ?? "",
         parsedWords,
         "",
-        isPrivate
+        isPrivate,
+        selectedFolderId || undefined
       );
 
       setShowModal(true);
@@ -112,6 +128,26 @@ export default function CreateLesson() {
         />
         <span className="font-semibold">Đặt bài học ở chế độ riêng tư</span>
       </label>
+
+      {/* Folder Selection */}
+      {folders.length > 0 && (
+        <div className="mb-4">
+          <label className="block mb-2 font-semibold">Chọn thư mục (tùy chọn)</label>
+          <select
+            value={selectedFolderId || ""}
+            onChange={(e) => setSelectedFolderId(e.target.value || null)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            disabled={loading}
+          >
+            <option value="">Không chọn thư mục</option>
+            {folders.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.icon} {folder.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
 
       <label className="block mb-2 font-semibold">Tiêu đề bài học</label>
