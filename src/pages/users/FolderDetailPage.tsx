@@ -37,6 +37,7 @@ export default function FolderDetailPage() {
         }
 
         loadFolderData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [folderId, currentUsername]);
 
     const loadFolderData = async () => {
@@ -70,7 +71,7 @@ export default function FolderDetailPage() {
             if (folder) {
                 await folderService.updateLessonCount(folder.id, lessons.length - 1);
             }
-        } catch (err) {
+        } catch {
             toast.error("Không thể xóa bài học. Vui lòng thử lại.");
         }
     };
@@ -80,9 +81,9 @@ export default function FolderDetailPage() {
             await lessonService.togglePrivacyLesson(id, isPrivate);
             setLessons(lessons.map((l) => (l.id === id ? { ...l, isPrivate } : l)));
             toast.success("Đã cập nhật trạng thái bài học");
-        } catch (err) {
+        } catch {
             toast.error("Không thể cập nhật trạng thái bài học.");
-            throw err;
+            throw new Error("Update failed");
         }
     };
 
@@ -96,7 +97,7 @@ export default function FolderDetailPage() {
             if (folder) {
                 await folderService.updateLessonCount(folder.id, lessons.length - 1);
             }
-        } catch (err) {
+        } catch {
             toast.error("Không thể xóa bài học khỏi thư mục.");
         }
     };

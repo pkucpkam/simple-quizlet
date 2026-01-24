@@ -19,22 +19,22 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
   useEffect(() => {
-  const allTerms = allVocabs.map((v) => v.term);
+    const allTerms = allVocabs.map((v) => v.term);
 
-  // Lấy tối đa 3 đáp án sai từ allTerms
-  const wrongOptions = allTerms
-    .filter((term) => term !== vocab.term)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
+    // Lấy tối đa 3 đáp án sai từ allTerms
+    const wrongOptions = allTerms
+      .filter((term) => term !== vocab.term)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
 
-  const shuffledOptions = [vocab.term, ...wrongOptions]
-    .map((value) => ({ value, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ value }) => value);
+    const shuffledOptions = [vocab.term, ...wrongOptions]
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
 
-  setOptions(shuffledOptions);
-  setSelectedAnswer(""); // reset lựa chọn cũ
-}, [vocab]); // chỉ chạy khi vocab mới
+    setOptions(shuffledOptions);
+    setSelectedAnswer(""); // reset lựa chọn cũ
+  }, [vocab, allVocabs]); // chỉ chạy khi vocab mới
 
 
   const handleSelect = (answer: string) => {
@@ -54,7 +54,7 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
 
       <div className="space-y-4">
         {options.map((option, idx) => {
-          let baseClasses =
+          const baseClasses =
             "w-full p-4 text-left rounded-lg border-2 transition-all duration-200";
           let styleClasses =
             "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-25 hover:shadow-md";
@@ -65,7 +65,7 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
             } else if (option === selectedAnswer && option !== vocab.term) {
               styleClasses = "border-red-400 bg-red-100 text-red-800";
             }
-          } 
+          }
 
           return (
             <button

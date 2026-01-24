@@ -38,8 +38,9 @@ export const registerUser = async ({
     });
 
     return { success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email của bạn để xác thực tài khoản trước khi đăng nhập.' };
-  } catch (err: any) {
-    switch (err.code) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message: string };
+    switch (error.code) {
       case 'auth/email-already-in-use':
         return { success: false, message: 'Email đã được sử dụng!' };
       case 'auth/invalid-email':
@@ -47,7 +48,7 @@ export const registerUser = async ({
       case 'auth/weak-password':
         return { success: false, message: 'Mật khẩu quá yếu! Vui lòng sử dụng mật khẩu mạnh hơn.' };
       default:
-        return { success: false, message: 'Đã có lỗi xảy ra: ' + err.message };
+        return { success: false, message: 'Đã có lỗi xảy ra: ' + error.message };
     }
   }
 };

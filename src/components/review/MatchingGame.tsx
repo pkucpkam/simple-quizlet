@@ -87,7 +87,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
     } finally {
       setLoading(false);
     }
-  }, [vocabList]);
+  }, [vocabList, isCompleted]);
 
   const handleCardClick = (clickedCard: MatchCard) => {
     if (clickedCard.isMatched || clickedCard.isSelected || isCompleted) return;

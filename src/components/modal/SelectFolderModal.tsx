@@ -16,22 +16,22 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
     const [selectedFolderId, setSelectedFolderId] = useState<string | null>(currentFolderId || null);
 
     useEffect(() => {
+        const loadFolders = async () => {
+            try {
+                setLoading(true);
+                const fetchedFolders = await folderService.getMyFolders(username);
+                setFolders(fetchedFolders);
+            } catch (error) {
+                console.error("Error loading folders:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (isOpen) {
             loadFolders();
         }
     }, [isOpen, username]);
-
-    const loadFolders = async () => {
-        try {
-            setLoading(true);
-            const fetchedFolders = await folderService.getMyFolders(username);
-            setFolders(fetchedFolders);
-        } catch (error) {
-            console.error("Error loading folders:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleSubmit = () => {
         onSelect(selectedFolderId);
@@ -62,8 +62,8 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                             <div
                                 onClick={() => setSelectedFolderId(null)}
                                 className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedFolderId === null
-                                        ? "border-blue-500 bg-blue-50"
-                                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                    ? "border-blue-500 bg-blue-50"
+                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
@@ -84,8 +84,8 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                     key={folder.id}
                                     onClick={() => setSelectedFolderId(folder.id)}
                                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedFolderId === folder.id
-                                            ? "border-blue-500 bg-blue-50"
-                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                        ? "border-blue-500 bg-blue-50"
+                                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                                         }`}
                                     style={{
                                         borderLeftWidth: "4px",

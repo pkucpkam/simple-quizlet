@@ -4,12 +4,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../service/firebase_setup';
 import { logoutUser } from '../../service/authService';
 import { getUserInfo } from '../../service/userService';
+import { srsService } from '../../service/srsService';
 
 const Header: React.FC = () => {
   console.log('[Header] Rendering Header component');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [dueCount, setDueCount] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,6 +55,27 @@ const Header: React.FC = () => {
     };
   }, []);
 
+  const loadDueCount = async () => {
+    if (!username) return;
+    try {
+      const stats = await srsService.getUserStats(username);
+      setDueCount(stats.dueToday);
+    } catch (error) {
+      console.error('[Header] Error loading due count:', error);
+    }
+  };
+
+  // Load due cards count
+  useEffect(() => {
+    if (isLoggedIn && username) {
+      loadDueCount();
+      // Refresh every 5 minutes
+      const interval = setInterval(loadDueCount, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, username]);
+
   const handleLogout = async () => {
     const result = await logoutUser();
     if (result.success) {
@@ -80,10 +103,21 @@ const Header: React.FC = () => {
               </li>
 
               <li>
-                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="my-lessons"> Bài học của tôi </Link>
+                <Link
+                  className="relative text-black text-base font-medium transition hover:text-blue-700"
+                  to="/dashboard"
+                >
+                  📊 Dashboard
+                  {dueCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                      {dueCount > 99 ? '99+' : dueCount}
+                    </span>
+                  )}
+                </Link>
               </li>
+
               <li>
-                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="#"> Bài học đã lưu </Link>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="my-lessons"> Bài học của tôi </Link>
               </li>
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="create-lesson"> Tạo bài học </Link>
@@ -93,9 +127,6 @@ const Header: React.FC = () => {
               </li>
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="review-page"> Ôn tập </Link>
-              </li>
-              <li>
-                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="leaderboard"> 🏆 Xếp hạng </Link>
               </li>
             </ul>
           </nav>

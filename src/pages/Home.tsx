@@ -93,7 +93,7 @@ export default function Home() {
             });
           }
         }
-      } catch (err) {
+      } catch {
         setError("Không thể tải danh sách bài học. Vui lòng thử lại.");
       } finally {
         setLoading(false);
@@ -110,7 +110,7 @@ export default function Home() {
       setLessons((prev) => prev.filter((l) => l.id !== id));
       setTotalItems((prev) => prev - 1);
       toast.success("Bài học đã được xóa thành công");
-    } catch (error) {
+    } catch {
       toast.error("Không thể xóa bài học. Vui lòng thử lại.");
     }
   };
@@ -122,7 +122,7 @@ export default function Home() {
         prev.map((l) => (l.id === id ? { ...l, isPrivate } : l))
       );
       toast.success(`Bài học đã được chuyển sang ${isPrivate ? "riêng tư" : "công khai"}`);
-    } catch (error) {
+    } catch {
       toast.error("Không thể cập nhật trạng thái bài học.");
     }
   };
@@ -142,24 +142,29 @@ export default function Home() {
     // BUT we keep it for immediate feedback or sorting logic.
     // Actually, we should just Sort here. Filtering is handled by fetchLessons.
 
-    let filtered = [...lessons]; // Copy array
+    const filtered = [...lessons]; // Copy array
 
     filtered.sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      const aVal = a[sortField];
+      const bVal = b[sortField];
 
       if (sortField === "createdAt") {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
+        const timeA = new Date(aVal as Date).getTime();
+        const timeB = new Date(bVal as Date).getTime();
+        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
       }
 
-      if (typeof aValue === "string") {
+      if (typeof aVal === "string" && typeof bVal === "string") {
         return sortOrder === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
       }
 
-      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      return 0;
     });
 
     return filtered;
@@ -451,8 +456,8 @@ export default function Home() {
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum as number)}
                           className={`px-3 py-1 rounded border transition-colors ${currentPage === pageNum
-                              ? 'bg-blue-600 text-white border-blue-600'
-                              : 'border-gray-300 hover:bg-gray-100'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'border-gray-300 hover:bg-gray-100'
                             }`}
                         >
                           {pageNum}

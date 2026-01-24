@@ -30,8 +30,9 @@ export const loginUser = async ({ email, password }: LoginData): Promise<LoginRe
       user: user,
       message: 'Đăng nhập thành công!',
     };
-  } catch (err: any) {
-    switch (err.code) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message: string };
+    switch (error.code) {
       case 'auth/user-not-found':
       case 'auth/wrong-password':
         return { success: false, message: 'Email hoặc mật khẩu không đúng!' };
@@ -40,7 +41,7 @@ export const loginUser = async ({ email, password }: LoginData): Promise<LoginRe
       case 'auth/too-many-requests':
         return { success: false, message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau!' };
       default:
-        return { success: false, message: 'Đã có lỗi xảy ra: ' + err.message };
+        return { success: false, message: 'Đã có lỗi xảy ra: ' + error.message };
     }
   }
 };

@@ -12,6 +12,8 @@ import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
 import VerifyEmail from './pages/VerifyEmail';
+import DashboardPage from './pages/DashboardPage';
+import SRSReviewPage from './pages/SRSReviewPage';
 import { Toaster } from 'react-hot-toast';
 
 import PrivateRoute from './components/common/PrivateRoute';
@@ -30,6 +32,8 @@ function App() {
         {/* Protected Routes - Login Required */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/srs-review" element={<SRSReviewPage />} />
           <Route path="/create-lesson" element={<CreateLesson />} />
           <Route path="/my-lessons" element={<MyLessons />} />
           <Route path="/folder/:folderId" element={<FolderDetailPage />} />

@@ -22,23 +22,23 @@ const Quiz: React.FC<QuizProps> = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
   const generateWrongOptions = (correctAnswer: string, allDefs: string[]) => {
-  return allDefs
-    .filter((def) => def !== correctAnswer)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3); 
-};
+    return allDefs
+      .filter((def) => def !== correctAnswer)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+  };
 
 
   useEffect(() => {
-  const wrongOptions = generateWrongOptions(definition, allDefinitions);
-  const shuffledOptions = [definition, ...wrongOptions]
-    .map((value) => ({ value, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ value }) => value);
+    const wrongOptions = generateWrongOptions(definition, allDefinitions);
+    const shuffledOptions = [definition, ...wrongOptions]
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
 
-  setOptions(shuffledOptions);
-  setSelectedAnswer(""); 
-}, [term, definition]); 
+    setOptions(shuffledOptions);
+    setSelectedAnswer("");
+  }, [term, definition, allDefinitions]);
 
 
   const handleSelect = (answer: string) => {
@@ -58,7 +58,7 @@ const Quiz: React.FC<QuizProps> = ({
 
       <div className="space-y-4">
         {options.map((option, idx) => {
-          let baseClasses =
+          const baseClasses =
             "w-full p-4 text-left rounded-lg border-2 transition-all duration-200";
           let styleClasses =
             "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-25 hover:shadow-md";
@@ -88,7 +88,7 @@ const Quiz: React.FC<QuizProps> = ({
             </button>
           );
         })}
-      </div>  
+      </div>
       {showResult && selectedAnswer !== definition && (
         <div className="mt-6 text-center">
           <button

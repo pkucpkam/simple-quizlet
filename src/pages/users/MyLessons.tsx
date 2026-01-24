@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import LessonCard from "../../components/LessonCard";
 import FolderCard from "../../components/FolderCard";
@@ -41,16 +41,7 @@ export default function MyLessons() {
   const storedUser = sessionStorage.getItem("user");
   const username = storedUser ? JSON.parse(storedUser).username : null;
 
-  useEffect(() => {
-    if (username) {
-      fetchData();
-    } else {
-      setError("Vui lòng đăng nhập để xem bài học của bạn.");
-      setLoading(false);
-    }
-  }, [username]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [fetchedLessons, fetchedFolders] = await Promise.all([
@@ -59,19 +50,28 @@ export default function MyLessons() {
       ]);
       setLessons(fetchedLessons);
       setFolders(fetchedFolders);
-    } catch (err) {
+    } catch {
       setError("Không thể tải dữ liệu. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
+
+  useEffect(() => {
+    if (username) {
+      fetchData();
+    } else {
+      setError("Vui lòng đăng nhập để xem bài học của bạn.");
+      setLoading(false);
+    }
+  }, [username, fetchData]);
 
   const handleCreateFolder = async (data: CreateFolderData) => {
     try {
       await folderService.createFolder(username, data);
       toast.success("Đã tạo thư mục mới!");
       fetchData(); // Reload data
-    } catch (err) {
+    } catch {
       toast.error("Không thể tạo thư mục.");
     }
   };
@@ -88,7 +88,7 @@ export default function MyLessons() {
       await folderService.deleteFolder(folderId);
       setFolders(folders.filter((f) => f.id !== folderId));
       toast.success("Đã xóa thư mục!");
-    } catch (err) {
+    } catch {
       toast.error("Không thể xóa thư mục.");
     }
   };
@@ -98,7 +98,7 @@ export default function MyLessons() {
       await lessonService.deleteLessonById(id);
       setLessons(lessons.filter((l) => l.id !== id));
       toast.success("Đã xóa bài học!");
-    } catch (err) {
+    } catch {
       toast.error("Không thể xóa bài học.");
     }
   };
@@ -107,9 +107,9 @@ export default function MyLessons() {
     try {
       await lessonService.togglePrivacyLesson(id, isPrivate);
       setLessons(lessons.map((l) => (l.id === id ? { ...l, isPrivate } : l)));
-    } catch (err) {
+    } catch {
       toast.error("Không thể cập nhật trạng thái bài học.");
-      throw err;
+      throw new Error("Update failed");
     }
   };
 
@@ -123,7 +123,7 @@ export default function MyLessons() {
       );
       toast.success(folderId ? "Đã thêm vào thư mục!" : "Đã xóa khỏi thư mục!");
       setSelectedLessonId(null);
-    } catch (err) {
+    } catch {
       toast.error("Không thể di chuyển bài học.");
     }
   };
@@ -165,8 +165,8 @@ export default function MyLessons() {
         <button
           onClick={() => setViewMode("all")}
           className={`px-4 py-2 font-medium transition ${viewMode === "all"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 hover:text-gray-800"
+            ? "text-blue-600 border-b-2 border-blue-600"
+            : "text-gray-600 hover:text-gray-800"
             }`}
         >
           Tất cả
@@ -174,8 +174,8 @@ export default function MyLessons() {
         <button
           onClick={() => setViewMode("folders")}
           className={`px-4 py-2 font-medium transition ${viewMode === "folders"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 hover:text-gray-800"
+            ? "text-blue-600 border-b-2 border-blue-600"
+            : "text-gray-600 hover:text-gray-800"
             }`}
         >
           Thư mục ({folders.length})
@@ -183,8 +183,8 @@ export default function MyLessons() {
         <button
           onClick={() => setViewMode("lessons")}
           className={`px-4 py-2 font-medium transition ${viewMode === "lessons"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-600 hover:text-gray-800"
+            ? "text-blue-600 border-b-2 border-blue-600"
+            : "text-gray-600 hover:text-gray-800"
             }`}
         >
           Bài học riêng lẻ ({lessonsWithoutFolder.length})

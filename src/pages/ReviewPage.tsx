@@ -7,6 +7,9 @@ import MatchingGame from "../components/review/MatchingGame";
 import { lessonService } from "../service/lessonService";
 import ReviewResult from "../components/review/ReviewResult";
 
+const quizTypes = ["normal", "reverse", "practice", "matching"] as const;
+type QuizType = (typeof quizTypes)[number];
+
 const ReviewPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
 
@@ -20,8 +23,6 @@ const ReviewPage = () => {
   const [, setIsCorrect] = useState<boolean | null>(null);
 
 
-  const quizTypes = ["normal", "reverse", "practice", "matching"] as const;
-  type QuizType = (typeof quizTypes)[number];
   const [quizType, setQuizType] = useState<QuizType>("normal");
 
   const WORDS_PER_SESSION = 5;
@@ -31,7 +32,7 @@ const ReviewPage = () => {
       try {
         if (!lessonId) return;
         const lesson = await lessonService.getLesson(lessonId);
-        const vocabData = lesson.vocabulary.map((item: any) => ({
+        const vocabData = lesson.vocabulary.map((item: { word: string; definition: string }) => ({
           term: item.word,
           definition: item.definition,
         }));
@@ -70,12 +71,12 @@ const ReviewPage = () => {
   };
 
   const handleRestart = () => {
-    setVocabList(fullVocabList); 
+    setVocabList(fullVocabList);
     setCurrentIndex(0);
     setCorrectAnswers(0);
     setShowResult(false);
     setIsCorrect(null);
-    setSessionCount(0); 
+    setSessionCount(0);
     setQuizType(quizTypes[Math.floor(Math.random() * quizTypes.length)]);
   };
 
@@ -133,7 +134,7 @@ const ReviewPage = () => {
           vocab={currentWord}
           onAnswer={handleAnswer}
           showResult={showResult}
-          onNext={handleNext} 
+          onNext={handleNext}
         />
       )}
 

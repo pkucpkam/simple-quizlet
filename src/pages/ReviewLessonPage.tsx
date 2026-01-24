@@ -86,7 +86,7 @@ export default function ReviewLessonPage() {
             });
           }
         }
-      } catch (err) {
+      } catch {
         setError("Không thể tải danh sách bài ôn tập. Vui lòng thử lại.");
       } finally {
         setLoading(false);
@@ -103,7 +103,7 @@ export default function ReviewLessonPage() {
       setLessons((prev) => prev.filter((l) => l.id !== id));
       setTotalItems((prev) => prev - 1);
       toast.success("Bài học đã được xóa thành công");
-    } catch (error) {
+    } catch {
       toast.error("Không thể xóa bài học. Vui lòng thử lại.");
     }
   };
@@ -115,7 +115,7 @@ export default function ReviewLessonPage() {
         prev.map((l) => (l.id === id ? { ...l, isPrivate } : l))
       );
       toast.success(`Bài học đã được chuyển sang ${isPrivate ? "riêng tư" : "công khai"}`);
-    } catch (error) {
+    } catch {
       toast.error("Không thể cập nhật trạng thái bài học.");
     }
   };
@@ -130,23 +130,28 @@ export default function ReviewLessonPage() {
   };
 
   const filteredAndSortedLessons = useMemo(() => {
-    let filtered = [...lessons];
+    const filtered = [...lessons];
     filtered.sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      const aVal = a[sortField];
+      const bVal = b[sortField];
 
       if (sortField === "createdAt") {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
+        const timeA = new Date(aVal as Date).getTime();
+        const timeB = new Date(bVal as Date).getTime();
+        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
       }
 
-      if (typeof aValue === "string") {
+      if (typeof aVal === "string" && typeof bVal === "string") {
         return sortOrder === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
       }
 
-      return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      return 0;
     });
     return filtered;
   }, [lessons, sortField, sortOrder]);

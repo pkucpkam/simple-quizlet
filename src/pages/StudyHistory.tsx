@@ -116,7 +116,7 @@ const StudyHistory: React.FC = () => {
             ].map((filterOption) => (
               <button
                 key={filterOption.value}
-                onClick={() => setFilter(filterOption.value as any)}
+                onClick={() => setFilter(filterOption.value as 'all' | 'flashcard' | 'quiz' | 'test')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === filterOption.value
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 bg-gray-100 hover:bg-gray-200'

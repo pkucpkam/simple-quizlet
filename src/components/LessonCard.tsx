@@ -113,7 +113,7 @@ export default function LessonCard({ lesson, onDelete, onTogglePrivacy, onEdit }
           try {
             await onDelete(lesson.id);
             toast.success(`Đã xoá bài học "${lesson.title}"`);
-          } catch (error) {
+          } catch {
             toast.error("Không thể xoá bài học. Vui lòng thử lại.");
           }
           setConfirmType(null);
@@ -129,7 +129,7 @@ export default function LessonCard({ lesson, onDelete, onTogglePrivacy, onEdit }
           try {
             await onTogglePrivacy(lesson.id, !lesson.isPrivate);
             toast.success(`Bài học "${lesson.title}" đã được ${lesson.isPrivate ? "chuyển công khai" : "chuyển riêng tư"}`);
-          } catch (error) {
+          } catch {
             toast.error("Không thể cập nhật trạng thái bài học.");
           }
           setConfirmType(null);
