@@ -11,6 +11,8 @@ import EditLesson from './pages/users/EditLesson';
 import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
+import TestLessonPage from './pages/TestLessonPage';
+import TestPage from './pages/TestPage';
 import VerifyEmail from './pages/VerifyEmail';
 import DashboardPage from './pages/DashboardPage';
 import SRSReviewPage from './pages/SRSReviewPage';
@@ -42,6 +44,8 @@ function App() {
           <Route path="/study-history" element={<StudyHistory />} />
           <Route path="/review-page" element={<ReviewLessonPage />} />
           <Route path="/review/:lessonId" element={<ReviewPage />} />
+          <Route path="/test-page" element={<TestLessonPage />} />
+          <Route path="/test/:lessonId" element={<TestPage />} />
         </Route>
       </Routes>
     </div>

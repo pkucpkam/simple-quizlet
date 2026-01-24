@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { folderService } from "../../service/folderService";
 import { lessonService } from "../../service/lessonService";
@@ -18,6 +18,8 @@ interface Lesson {
     folderId?: string | null;
 }
 
+type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc";
+
 export default function FolderDetailPage() {
     const { folderId } = useParams<{ folderId: string }>();
     const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function FolderDetailPage() {
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [sortOption, setSortOption] = useState<SortOption>("date-desc");
 
     const storedUser = sessionStorage.getItem("user");
     const currentUsername = storedUser ? JSON.parse(storedUser).username : null;
@@ -102,6 +105,22 @@ export default function FolderDetailPage() {
         }
     };
 
+    const sortedLessons = useMemo(() => {
+        const sorted = [...lessons];
+        switch (sortOption) {
+            case "date-desc":
+                return sorted.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            case "date-asc":
+                return sorted.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+            case "name-asc":
+                return sorted.sort((a, b) => a.title.localeCompare(b.title));
+            case "name-desc":
+                return sorted.sort((a, b) => b.title.localeCompare(a.title));
+            default:
+                return sorted;
+        }
+    }, [lessons, sortOption]);
+
     if (loading) {
         return (
             <div className="p-8 flex justify-center items-center">
@@ -153,6 +172,33 @@ export default function FolderDetailPage() {
                 </div>
             </div>
 
+            {/* Sort Controls */}
+            {lessons.length > 0 && (
+                <div className="flex justify-end items-center gap-3">
+                    <label htmlFor="sort-select" className="text-gray-600 font-medium text-sm">
+                        Sắp xếp theo:
+                    </label>
+                    <div className="relative">
+                        <select
+                            id="sort-select"
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value as SortOption)}
+                            className="appearance-none pl-4 pr-10 py-2 bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm cursor-pointer hover:border-gray-300 transition-colors"
+                        >
+                            <option value="date-desc">Mới nhất</option>
+                            <option value="date-asc">Cũ nhất</option>
+                            <option value="name-asc">Tên (A-Z)</option>
+                            <option value="name-desc">Tên (Z-A)</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Lessons */}
             <div className="flex flex-col gap-6">
                 {lessons.length === 0 ? (
@@ -166,7 +212,7 @@ export default function FolderDetailPage() {
                         </button>
                     </div>
                 ) : (
-                    lessons.map((lesson) => (
+                    sortedLessons.map((lesson) => (
                         <div key={lesson.id} className="relative">
                             <LessonCard
                                 lesson={lesson}
