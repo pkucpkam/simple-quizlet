@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, addDoc, serverTimestamp, setDoc, doc, increment, getDoc } from "firebase/firestore";
 import { db } from "./firebase_setup";
 import type { StudySession, StudyStats } from "../types/history";
 
@@ -19,6 +19,16 @@ export const historyService = {
         studyMode: sessionData.studyMode || "flashcard",
         studyTime: serverTimestamp(),
       });
+
+      // Update daily aggregate heatmap log
+      const today = new Date();
+      // Format to YYYY-MM-DD local time
+      const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const dailyRef = doc(db, `history/${userId}/aggregate`, "dailyLog");
+      await setDoc(dailyRef, {
+        [dateString]: increment(1)
+      }, { merge: true }).catch(err => console.error("Error updating daily log:", err));
+
       return docRef.id;
     } catch (error) {
       console.error("[History] Error saving study session:", error);
@@ -48,6 +58,20 @@ export const historyService = {
     } catch (error) {
       console.error("[History] Error fetching user history:", error);
       return [];
+    }
+  },
+
+  async getUserDailyActivity(userId: string): Promise<Record<string, number>> {
+    try {
+      const dailyRef = doc(db, `history/${userId}/aggregate`, "dailyLog");
+      const docSnap = await getDoc(dailyRef);
+      if (docSnap.exists()) {
+        return docSnap.data() as Record<string, number>;
+      }
+      return {};
+    } catch (error) {
+      console.error("[History] Error fetching daily activity:", error);
+      return {};
     }
   },
 

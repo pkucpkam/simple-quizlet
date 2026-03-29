@@ -31,6 +31,7 @@ const Header: React.FC = () => {
         sessionStorage.setItem(
           'user',
           JSON.stringify({
+            uid: user.uid,
             username: userInfo.username,
             email: user.email,
             isLoggedIn: true,

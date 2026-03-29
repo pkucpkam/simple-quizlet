@@ -4,6 +4,7 @@ import { lessonService, type PaginatedLessonsResult } from "../service/lessonSer
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/common/ConfirmModal";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import ActivityHeatmap from "../components/common/ActivityHeatmap";
 
 interface Lesson {
   id: string;
@@ -42,7 +43,9 @@ export default function Home() {
   const navigate = useNavigate();
 
   const storedUser = sessionStorage.getItem("user");
-  const currentUsername = storedUser ? JSON.parse(storedUser).username : null;
+  const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+  const currentUsername = parsedUser ? parsedUser.username : null;
+  const currentUserId = parsedUser ? parsedUser.uid : null;
 
   // Debounce effect
   useEffect(() => {
@@ -234,6 +237,10 @@ export default function Home() {
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {currentUserId && (
+        <ActivityHeatmap userId={currentUserId} />
+      )}
+      
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-blue-700 mb-4">Danh sách bài học</h1>
 
