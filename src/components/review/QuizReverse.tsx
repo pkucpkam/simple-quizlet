@@ -34,7 +34,8 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
 
     setOptions(shuffledOptions);
     setSelectedAnswer(""); // reset lựa chọn cũ
-  }, [vocab, allVocabs]); // chỉ chạy khi vocab mới
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vocab.term]); // chỉ chạy khi vocab.term thay đổi
 
 
   const handleSelect = (answer: string) => {

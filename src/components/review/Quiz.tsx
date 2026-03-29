@@ -38,7 +38,8 @@ const Quiz: React.FC<QuizProps> = ({
 
     setOptions(shuffledOptions);
     setSelectedAnswer("");
-  }, [term, definition, allDefinitions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [term]);
 
 
   const handleSelect = (answer: string) => {
