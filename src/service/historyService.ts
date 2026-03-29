@@ -8,18 +8,6 @@ export const historyService = {
     sessionData: Pick<StudySession, "setId" | "setName" | "lessonId" | "lessonTitle" | "timeSpent" | "knowCount" | "studyMode">
   ) {
     try {
-      console.log("[HistoryService] Saving data to Firestore:", {
-        userId,
-        setId: sessionData.setId,
-        setName: sessionData.setName,
-        lessonId: sessionData.lessonId,
-        lessonTitle: sessionData.lessonTitle,
-        timeSpent: sessionData.timeSpent,
-        knowCount: sessionData.knowCount,
-        studyMode: sessionData.studyMode,
-        studyTime: serverTimestamp(),
-      });
-
       const ref = collection(db, `history/${userId}/sessions`);
       const docRef = await addDoc(ref, {
         setId: sessionData.setId || "",
@@ -31,7 +19,6 @@ export const historyService = {
         studyMode: sessionData.studyMode || "flashcard",
         studyTime: serverTimestamp(),
       });
-      console.log("[History] Saved new study session:", docRef.id);
       return docRef.id;
     } catch (error) {
       console.error("[History] Error saving study session:", error);
@@ -57,7 +44,6 @@ export const historyService = {
         knowCount: doc.data().knowCount || 0,
         studyMode: doc.data().studyMode || "flashcard",
       }));
-      console.log("[History] Fetched sessions:", sessions);
       return sessions;
     } catch (error) {
       console.error("[History] Error fetching user history:", error);
@@ -70,24 +56,49 @@ export const historyService = {
       return {
         totalSessions: 0,
         totalTimeSpent: 0,
-        favoriteMode: "",
+        popularMode: "",
         totalSetsStudied: 0,
+        flashcardStats: { sessions: 0, timeSpent: 0 },
+        reviewStats: { sessions: 0, timeSpent: 0 },
+        testStats: { sessions: 0, timeSpent: 0 },
       };
     }
 
     const totalTimeSpent = sessions.reduce((sum, s) => sum + (s.timeSpent || 0), 0);
     const uniqueSets = new Set(sessions.map((s) => s.setId)).size;
+
     const modes = sessions.reduce((acc, s) => {
       acc[s.studyMode] = (acc[s.studyMode] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    const favoriteMode = Object.keys(modes).reduce((a, b) => (modes[a] > modes[b] ? a : b), "");
+    const popularMode = Object.keys(modes).reduce((a, b) => (modes[a] > modes[b] ? a : b), "");
+
+    const flashcardStats = { sessions: 0, timeSpent: 0 };
+    const reviewStats = { sessions: 0, timeSpent: 0 };
+    const testStats = { sessions: 0, timeSpent: 0 };
+
+    sessions.forEach(session => {
+      const time = session.timeSpent || 0;
+      if (session.studyMode === "flashcard") {
+        flashcardStats.sessions++;
+        flashcardStats.timeSpent += time;
+      } else if (session.studyMode === "quiz" || session.studyMode === "review" || session.studyMode === "srs_review") {
+        reviewStats.sessions++;
+        reviewStats.timeSpent += time;
+      } else if (session.studyMode === "test") {
+        testStats.sessions++;
+        testStats.timeSpent += time;
+      }
+    });
 
     return {
       totalSessions: sessions.length,
       totalTimeSpent,
-      favoriteMode,
+      popularMode,
       totalSetsStudied: uniqueSets,
+      flashcardStats,
+      reviewStats,
+      testStats,
     };
   },
 };

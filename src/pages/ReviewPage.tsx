@@ -6,6 +6,8 @@ import Practice from "../components/review/Practice";
 import MatchingGame from "../components/review/MatchingGame";
 import { lessonService } from "../service/lessonService";
 import ReviewResult from "../components/review/ReviewResult";
+import { historyService } from "../service/historyService";
+import { auth } from "../service/firebase_setup";
 
 const quizTypes = ["normal", "reverse", "practice", "matching"] as const;
 type QuizType = (typeof quizTypes)[number];
@@ -21,6 +23,9 @@ const ReviewPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [, setSessionCount] = useState(0);
   const [, setIsCorrect] = useState<boolean | null>(null);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [hasSaved, setHasSaved] = useState(false);
+  const [lessonTitle, setLessonTitle] = useState("");
 
 
   const [quizType, setQuizType] = useState<QuizType>("normal");
@@ -32,6 +37,7 @@ const ReviewPage = () => {
       try {
         if (!lessonId) return;
         const lesson = await lessonService.getLesson(lessonId);
+        setLessonTitle(lesson.title);
         const vocabData = lesson.vocabulary.map((item: { word: string; definition: string }) => ({
           term: item.word,
           definition: item.definition,
@@ -48,6 +54,25 @@ const ReviewPage = () => {
     };
     fetchLesson();
   }, [lessonId]);
+
+  useEffect(() => {
+    if (currentIndex >= vocabList.length && vocabList.length > 0 && !hasSaved) {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+
+      const timeSpent = Math.round((Date.now() - startTime) / 1000);
+      historyService.saveStudySession(userId, {
+        setId: lessonId || "",
+        setName: lessonTitle || "Bài học không tên",
+        lessonId: lessonId || "",
+        lessonTitle: lessonTitle || "Bài học không tên",
+        timeSpent,
+        knowCount: correctAnswers,
+        studyMode: "review",
+      });
+      setHasSaved(true);
+    }
+  }, [currentIndex, vocabList.length, hasSaved, lessonId, lessonTitle, startTime, correctAnswers]);
 
   const handleNext = () => {
     setCurrentIndex((prev) => prev + 1);
@@ -77,6 +102,8 @@ const ReviewPage = () => {
     setShowResult(false);
     setIsCorrect(null);
     setSessionCount(0);
+    setHasSaved(false);
+    setStartTime(Date.now());
     setQuizType(quizTypes[Math.floor(Math.random() * quizTypes.length)]);
   };
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { lessonService, type PaginatedLessonsResult } from "../service/lessonService";
 import toast from "react-hot-toast";
@@ -347,7 +347,11 @@ export default function Home() {
                               className="cursor-pointer"
                               onClick={() =>
                                 navigate(`/study/${lesson.id}`, {
-                                  state: { vocabId: lesson.vocabId },
+                                  state: {
+                                    vocabId: lesson.vocabId,
+                                    lessonId: lesson.id,
+                                    lessonTitle: lesson.title
+                                  },
                                 })
                               }
                             >

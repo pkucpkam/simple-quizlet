@@ -114,10 +114,8 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
             );
 
             const remainingCards = newCards.filter(card => !card.isMatched);
-            console.log("Remaining cards:", remainingCards.length);
 
             if (remainingCards.length === 0) {
-              console.log("Game completed!");
               setIsCompleted(true);
               onAnswer("matching", true);
             }

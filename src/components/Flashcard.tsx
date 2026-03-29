@@ -34,19 +34,15 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
   };
 
   useEffect(() => {
-    console.log('[Flashcard] Card changed, resetting isFlipped. Card ID:', card.id);
     setIsFlipped(false);
   }, [card.id]);
 
   const handleFlip = (event: React.MouseEvent) => {
     event.stopPropagation();
-    setIsFlipped((prev) => {
-      console.log('[Flashcard] Toggling isFlipped from', prev, 'to', !prev, 'for card:', card.id);
-      return !prev;
-    });
+    setIsFlipped((prev) => !prev);
   };
 
-  console.log('[Flashcard] Rendering card:', card, 'isFlipped:', isFlipped);
+
 
   return (
     <div className="flex flex-col items-center">
@@ -118,7 +114,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
         <button
           onClick={(e) => {
             e.stopPropagation();
-            console.log('[Flashcard] Marking still_learning for card:', card.id);
             onMarkStillLearning(card.id);
           }}
           className="px-4 py-2 sm:px-5 sm:py-3 bg-red-600 text-white rounded hover:bg-red-700 text-base sm:text-lg md:text-xl"
@@ -128,7 +123,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
         <button
           onClick={(e) => {
             e.stopPropagation();
-            console.log('[Flashcard] Marking know for card:', card.id);
             onMarkKnow(card.id);
           }}
           className="px-4 py-2 sm:px-5 sm:py-3 bg-green-600 text-white rounded hover:bg-green-700 text-base sm:text-lg md:text-xl"

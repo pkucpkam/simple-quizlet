@@ -9,16 +9,13 @@ const StudyHistory: React.FC = () => {
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [stats, setStats] = useState<StudyStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'flashcard' | 'quiz' | 'test'>('all');
+  const [filter, setFilter] = useState<'all' | 'flashcard' | 'review' | 'test'>('all');
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
-    console.log("[StudyHistory] Raw sessionStorage:", storedUser);
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        console.log("[StudyHistory] Parsed user:", parsed);
-        console.log("[StudyHistory] User UID:", parsed.uid);
         setUser(parsed);
       } catch {
         setUser(null);
@@ -31,14 +28,11 @@ const StudyHistory: React.FC = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       if (!user) {
-        console.log("[StudyHistory] No user, skipping fetch");
         return;
       }
 
-      console.log("[StudyHistory] Fetching history for uid:", user.uid);
       setLoading(true);
       const history = await historyService.getUserStudyHistory(user.uid);
-      console.log("[StudyHistory] Fetched history:", history);
       setSessions(history);
       setStats(historyService.getStudyStats(history));
       setLoading(false);
@@ -47,9 +41,13 @@ const StudyHistory: React.FC = () => {
     fetchHistory();
   }, [user]);
 
-  const filteredSessions = sessions.filter(session =>
-    filter === 'all' || session.studyMode === filter
-  );
+  const filteredSessions = sessions.filter(session => {
+    if (filter === 'all') return true;
+    if (filter === 'flashcard') return session.studyMode === 'flashcard';
+    if (filter === 'test') return session.studyMode === 'test';
+    if (filter === 'review') return ['quiz', 'review', 'srs_review'].includes(session.studyMode);
+    return false;
+  });
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -85,22 +83,59 @@ const StudyHistory: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Lịch sử học tập</h1>
 
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Tổng phiên học</h3>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalSessions}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Flashcards */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🃏</span>
+                <h3 className="text-lg font-semibold text-blue-800">Thẻ ghi nhớ (Flashcards)</h3>
+              </div>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-sm text-blue-600 mb-1">Thời gian học</p>
+                  <p className="text-3xl font-bold text-blue-700">{formatTime(stats.flashcardStats?.timeSpent || 0)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-blue-600 mb-1">Số lần học</p>
+                  <p className="text-2xl font-bold text-blue-700">{stats.flashcardStats?.sessions || 0}</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Thời gian học</h3>
-              <p className="text-3xl font-bold text-green-600">{formatTime(stats.totalTimeSpent)}</p>
+
+            {/* Review */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-sm border border-purple-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">🧠</span>
+                <h3 className="text-lg font-semibold text-purple-800">Ôn tập (Review/SRS)</h3>
+              </div>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-sm text-purple-600 mb-1">Thời gian học</p>
+                  <p className="text-3xl font-bold text-purple-700">{formatTime(stats.reviewStats?.timeSpent || 0)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-purple-600 mb-1">Số lần ôn</p>
+                  <p className="text-2xl font-bold text-purple-700">{stats.reviewStats?.sessions || 0}</p>
+                </div>
+              </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Điểm trung bình</h3>
-              <p className="text-3xl font-bold text-yellow-600">%</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Bộ đã học</h3>
-              <p className="text-3xl font-bold text-purple-600">{stats.totalSetsStudied}</p>
+
+            {/* Test */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">📝</span>
+                <h3 className="text-lg font-semibold text-green-800">Kiểm tra (Test)</h3>
+              </div>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-sm text-green-600 mb-1">Thời gian làm</p>
+                  <p className="text-3xl font-bold text-green-700">{formatTime(stats.testStats?.timeSpent || 0)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-green-600 mb-1">Số thẻ kiểm tra</p>
+                  <p className="text-2xl font-bold text-green-700">{stats.testStats?.sessions || 0}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -111,12 +146,12 @@ const StudyHistory: React.FC = () => {
             {[
               { value: 'all', label: 'Tất cả' },
               { value: 'flashcard', label: 'Thẻ ghi nhớ' },
-              { value: 'quiz', label: 'Quiz' },
+              { value: 'review', label: 'Ôn tập' },
               { value: 'test', label: 'Kiểm tra' }
             ].map((filterOption) => (
               <button
                 key={filterOption.value}
-                onClick={() => setFilter(filterOption.value as 'all' | 'flashcard' | 'quiz' | 'test')}
+                onClick={() => setFilter(filterOption.value as 'all' | 'flashcard' | 'review' | 'test')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === filterOption.value
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 bg-gray-100 hover:bg-gray-200'

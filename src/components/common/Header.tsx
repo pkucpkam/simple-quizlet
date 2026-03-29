@@ -4,22 +4,19 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../service/firebase_setup';
 import { logoutUser } from '../../service/authService';
 import { getUserInfo } from '../../service/userService';
-import { srsService } from '../../service/srsService';
+
 
 const Header: React.FC = () => {
-  console.log('[Header] Rendering Header component');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [dueCount, setDueCount] = useState<number>(0);
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('[Header] Setting up auth state listener');
     const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
       const userData = JSON.parse(storedUser);
-      console.log('[Header] Found user in sessionStorage:', userData);
       setIsLoggedIn(userData.isLoggedIn);
       setUsername(userData.username);
       setLoading(false);
@@ -27,11 +24,9 @@ const Header: React.FC = () => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('[Header] onAuthStateChanged triggered, user:', user?.email);
       if (user && user.emailVerified) {
         setIsLoggedIn(true);
         const userInfo = await getUserInfo(user);
-        console.log('[Header] Fetched userInfo:', userInfo);
         setUsername(userInfo.username);
         sessionStorage.setItem(
           'user',
@@ -50,31 +45,14 @@ const Header: React.FC = () => {
     });
 
     return () => {
-      console.log('[Header] Cleaning up auth state listener');
       unsubscribe();
     };
   }, []);
 
-  const loadDueCount = async () => {
-    if (!username) return;
-    try {
-      const stats = await srsService.getUserStats(username);
-      setDueCount(stats.dueToday);
-    } catch (error) {
-      console.error('[Header] Error loading due count:', error);
-    }
-  };
+
 
   // Load due cards count
-  useEffect(() => {
-    if (isLoggedIn && username) {
-      loadDueCount();
-      // Refresh every 5 minutes
-      const interval = setInterval(loadDueCount, 5 * 60 * 1000);
-      return () => clearInterval(interval);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, username]);
+
 
   const handleLogout = async () => {
     const result = await logoutUser();
@@ -102,19 +80,7 @@ const Header: React.FC = () => {
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="/"> Trang chủ </Link>
               </li>
 
-              <li>
-                <Link
-                  className="relative text-black text-base font-medium transition hover:text-blue-700"
-                  to="/dashboard"
-                >
-                  📊 Dashboard
-                  {dueCount > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                      {dueCount > 99 ? '99+' : dueCount}
-                    </span>
-                  )}
-                </Link>
-              </li>
+
 
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="my-lessons"> Bài học của tôi </Link>

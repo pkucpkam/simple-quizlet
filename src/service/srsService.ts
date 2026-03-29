@@ -13,11 +13,10 @@ import {
     increment,
 } from "firebase/firestore";
 import { db } from "./firebase_setup";
-import type { SRSCard, ReviewRating, ReviewSession, DailyStats } from "../types/srs";
+import type { SRSCard, ReviewRating, ReviewSession } from "../types/srs";
 import {
     calculateNextReview,
     getDueCards,
-    getCardStatus,
     initializeSRSCard,
 } from "../utils/srsAlgorithm";
 
@@ -43,7 +42,6 @@ export const srsService = {
             const existingCards = await getDocs(existingQuery);
 
             if (existingCards.size > 0) {
-                console.log("SRS cards already exist for this lesson");
                 return;
             }
 
@@ -67,7 +65,6 @@ export const srsService = {
             });
 
             await batch.commit();
-            console.log(`Initialized ${vocabulary.length} SRS cards for lesson ${lessonId}`);
         } catch (error) {
             console.error("Error initializing SRS cards:", error);
             throw new Error("Không thể khởi tạo thẻ học. Vui lòng thử lại.");
@@ -255,65 +252,6 @@ export const srsService = {
             });
         } catch (error) {
             console.error("Error ending review session:", error);
-        }
-    },
-
-    /**
-     * Get user statistics
-     */
-    async getUserStats(userId: string) {
-        try {
-            const cards = await this.getUserCards(userId);
-            const dueCards = getDueCards(cards);
-
-            const newCards = cards.filter((c) => c.totalReviews === 0);
-            const learningCards = cards.filter((c) => getCardStatus(c) === "learning");
-            const masteredCards = cards.filter((c) => getCardStatus(c) === "mastered");
-
-            const totalCorrect = cards.reduce((sum, c) => sum + c.correctCount, 0);
-            const totalReviews = cards.reduce((sum, c) => sum + c.totalReviews, 0);
-            const accuracy = totalReviews > 0 ? (totalCorrect / totalReviews) * 100 : 0;
-
-            return {
-                totalCards: cards.length,
-                newCards: newCards.length,
-                learningCards: learningCards.length,
-                masteredCards: masteredCards.length,
-                dueToday: dueCards.length,
-                totalReviews,
-                accuracy: Math.round(accuracy),
-            };
-        } catch (error) {
-            console.error("Error getting user stats:", error);
-            return {
-                totalCards: 0,
-                newCards: 0,
-                learningCards: 0,
-                masteredCards: 0,
-                dueToday: 0,
-                totalReviews: 0,
-                accuracy: 0,
-            };
-        }
-    },
-
-    /**
-     * Record daily statistics
-     */
-    async recordDailyStats(userId: string, stats: Omit<DailyStats, "id" | "date" | "userId">): Promise<void> {
-        try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const dailyStatsData = {
-                date: Timestamp.fromDate(today),
-                userId,
-                ...stats,
-            };
-
-            await addDoc(collection(db, "dailyStats"), dailyStatsData);
-        } catch (error) {
-            console.error("Error recording daily stats:", error);
         }
     },
 };

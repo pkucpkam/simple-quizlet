@@ -34,6 +34,10 @@ const StudyHistoryCard: React.FC<StudyHistoryCardProps> = ({ session }) => {
                 return '📚 Thẻ ghi nhớ';
             case 'quiz':
                 return '❓ Quiz';
+            case 'review':
+                return '🧠 Ôn tập';
+            case 'srs_review':
+                return '💡 Ôn tập SRS';
             case 'test':
                 return '📝 Kiểm tra';
             default:
@@ -46,9 +50,11 @@ const StudyHistoryCard: React.FC<StudyHistoryCardProps> = ({ session }) => {
             case 'flashcard':
                 return 'bg-blue-100 text-blue-800';
             case 'quiz':
-                return 'bg-green-100 text-green-800';
+            case 'review':
+            case 'srs_review':
+                return 'bg-indigo-100 text-indigo-800';
             case 'test':
-                return 'bg-purple-100 text-purple-800';
+                return 'bg-emerald-100 text-emerald-800';
             default:
                 return 'bg-gray-100 text-gray-800';
         }

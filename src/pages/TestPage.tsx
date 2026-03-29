@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { lessonService } from "../service/lessonService";
 import toast from "react-hot-toast";
+import { historyService } from "../service/historyService";
+import { auth } from "../service/firebase_setup";
 
 interface VocabItem {
     term: string;
@@ -26,6 +28,8 @@ export default function TestPage() {
     const [results, setResults] = useState<TestResult[]>([]);
     const [showResults, setShowResults] = useState(false);
     const [lessonTitle, setLessonTitle] = useState("");
+    const [startTime, setStartTime] = useState(Date.now());
+    const [hasSaved, setHasSaved] = useState(false);
 
     useEffect(() => {
         const fetchLesson = async () => {
@@ -111,7 +115,30 @@ export default function TestPage() {
         setUserInput("");
         setResults([]);
         setShowResults(false);
+        setStartTime(Date.now());
+        setHasSaved(false);
     };
+
+    useEffect(() => {
+        if (showResults && !hasSaved) {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+
+            const timeSpent = Math.round((Date.now() - startTime) / 1000);
+            const correctCount = results.filter((r) => r.isCorrect).length;
+
+            historyService.saveStudySession(userId, {
+                setId: lessonId || "",
+                setName: lessonTitle || "Bài học không tên",
+                lessonId: lessonId || "",
+                lessonTitle: lessonTitle || "Bài học không tên",
+                timeSpent,
+                knowCount: correctCount,
+                studyMode: "test",
+            });
+            setHasSaved(true);
+        }
+    }, [showResults, hasSaved, lessonId, lessonTitle, startTime, results]);
 
     const renderWordWithUnderscores = () => {
         const word = currentVocab.term;

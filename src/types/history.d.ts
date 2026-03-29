@@ -14,6 +14,18 @@ export interface StudySession {
 export interface StudyStats {
   totalSessions: number;
   totalTimeSpent: number;
-  favoriteMode: string;
+  popularMode: string;
   totalSetsStudied: number;
+  flashcardStats: {
+    sessions: number;
+    timeSpent: number;
+  };
+  reviewStats: {
+    sessions: number;
+    timeSpent: number;
+  };
+  testStats: {
+    sessions: number;
+    timeSpent: number;
+  };
 }

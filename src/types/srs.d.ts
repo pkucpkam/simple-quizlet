@@ -41,27 +41,3 @@ export interface ReviewSession {
     averageTime: number; // average time per card
 }
 
-export interface DailyStats {
-    date: Date;
-    userId: string;
-    newCards: number;
-    reviewedCards: number;
-    correctCount: number;
-    incorrectCount: number;
-    timeSpent: number; // in seconds
-    streak: number;
-}
-
-export interface UserProgress {
-    userId: string;
-    totalCards: number;
-    newCards: number; // Cards never reviewed
-    learningCards: number; // Cards in learning phase (interval < 21 days)
-    masteredCards: number; // Cards mastered (interval >= 21 days)
-    dueToday: number;
-    currentStreak: number;
-    longestStreak: number;
-    totalReviews: number;
-    accuracy: number; // percentage
-    lastStudyDate?: Date;
-}

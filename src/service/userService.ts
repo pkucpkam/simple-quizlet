@@ -8,10 +8,7 @@ interface UserInfo {
 
 export const getUserInfo = async (user: User): Promise<UserInfo> => {
   try {
-    console.log('[getUserInfo] Đang lấy thông tin user với UID:', user.uid);
-
     const userDoc = await getDoc(doc(db, 'users', user.uid));
-    console.log('[getUserInfo] Document snapshot:', userDoc.exists() ? userDoc.data() : 'Không tồn tại');
 
     if (userDoc.exists()) {
       const data = userDoc.data();

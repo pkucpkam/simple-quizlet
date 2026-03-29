@@ -4,6 +4,8 @@ import { srsService } from "../service/srsService";
 import ReviewCard from "../components/srs/ReviewCard";
 import type { SRSCard, ReviewRating } from "../types/srs";
 import toast from "react-hot-toast";
+import { historyService } from "../service/historyService";
+import { auth } from "../service/firebase_setup";
 
 export default function ReviewPage() {
     const navigate = useNavigate();
@@ -95,6 +97,19 @@ export default function ReviewPage() {
                     correctCount: correctCount + (showAnswer ? 1 : 0),
                     incorrectCount,
                     totalTime,
+                });
+            }
+
+            const userId = auth.currentUser?.uid;
+            if (userId) {
+                await historyService.saveStudySession(userId, {
+                    setId: "srs_daily",
+                    setName: "Ôn tập thông minh (SRS)",
+                    lessonId: "srs",
+                    lessonTitle: "Ôn tập thông minh",
+                    timeSpent: totalTime,
+                    knowCount: correctCount + (showAnswer ? 1 : 0),
+                    studyMode: "srs_review", 
                 });
             }
 

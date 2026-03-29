@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { auth } from "../service/firebase_setup";
 import Flashcard from "../components/Flashcard";
 import { lessonService } from "../service/lessonService";
@@ -18,8 +18,7 @@ const CompletionScreen: React.FC<{
   flashcards: FlashcardData[];
   onReviewAgain: () => void;
   onTest: () => void;
-  onGoToDashboard: () => void;
-}> = ({ flashcards, onReviewAgain, onTest, onGoToDashboard }) => {
+}> = ({ flashcards, onReviewAgain, onTest }) => {
   const knowCount = flashcards.filter((card) => card.status === "know").length;
   const stillLearningCount = flashcards.filter((card) => card.status === "still_learning").length;
 
@@ -35,24 +34,18 @@ const CompletionScreen: React.FC<{
         <p className="text-xs text-blue-600">Hệ thống sẽ tự động nhắc bạn ôn tập vào đúng thời điểm</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex gap-4">
         <button
-          className="py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+          className="flex-1 py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-md"
           onClick={onReviewAgain}
         >
-          Ôn tập lại
+          🔄 Ôn tập lại (Review)
         </button>
         <button
-          className="py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+          className="flex-1 py-3 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors shadow-md"
           onClick={onTest}
         >
-          Kiểm tra
-        </button>
-        <button
-          className="py-3 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold transition-colors col-span-2 shadow-lg"
-          onClick={onGoToDashboard}
-        >
-          📊 Xem Dashboard & Ôn tập SRS
+          📝 Kiểm tra (Test)
         </button>
       </div>
     </div>
@@ -69,9 +62,10 @@ const Study: React.FC = () => {
   const [hasSaved, setHasSaved] = useState(false); // Prevent duplicate saves
   const [srsInitialized, setSrsInitialized] = useState(false);
   const location = useLocation();
-  const vocabId = location.state?.vocabId;
-  const lessonId = location.state?.lessonId;
-  const lessonTitle = location.state?.lessonTitle;
+  const { lessonId: urlLessonId } = useParams<{ lessonId: string }>();
+  const lessonId = location.state?.lessonId || urlLessonId;
+  const vocabId = location.state?.vocabId || lessonId;
+  const [lessonTitle, setLessonTitle] = useState(location.state?.lessonTitle || "");
   const [startTime] = useState(Date.now());
 
   useEffect(() => {
@@ -87,7 +81,12 @@ const Study: React.FC = () => {
       }
 
       try {
-        const vocabList = await lessonService.getVocabulary(vocabId);
+        if (lessonId && !lessonTitle) {
+          const lesson = await lessonService.getLesson(lessonId);
+          setLessonTitle(lesson.title);
+        }
+
+        const vocabList = await lessonService.getVocabulary(vocabId || "");
         const formattedFlashcards: FlashcardData[] = vocabList.map((vocab, index) => ({
           id: `${vocabId}-${index}`,
           term: vocab.word,
@@ -104,7 +103,7 @@ const Study: React.FC = () => {
     };
 
     fetchVocab();
-  }, [vocabId]);
+  }, [vocabId, lessonId, lessonTitle]);
 
   useEffect(() => {
     if (flashcards.length > 0) {
@@ -147,7 +146,6 @@ const Study: React.FC = () => {
 
         srsService.initializeCardsForLesson(lessonId, username, vocabulary)
           .then(() => {
-            console.log("[Study] SRS cards initialized!");
             toast.success("✨ Đã tạo SRS cards cho bài học này!");
             setSrsInitialized(true);
           })
@@ -157,7 +155,6 @@ const Study: React.FC = () => {
       }
 
       setHasSaved(true);
-      console.log("[Study] Session saved!");
     }
   }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime, hasSaved, srsInitialized]);
 
@@ -194,19 +191,21 @@ const Study: React.FC = () => {
   };
 
   const handleReviewAgain = () => {
-    setFlashcards((prev) =>
-      prev.map((card) => ({ ...card, status: null }))
-    );
-    setCurrentIndex(0);
-    setIsCompleted(false);
+    if (lessonId) {
+      navigate(`/review/${lessonId}`);
+    } else {
+      setFlashcards((prev) =>
+        prev.map((card) => ({ ...card, status: null }))
+      );
+      setCurrentIndex(0);
+      setIsCompleted(false);
+    }
   };
 
   const handleTest = () => {
-    console.log("[Study] Navigating to test mode");
-  };
-
-  const handleGoToDashboard = () => {
-    navigate("/dashboard");
+    if (lessonId) {
+      navigate(`/test/${lessonId}`);
+    }
   };
 
   const knowCount = flashcards.filter((card) => card.status === "know").length;
@@ -229,7 +228,6 @@ const Study: React.FC = () => {
           flashcards={flashcards}
           onReviewAgain={handleReviewAgain}
           onTest={handleTest}
-          onGoToDashboard={handleGoToDashboard}
         />
       ) : (
         <>
