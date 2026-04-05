@@ -4,6 +4,7 @@ import { lessonService, type PaginatedLessonsResult } from "../service/lessonSer
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/common/ConfirmModal";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import Pagination from "../components/common/Pagination";
 
 interface Lesson {
   id: string;
@@ -186,35 +187,6 @@ export default function ReviewLessonPage() {
     setPageCursors(new Map([[1, null]]));
   };
 
-  const getPageNumbers = () => {
-    const delta = 2;
-    const range: number[] = [];
-    const rangeWithDots: (number | string)[] = [];
-
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
-
-    if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...');
-    } else {
-      rangeWithDots.push(1);
-    }
-
-    rangeWithDots.push(...range);
-
-    if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages);
-    } else if (totalPages > 1) {
-      rangeWithDots.push(totalPages);
-    }
-
-    return rangeWithDots;
-  };
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -352,21 +324,21 @@ export default function ReviewLessonPage() {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-3">
                               <button
                                 onClick={() => navigate(`/review/${lesson.id}`)}
-                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors shadow-sm"
+                                className="w-10 h-10 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all duration-300 shadow-sm border border-green-100 hover:shadow-md active:scale-90"
                                 title="Ôn tập ngay"
                               >
-                                🎯 Ôn tập
+                                <span className="text-xl">🎯</span>
                               </button>
                               {isCreator && (
                                 <button
                                   onClick={() => setConfirmDelete(lesson.id)}
-                                  className="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors"
+                                  className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm border border-red-100 hover:shadow-md active:scale-90"
                                   title="Xóa bài học"
                                 >
-                                  🗑️
+                                  <span className="text-lg">🗑️</span>
                                 </button>
                               )}
                             </div>
@@ -388,42 +360,13 @@ export default function ReviewLessonPage() {
                   <span className="font-semibold">{totalItems}</span> bài học
                 </p>
 
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      ‹ Trước
-                    </button>
-
-                    {getPageNumbers().map((pageNum, index) => (
-                      pageNum === '...' ? (
-                        <span key={`dots-${index}`} className="px-2 text-gray-400">...</span>
-                      ) : (
-                        <button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum as number)}
-                          className={`px-3 py-1 rounded border transition-colors ${currentPage === pageNum
-                            ? 'bg-green-600 text-white border-green-600'
-                            : 'border-gray-300 hover:bg-gray-100'
-                            }`}
-                        >
-                          {pageNum}
-                        </button>
-                      )
-                    ))}
-
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Sau ›
-                    </button>
-                  </div>
-                )}
+                {/* Pagination components */}
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  activeColor="bg-green-600"
+                />
               </div>
             </div>
           </div>

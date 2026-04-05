@@ -10,9 +10,20 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
   onTogglePrivacy: (id: string, isPrivate: boolean) => Promise<void>;
   onEdit?: (id: string) => void;
+  onFolderAction?: (id: string) => void;
+  folderActionLabel?: string;
+  folderActionIcon?: string;
 }
 
-export default function LessonCard({ lesson, onDelete, onTogglePrivacy, onEdit }: Props) {
+export default function LessonCard({ 
+  lesson, 
+  onDelete, 
+  onTogglePrivacy, 
+  onEdit,
+  onFolderAction,
+  folderActionLabel,
+  folderActionIcon = "📁"
+}: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<null | "delete" | "privacy">(null);
   const navigate = useNavigate();
@@ -41,74 +52,111 @@ export default function LessonCard({ lesson, onDelete, onTogglePrivacy, onEdit }
   return (
     <>
       <div
-        className="w-full max-w-3xl bg-white shadow-md rounded-xl px-6 py-5 mx-auto flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:bg-blue-50"
+        className="w-full h-full bg-white shadow-md hover:shadow-xl rounded-2xl px-6 py-6 flex flex-col gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:bg-blue-50/30 border border-gray-100"
         onClick={handleCardClick}
       >
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold text-blue-600">{lesson.title}</h2>
-          <p className="text-gray-600 mt-1">{lesson.description}</p>
-          <p className="text-sm text-gray-400 mt-1">Từ vựng: {lesson.wordCount} từ</p>
-          <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
-          <p className="text-sm mt-1">
-            {lesson.isPrivate ? (
-              <span className="text-red-500">Riêng tư</span>
-            ) : (
-              <span className="text-green-600">Công khai</span>
-            )}
-          </p>
-        </div>
+        <div className="flex-1 flex flex-col">
+          <div className="flex justify-between items-start gap-4 mb-4">
+            <h2 className="text-xl font-bold text-gray-800 line-clamp-2 leading-tight hover:text-blue-600 transition-colors flex-1">
+              {lesson.title}
+            </h2>
+            <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+              {onFolderAction && (
+                <button
+                  onClick={() => onFolderAction(lesson.id)}
+                  className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+                  title={folderActionLabel}
+                >
+                  <span className="text-lg">{folderActionIcon}</span>
+                </button>
+              )}
 
-        {isCreator && (
-          <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
-            <button
-              className="bg-gray-200 text-gray-700 px-3 py-2 rounded hover:bg-gray-300 transition"
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              title="Tùy chọn"
-            >
-              ⋮
-            </button>
-
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg z-10">
-                {onEdit && (
+              {isCreator && (
+                <div className="relative" ref={menuRef}>
                   <button
-                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    onClick={() => {
-                      onEdit(lesson.id);
-                      setIsMenuOpen(false);
-                    }}
+                    className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors shadow-sm"
+                    onClick={() => setIsMenuOpen((prev) => !prev)}
+                    title="Tùy chọn"
                   >
-                    ✏️ Chỉnh sửa
+                    <span className="text-xl">⋮</span>
                   </button>
-                )}
-                <button
-                  className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => {
-                    setConfirmType("privacy");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  {lesson.isPrivate ? "Chuyển công khai" : "Chuyển riêng tư"}
-                </button>
-                <button
-                  className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                  onClick={() => {
-                    setConfirmType("delete");
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Xoá
-                </button>
+
+                  {isMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden z-20 py-1.5 animate-in fade-in zoom-in duration-200">
+                      {onEdit && (
+                        <button
+                          className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors font-medium"
+                          onClick={() => {
+                            onEdit(lesson.id);
+                            setIsMenuOpen(false);
+                          }}
+                        >
+                          <span className="text-lg">✏️</span> Chỉnh sửa
+                        </button>
+                      )}
+                      <button
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors font-medium"
+                        onClick={() => {
+                          setConfirmType("privacy");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <span className="text-lg">{lesson.isPrivate ? "🔓" : "🔒"}</span>
+                        {lesson.isPrivate ? "Chuyển công khai" : "Chuyển riêng tư"}
+                      </button>
+                      <div className="h-px bg-gray-100 my-1 mx-2"></div>
+                      <button
+                        className="flex items-center gap-3 w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-colors font-medium"
+                        onClick={() => {
+                          setConfirmType("delete");
+                          setIsMenuOpen(false);
+                        }}
+                      >
+                        <span className="text-lg">🗑️</span> Xoá bài học
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <p className="text-gray-500 text-sm line-clamp-3 mb-6 flex-1">
+            {lesson.description || "Không có mô tả cho bài học này. Hãy thêm mô tả để giúp người học hiểu rõ hơn về nội dung."}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 mt-auto pt-5 border-t border-gray-100">
+            <div className="flex items-center gap-2 bg-blue-50/50 px-3 py-1.5 rounded-full text-xs font-bold text-blue-700 border border-blue-100/50">
+              <span>📚</span> {lesson.wordCount} từ vựng
+            </div>
+            {lesson.isPrivate ? (
+              <div className="flex items-center gap-2 bg-amber-50 px-3 py-1.5 rounded-full text-xs font-bold text-amber-700 border border-amber-100/50">
+                <span>🔒</span> Riêng tư
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-700 border border-emerald-100/50">
+                <span>🌍</span> Công khai
               </div>
             )}
           </div>
-        )}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-[11px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-[10px] text-white">
+                {lesson.creator.charAt(0).toUpperCase()}
+              </div>
+              {lesson.creator}
+            </div>
+            <div className="text-[10px] text-gray-300 font-medium italic">
+              {new Date(lesson.createdAt).toLocaleDateString("vi-VN")}
+            </div>
+          </div>
+        </div>
       </div>
 
       <ConfirmModal
         open={confirmType === "delete"}
         title="Xác nhận xoá"
-        message={`Bạn có chắc chắn muốn xoá bài học "${lesson.title}" không?`}
+        message={`Bạn có chắc chắn muốn xoá bài học "${lesson.title}" không? Hành động này không thể hoàn tác.`}
         onConfirm={async () => {
           try {
             await onDelete(lesson.id);
