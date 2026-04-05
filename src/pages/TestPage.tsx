@@ -134,6 +134,7 @@ export default function TestPage() {
                 lessonTitle: lessonTitle || "Bài học không tên",
                 timeSpent,
                 knowCount: correctCount,
+                totalCount: results.length,
                 studyMode: "test",
             });
             setHasSaved(true);

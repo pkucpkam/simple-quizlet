@@ -134,6 +134,7 @@ const Study: React.FC = () => {
         lessonTitle: lessonTitle || "Bài học không tên",
         timeSpent,
         knowCount,
+        totalCount: flashcards.length,
         studyMode: "flashcard",
       });
 

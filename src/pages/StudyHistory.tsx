@@ -10,6 +10,8 @@ const StudyHistory: React.FC = () => {
   const [stats, setStats] = useState<StudyStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'flashcard' | 'review' | 'test'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
@@ -48,6 +50,17 @@ const StudyHistory: React.FC = () => {
     if (filter === 'review') return ['quiz', 'review', 'srs_review'].includes(session.studyMode);
     return false;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+  const currentSessions = filteredSessions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -164,12 +177,50 @@ const StudyHistory: React.FC = () => {
         </div>
 
         {/* Study Sessions */}
-        {filteredSessions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSessions.map((session) => (
-              <StudyHistoryCard key={session.id} session={session} />
-            ))}
-          </div>
+        {currentSessions.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {currentSessions.map((session) => (
+                <StudyHistoryCard key={session.id} session={session} />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center space-x-2 pb-8">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  Trước
+                </button>
+
+                <div className="flex space-x-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white text-gray-700 border hover:bg-gray-50'
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  Sau
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <div className="text-gray-400 mb-4">

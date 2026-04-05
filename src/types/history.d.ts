@@ -8,6 +8,7 @@ export interface StudySession {
   studyTime: Date;
   timeSpent: number;
   knowCount: number;
+  totalCount?: number;
   studyMode: string;
 }
 

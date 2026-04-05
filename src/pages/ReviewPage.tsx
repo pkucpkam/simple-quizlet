@@ -68,6 +68,7 @@ const ReviewPage = () => {
         lessonTitle: lessonTitle || "Bài học không tên",
         timeSpent,
         knowCount: correctAnswers,
+        totalCount: vocabList.length,
         studyMode: "review",
       });
       setHasSaved(true);

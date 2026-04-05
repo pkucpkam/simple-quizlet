@@ -109,6 +109,7 @@ export default function ReviewPage() {
                     lessonTitle: "Ôn tập thông minh",
                     timeSpent: totalTime,
                     knowCount: correctCount + (showAnswer ? 1 : 0),
+                    totalCount: cards.length,
                     studyMode: "srs_review", 
                 });
             }

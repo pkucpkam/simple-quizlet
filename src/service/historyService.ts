@@ -5,7 +5,7 @@ import type { StudySession, StudyStats } from "../types/history";
 export const historyService = {
   async saveStudySession(
     userId: string,
-    sessionData: Pick<StudySession, "setId" | "setName" | "lessonId" | "lessonTitle" | "timeSpent" | "knowCount" | "studyMode">
+    sessionData: Pick<StudySession, "setId" | "setName" | "lessonId" | "lessonTitle" | "timeSpent" | "knowCount" | "totalCount" | "studyMode">
   ) {
     try {
       const ref = collection(db, `history/${userId}/sessions`);
@@ -16,6 +16,7 @@ export const historyService = {
         lessonTitle: sessionData.lessonTitle || "",
         timeSpent: sessionData.timeSpent || 0,
         knowCount: sessionData.knowCount || 0,
+        totalCount: sessionData.totalCount || 0,
         studyMode: sessionData.studyMode || "flashcard",
         studyTime: serverTimestamp(),
       });
@@ -52,6 +53,7 @@ export const historyService = {
         studyTime: doc.data().studyTime?.toDate?.() || new Date(),
         timeSpent: doc.data().timeSpent || 0,
         knowCount: doc.data().knowCount || 0,
+        totalCount: doc.data().totalCount || 0,
         studyMode: doc.data().studyMode || "flashcard",
       }));
       return sessions;

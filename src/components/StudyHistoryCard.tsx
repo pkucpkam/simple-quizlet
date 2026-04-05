@@ -87,8 +87,19 @@ const StudyHistoryCard: React.FC<StudyHistoryCardProps> = ({ session }) => {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-gray-50 rounded-md p-3 text-center">
-                    <p className="text-2xl font-bold text-green-600">{session.knowCount}</p>
-                    <p className="text-xs text-gray-500">Từ đã thuộc</p>
+                    <p className="text-2xl font-bold text-green-600">
+                        {session.knowCount}
+                        {session.totalCount && session.totalCount > 0 ? (
+                            <span className="text-sm font-normal text-gray-500 ml-1">
+                                / {session.totalCount}
+                            </span>
+                        ) : null}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        {session.totalCount && session.totalCount > 0
+                            ? `Đúng (${Math.round((session.knowCount * 100) / session.totalCount)}%)`
+                            : 'Từ đã thuộc'}
+                    </p>
                 </div>
                 <div className="bg-gray-50 rounded-md p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600">{formatTime(session.timeSpent).split(' ')[0]}</p>
