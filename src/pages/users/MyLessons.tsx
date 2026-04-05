@@ -9,18 +9,9 @@ import { lessonService } from "../../service/lessonService";
 import { folderService } from "../../service/folderService";
 import type { Folder, CreateFolderData } from "../../types/folder";
 import toast from "react-hot-toast";
+import Pagination from "../../components/common/Pagination";
 
-interface Lesson {
-  id: string;
-  title: string;
-  creator: string;
-  vocabId: string;
-  createdAt: Date;
-  description: string;
-  wordCount: number;
-  isPrivate: boolean;
-  folderId?: string | null;
-}
+import type { Lesson } from "../../types/lesson";
 
 type ViewMode = "all" | "folders" | "lessons";
 
@@ -142,6 +133,24 @@ export default function MyLessons() {
 
   const lessonsWithoutFolder = lessons.filter((l) => !l.folderId);
 
+  // Sorting lessons by date (newest first)
+  const sortedLessons = [...filteredLessons].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  // Pagination logic
+  const [currentPage, setCurrentPage] = useState(1);
+  const lessonsPerPage = 6;
+  const totalPages = Math.ceil(sortedLessons.length / lessonsPerPage);
+  const indexOfLastLesson = currentPage * lessonsPerPage;
+  const indexOfFirstLesson = indexOfLastLesson - lessonsPerPage;
+  const currentLessons = sortedLessons.slice(indexOfFirstLesson, indexOfLastLesson);
+
+  // Reset to page 1 when view mode or lessons change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [viewMode, lessons.length]);
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -154,53 +163,70 @@ export default function MyLessons() {
         </div>
         <button
           onClick={() => setIsCreateFolderOpen(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-sm"
         >
           <span>📁</span> Tạo thư mục mới
         </button>
       </div>
 
       {/* View Mode Tabs */}
-      <div className="flex gap-2 mb-6 border-b">
+      <div className="flex gap-2 mb-8 border-b border-gray-200">
         <button
           onClick={() => setViewMode("all")}
-          className={`px-4 py-2 font-medium transition ${viewMode === "all"
-            ? "text-blue-600 border-b-2 border-blue-600"
-            : "text-gray-600 hover:text-gray-800"
+          className={`px-6 py-3 font-semibold transition ${viewMode === "all"
+            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
             }`}
         >
-          Tất cả
+          Tất cả bài học
         </button>
         <button
           onClick={() => setViewMode("folders")}
-          className={`px-4 py-2 font-medium transition ${viewMode === "folders"
-            ? "text-blue-600 border-b-2 border-blue-600"
-            : "text-gray-600 hover:text-gray-800"
+          className={`px-6 py-3 font-semibold transition ${viewMode === "folders"
+            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
             }`}
         >
           Thư mục ({folders.length})
         </button>
         <button
           onClick={() => setViewMode("lessons")}
-          className={`px-4 py-2 font-medium transition ${viewMode === "lessons"
-            ? "text-blue-600 border-b-2 border-blue-600"
-            : "text-gray-600 hover:text-gray-800"
+          className={`px-6 py-3 font-semibold transition ${viewMode === "lessons"
+            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
             }`}
         >
-          Bài học riêng lẻ ({lessonsWithoutFolder.length})
+          Bài học lẻ ({lessonsWithoutFolder.length})
         </button>
       </div>
 
-      {loading && <p className="text-center text-gray-500">Đang tải...</p>}
-      {error && <p className="text-center text-red-500">{error}</p>}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-500 font-medium">Đang tải dữ liệu...</p>
+        </div>
+      )}
+      {error && (
+        <div className="text-center py-12 bg-red-50 rounded-xl border border-red-100">
+          <p className="text-red-500 font-medium">{error}</p>
+          <button onClick={fetchData} className="mt-4 text-blue-600 hover:underline">Thử lại</button>
+        </div>
+      )}
 
       {!loading && !error && (
-        <div className="space-y-8">
+        <div className="space-y-12">
           {/* Folders Section */}
           {(viewMode === "all" || viewMode === "folders") && folders.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">📁 Thư mục</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <span className="text-blue-600">📁</span> Thư mục của bạn
+                </h2>
+                {viewMode === "all" && (
+                  <button onClick={() => setViewMode("folders")} className="text-blue-600 hover:underline font-medium">Xem tất cả</button>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {folders.map((folder) => (
                   <FolderCard
                     key={folder.id}
@@ -214,30 +240,35 @@ export default function MyLessons() {
           )}
 
           {/* Lessons Section */}
-          {(viewMode === "all" || viewMode === "lessons") && filteredLessons.length > 0 && (
+          {(viewMode === "all" || viewMode === "lessons") && currentLessons.length > 0 && (
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                📚 {viewMode === "lessons" ? "Bài học riêng lẻ" : "Tất cả bài học"}
-              </h2>
-              <div className="flex flex-col gap-4">
-                {filteredLessons.map((lesson) => (
-                  <div key={lesson.id} className="relative">
-                    <LessonCard
-                      lesson={lesson}
-                      onDelete={handleDeleteLesson}
-                      onTogglePrivacy={handleTogglePrivacy}
-                      onEdit={(id) => navigate(`/edit/${id}`)}
-                    />
-                    <button
-                      onClick={() => openMoveToFolder(lesson.id)}
-                      className="absolute top-4 right-16 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
-                      title="Di chuyển vào thư mục"
-                    >
-                      📁 Thêm vào thư mục
-                    </button>
-                  </div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <span className="text-blue-600">📚</span> {viewMode === "lessons" ? "Bài học riêng lẻ" : "Tất cả bài học"}
+                </h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentLessons.map((lesson) => (
+                  <LessonCard
+                    key={lesson.id}
+                    lesson={lesson}
+                    onDelete={handleDeleteLesson}
+                    onTogglePrivacy={handleTogglePrivacy}
+                    onEdit={(id) => navigate(`/edit/${id}`)}
+                    onFolderAction={openMoveToFolder}
+                    folderActionLabel="Thêm vào thư mục"
+                  />
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                activeColor="bg-blue-600"
+              />
             </div>
           )}
 
