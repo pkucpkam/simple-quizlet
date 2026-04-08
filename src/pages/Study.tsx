@@ -11,6 +11,7 @@ interface FlashcardData {
   id: string;
   term: string;
   definition: string;
+  ipa?: string;
   status: "know" | "still_learning" | null;
 }
 
@@ -91,6 +92,7 @@ const Study: React.FC = () => {
           id: `${vocabId}-${index}`,
           term: vocab.word,
           definition: vocab.definition,
+          ipa: vocab.ipa,
           status: null,
         }));
         setFlashcards(formattedFlashcards);

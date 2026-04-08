@@ -20,6 +20,7 @@ import { db } from "./firebase_setup";
 interface VocabItem {
   word: string;
   definition: string;
+  ipa?: string;
 }
 
 interface Lesson {
@@ -43,9 +44,10 @@ export interface PaginatedLessonsResult {
 export const lessonService = {
   async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string) {
     try {
-      const vocabData = vocabList.map(({ word, definition }) => ({
+      const vocabData = vocabList.map(({ word, definition, ipa }) => ({
         word,
         definition,
+        ...(ipa ? { ipa } : {})
       }));
 
       const vocabRef = await addDoc(collection(db, "vocabularies"), {

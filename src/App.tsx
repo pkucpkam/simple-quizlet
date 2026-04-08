@@ -14,6 +14,7 @@ import ReviewPage from './pages/ReviewPage';
 import TestLessonPage from './pages/TestLessonPage';
 import TestPage from './pages/TestPage';
 import VerifyEmail from './pages/VerifyEmail';
+// import Migration from './pages/Migration';
 
 import SRSReviewPage from './pages/SRSReviewPage';
 import { Toaster } from 'react-hot-toast';
@@ -30,6 +31,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        {/* <Route path="/migration" element={<Migration />} /> */}
 
         {/* Protected Routes - Login Required */}
         <Route element={<PrivateRoute />}>

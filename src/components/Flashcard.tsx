@@ -5,6 +5,7 @@ interface FlashcardData {
   id: string;
   term: string;
   definition: string;
+  ipa?: string;
   status: 'know' | 'still_learning' | null;
 }
 
@@ -54,8 +55,11 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
           className={`relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''
             }`}
         >
-          <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] z-10">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">{card.term}</h2>
+          <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] z-10">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center">{card.term}</h2>
+            {card.ipa && (
+              <p className="mt-2 text-lg sm:text-xl text-blue-600 font-mono tracking-wide">{card.ipa}</p>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
