@@ -161,36 +161,54 @@ const Study: React.FC = () => {
     }
   }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime, hasSaved, srsInitialized]);
 
+  const proceedToNextCard = (newFlashcards: FlashcardData[], currentIdx: number) => {
+    setTimeout(() => {
+      const isAllKnown = newFlashcards.every((c) => c.status === "know");
+      if (isAllKnown) {
+        setIsCompleted(true);
+        return;
+      }
+
+      let nextIndex = currentIdx + 1;
+      while (nextIndex < newFlashcards.length && newFlashcards[nextIndex].status === "know") {
+        nextIndex++;
+      }
+
+      if (nextIndex < newFlashcards.length) {
+        setCurrentIndex(nextIndex);
+      } else {
+        // Wrap around to start and find first unmemorized card
+        let wrapIndex = 0;
+        while (wrapIndex < newFlashcards.length && newFlashcards[wrapIndex].status === "know") {
+          wrapIndex++;
+        }
+        setCurrentIndex(wrapIndex);
+      }
+    }, 200);
+  };
+
   const handleMarkKnow = (id: string) => {
-    setFlashcards((prev) =>
-      prev.map((card) =>
+    setFlashcards((prev) => {
+      const next = prev.map((card) =>
         card.id === id && card.status !== "know"
-          ? { ...card, status: "know" }
+          ? { ...card, status: "know" as const }
           : card
-      )
-    );
-    goToNextCard();
+      );
+      proceedToNextCard(next, currentIndex);
+      return next;
+    });
   };
 
   const handleMarkStillLearning = (id: string) => {
-    setFlashcards((prev) =>
-      prev.map((card) =>
+    setFlashcards((prev) => {
+      const next = prev.map((card) =>
         card.id === id && card.status !== "still_learning"
-          ? { ...card, status: "still_learning" }
+          ? { ...card, status: "still_learning" as const }
           : card
-      )
-    );
-    goToNextCard();
-  };
-
-  const goToNextCard = () => {
-    setTimeout(() => {
-      if (currentIndex < flashcards.length - 1) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        setIsCompleted(true);
-      }
-    }, 200);
+      );
+      proceedToNextCard(next, currentIndex);
+      return next;
+    });
   };
 
   const handleReviewAgain = () => {
