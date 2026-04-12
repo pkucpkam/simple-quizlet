@@ -17,13 +17,13 @@ import {
 import type { DocumentData } from "firebase/firestore";
 import { db } from "./firebase_setup";
 
-interface VocabItem {
+export interface VocabItem {
   word: string;
   definition: string;
   ipa?: string;
 }
 
-interface Lesson {
+export interface Lesson {
   id: string;
   title: string;
   creator: string;
@@ -32,6 +32,8 @@ interface Lesson {
   description: string;
   wordCount: number;
   isPrivate: boolean;
+  isOfficial?: boolean;
+  vocabulary?: VocabItem[]; // Add this
 }
 
 export interface PaginatedLessonsResult {
@@ -42,7 +44,7 @@ export interface PaginatedLessonsResult {
 }
 
 export const lessonService = {
-  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string) {
+  async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string, isOfficial: boolean = false) {
     try {
       const vocabData = vocabList.map(({ word, definition, ipa }) => ({
         word,
@@ -63,7 +65,8 @@ export const lessonService = {
         description,
         wordCount: vocabData.length,
         isPrivate,
-        folderId: folderId || null
+        folderId: folderId || null,
+        isOfficial
       });
 
       return {
@@ -94,6 +97,7 @@ export const lessonService = {
           description: data.description || "",
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
+          isOfficial: data.isOfficial || false,
         };
       });
 
@@ -127,6 +131,7 @@ export const lessonService = {
           description: data.description || "",
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
+          isOfficial: data.isOfficial || false,
         };
       });
 
@@ -186,6 +191,7 @@ export const lessonService = {
           description: data.description || "",
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
+          isOfficial: data.isOfficial || false,
         };
       });
 
@@ -201,6 +207,71 @@ export const lessonService = {
     } catch (error) {
       console.error("Lỗi khi lấy danh sách bài học phân trang:", error);
       throw new Error("Không thể lấy danh sách bài học. Vui lòng thử lại.");
+    }
+  },
+
+  // NEW: Optimized paginated ALL lessons fetching (for Admin)
+  async getAllLessonsPaginated(
+    pageSize: number = 10,
+    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null
+  ): Promise<PaginatedLessonsResult> {
+    try {
+      let q = query(
+        collection(db, "lessons"),
+        orderBy("createdAt", "desc"),
+        limit(pageSize + 1)
+      );
+
+      if (lastVisibleDoc) {
+        q = query(
+          collection(db, "lessons"),
+          orderBy("createdAt", "desc"),
+          startAfter(lastVisibleDoc),
+          limit(pageSize + 1)
+        );
+      }
+
+      const snapshot = await getDocs(q);
+      const docs = snapshot.docs;
+      const hasMore = docs.length > pageSize;
+      const actualDocs = hasMore ? docs.slice(0, pageSize) : docs;
+
+      const lessons: Lesson[] = actualDocs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          creator: data.creator,
+          vocabId: data.vocabId,
+          createdAt: data.createdAt.toDate(),
+          description: data.description || "",
+          wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
+          isOfficial: data.isOfficial || false,
+        };
+      });
+
+      const total = await this.getTotalAllLessonsCount();
+
+      return {
+        lessons,
+        lastVisible: actualDocs.length > 0 ? actualDocs[actualDocs.length - 1] : null,
+        hasMore,
+        total,
+      };
+    } catch (error) {
+      console.error("Lỗi khi lấy tất cả bài học phân trang:", error);
+      throw new Error("Không thể lấy danh sách bài học.");
+    }
+  },
+
+  async getTotalAllLessonsCount(): Promise<number> {
+    try {
+      const q = query(collection(db, "lessons"));
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch {
+      return 0;
     }
   },
 
@@ -290,6 +361,7 @@ export const lessonService = {
           wordCount: data.wordCount || 0,
           isPrivate: data.isPrivate || false,
           folderId: data.folderId || null,
+          isOfficial: data.isOfficial || false,
         };
       });
       return lessons;
@@ -317,6 +389,8 @@ export const lessonService = {
         createdAt: lessonData.createdAt.toDate(),
         description: lessonData.description || "",
         wordCount: lessonData.wordCount || vocab.length,
+        isOfficial: lessonData.isOfficial || false,
+        isPrivate: lessonData.isPrivate || false, // Add this
         vocabulary: vocab,
       };
     } catch (error) {
@@ -393,6 +467,67 @@ export const lessonService = {
     } catch (error) {
       console.error("Lỗi khi đếm bài học trong thư mục:", error);
       return 0;
+    }
+  },
+  async getAllLessons(): Promise<Lesson[]> {
+    try {
+      const q = query(
+        collection(db, "lessons"),
+        orderBy("createdAt", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const lessons: Lesson[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          creator: data.creator,
+          vocabId: data.vocabId,
+          createdAt: data.createdAt.toDate(),
+          description: data.description || "",
+          wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
+          folderId: data.folderId || null,
+          isOfficial: data.isOfficial || false,
+        };
+      });
+
+      return lessons;
+    } catch (error) {
+      console.error("Lỗi khi lấy tất cả bài học:", error);
+      throw new Error("Không thể lấy danh sách bài học.");
+    }
+  },
+  async getOfficialLessons(): Promise<Lesson[]> {
+    try {
+      const q = query(
+        collection(db, "lessons"),
+        where("isOfficial", "==", true),
+        orderBy("createdAt", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const lessons: Lesson[] = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title,
+          creator: data.creator,
+          vocabId: data.vocabId,
+          createdAt: data.createdAt.toDate(),
+          description: data.description || "",
+          wordCount: data.wordCount || 0,
+          isPrivate: data.isPrivate || false,
+          folderId: data.folderId || null,
+          isOfficial: true
+        };
+      });
+
+      return lessons;
+    } catch (error) {
+      console.error("Lỗi khi lấy bài học chính thức:", error);
+      throw new Error("Không thể lấy danh sách bài học hệ thống.");
     }
   },
 };

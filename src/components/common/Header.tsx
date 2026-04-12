@@ -9,6 +9,7 @@ import { getUserInfo } from '../../service/userService';
 const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
 
@@ -20,6 +21,7 @@ const Header: React.FC = () => {
       const userData = JSON.parse(storedUser);
       setIsLoggedIn(userData.isLoggedIn);
       setUsername(userData.username);
+      setUserRole(userData.role || 'USER');
       setLoading(false);
       return;
     }
@@ -29,11 +31,13 @@ const Header: React.FC = () => {
         setIsLoggedIn(true);
         const userInfo = await getUserInfo(user);
         setUsername(userInfo.username);
+        setUserRole(userInfo.role || 'USER');
         sessionStorage.setItem(
           'user',
           JSON.stringify({
             uid: user.uid,
             username: userInfo.username,
+            role: userInfo.role || 'USER',
             email: user.email,
             isLoggedIn: true,
           })
@@ -41,6 +45,7 @@ const Header: React.FC = () => {
       } else {
         setIsLoggedIn(false);
         setUsername(null);
+        setUserRole(null);
         sessionStorage.removeItem('user');
       }
       setLoading(false);
@@ -62,6 +67,7 @@ const Header: React.FC = () => {
       sessionStorage.removeItem('user');
       setIsLoggedIn(false);
       setUsername(null);
+      setUserRole(null);
       navigate('/login');
     } else {
       console.error('Lỗi đăng xuất:', result.message);
@@ -129,6 +135,15 @@ const Header: React.FC = () => {
                       >
                         Hồ sơ cá nhân
                       </Link>
+                      {userRole === 'ADMIN' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setDropdownOpen(false)}
+                          className="block rounded-lg px-4 py-2 text-sm text-blue-600 font-semibold hover:bg-blue-50"
+                        >
+                          Quản lý (Admin)
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           setDropdownOpen(false);
