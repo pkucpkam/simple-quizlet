@@ -10,6 +10,7 @@ const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -98,6 +99,9 @@ const Header: React.FC = () => {
               <li>
                 <Link className="text-black text-base font-medium transition hover:text-blue-700" to="review-page"> Ôn tập </Link>
               </li>
+              <li>
+                <Link className="text-black text-base font-medium transition hover:text-blue-700" to="leaderboard"> Bảng xếp hạng </Link>
+              </li>
             </ul>
           </nav>
 
@@ -105,14 +109,38 @@ const Header: React.FC = () => {
             {loading ? (
               <p className="text-gray-500">Đang tải...</p>
             ) : isLoggedIn ? (
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">Xin chào, {username}</span>
+              <div className="relative">
                 <button
-                  onClick={handleLogout}
-                  className="block rounded-md bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 rounded-md bg-gray-100 px-4 py-2 transition hover:bg-gray-200"
                 >
-                  Đăng xuất
+                  <span className="text-sm font-medium text-gray-700">Xin chào, {username}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-gray-100 bg-white shadow-lg z-50">
+                    <div className="p-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setDropdownOpen(false)}
+                        className="block rounded-lg px-4 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                      >
+                        Hồ sơ cá nhân
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="sm:flex sm:gap-4">

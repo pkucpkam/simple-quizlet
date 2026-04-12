@@ -14,6 +14,8 @@ import ReviewPage from './pages/ReviewPage';
 import TestLessonPage from './pages/TestLessonPage';
 import TestPage from './pages/TestPage';
 import VerifyEmail from './pages/VerifyEmail';
+import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
 // import Migration from './pages/Migration';
 
 import SRSReviewPage from './pages/SRSReviewPage';
@@ -36,6 +38,8 @@ function App() {
         {/* Protected Routes - Login Required */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
           <Route path="/srs-review" element={<SRSReviewPage />} />
           <Route path="/create-lesson" element={<CreateLesson />} />
