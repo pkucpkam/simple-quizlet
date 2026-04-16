@@ -1,19 +1,24 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth';
+import LoadingScreen from './LoadingScreen';
 
 export default function AdminRoute() {
-    const storedUser = sessionStorage.getItem('user');
-    const userData = storedUser ? JSON.parse(storedUser) : null;
+    const { user, loading } = useAuth();
     
-    const isAuthenticated = userData && userData.isLoggedIn;
-    const isAdmin = userData && userData.role === 'ADMIN';
+    const isAuthenticated = user && user.isLoggedIn;
+    const isAdmin = user && user.role === 'ADMIN';
 
     useEffect(() => {
-        if (isAuthenticated && !isAdmin) {
+        if (!loading && isAuthenticated && !isAdmin) {
             toast.error('Bạn không có quyền truy cập vào khu vực này');
         }
-    }, [isAuthenticated, isAdmin]);
+    }, [loading, isAuthenticated, isAdmin]);
+
+    if (loading) {
+        return <LoadingScreen />;
+    }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;

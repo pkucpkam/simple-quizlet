@@ -24,8 +24,15 @@ interface Lesson {
 type SortField = "title" | "creator" | "wordCount" | "createdAt";
 type SortOrder = "asc" | "desc";
 
+import { useAuth } from "../hooks/useAuth";
+
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const currentUserId = user?.uid || null;
+  const currentUsername = user?.username || null;
+
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [officialFolders, setOfficialFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,11 +56,6 @@ export default function Home() {
   // Hover & Menu state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  const storedUser = sessionStorage.getItem("user");
-  const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-  const currentUserId = parsedUser ? parsedUser.uid : null;
-  const currentUsername = parsedUser ? parsedUser.username : null;
 
   useEffect(() => {
     const timer = setTimeout(() => {

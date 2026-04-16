@@ -1,60 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../service/firebase_setup';
 import { logoutUser } from '../../service/authService';
-import { getUserInfo } from '../../service/userService';
+import { useAuth } from '../../hooks/useAuth';
 
 
 const Header: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { user, loading } = useAuth();
+  const isLoggedIn = !!user?.isLoggedIn;
+  const username = user?.username || null;
+  const userRole = user?.role || null;
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const storedUser = sessionStorage.getItem('user');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setIsLoggedIn(userData.isLoggedIn);
-      setUsername(userData.username);
-      setUserRole(userData.role || 'USER');
-      setLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && user.emailVerified) {
-        setIsLoggedIn(true);
-        const userInfo = await getUserInfo(user);
-        setUsername(userInfo.username);
-        setUserRole(userInfo.role || 'USER');
-        sessionStorage.setItem(
-          'user',
-          JSON.stringify({
-            uid: user.uid,
-            username: userInfo.username,
-            role: userInfo.role || 'USER',
-            email: user.email,
-            isLoggedIn: true,
-          })
-        );
-      } else {
-        setIsLoggedIn(false);
-        setUsername(null);
-        setUserRole(null);
-        sessionStorage.removeItem('user');
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
 
 
@@ -65,9 +22,6 @@ const Header: React.FC = () => {
     const result = await logoutUser();
     if (result.success) {
       sessionStorage.removeItem('user');
-      setIsLoggedIn(false);
-      setUsername(null);
-      setUserRole(null);
       navigate('/login');
     } else {
       console.error('Lỗi đăng xuất:', result.message);
