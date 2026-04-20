@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { auth } from "../service/firebase_setup";
 import Flashcard from "../components/Flashcard";
-import { lessonService } from "../service/lessonService";
+import { lessonService, type VocabItem } from "../service/lessonService";
 import { historyService } from "../service/historyService";
 import { srsService } from "../service/srsService";
 import toast from "react-hot-toast";
@@ -12,6 +12,9 @@ interface FlashcardData {
   term: string;
   definition: string;
   ipa?: string;
+  wordType?: string;
+  exampleEn?: string;
+  exampleVi?: string;
   status: "know" | "still_learning" | null;
 }
 
@@ -71,33 +74,39 @@ const Study: React.FC = () => {
 
   useEffect(() => {
     const fetchVocab = async () => {
-      if (!vocabId) {
-        setFlashcards([
-          { id: "1", term: "Apple", definition: "Táo", status: null },
-          { id: "2", term: "Book", definition: "Sách", status: null },
-          { id: "3", term: "House", definition: "Nhà", status: null },
-        ]);
-        setLoading(false);
-        return;
-      }
-
       try {
-        if (lessonId && !lessonTitle) {
+        setLoading(true);
+        let vocabList: VocabItem[] = [];
+
+        if (lessonId) {
           const lesson = await lessonService.getLesson(lessonId);
           setLessonTitle(lesson.title);
+          vocabList = lesson.vocabulary || [];
+        } else if (vocabId) {
+          vocabList = await lessonService.getVocabulary(vocabId);
+        } else {
+          // Fallback demo data
+          vocabList = [
+            { word: "Apple", definition: "Táo" },
+            { word: "Book", definition: "Sách" },
+            { word: "House", definition: "Nhà" },
+          ];
         }
 
-        const vocabList = await lessonService.getVocabulary(vocabId || "");
         const formattedFlashcards: FlashcardData[] = vocabList.map((vocab, index) => ({
-          id: `${vocabId}-${index}`,
+          id: `${vocabId || lessonId}-${index}`,
           term: vocab.word,
           definition: vocab.definition,
           ipa: vocab.ipa,
+          wordType: vocab.wordType,
+          exampleEn: vocab.exampleEn,
+          exampleVi: vocab.exampleVi,
           status: null,
         }));
         setFlashcards(formattedFlashcards);
         sessionStorage.setItem("flashcards", JSON.stringify(formattedFlashcards));
-      } catch {
+      } catch (err) {
+        console.error("Error in study fetch:", err);
         setError("Không thể tải từ vựng. Vui lòng thử lại.");
       } finally {
         setLoading(false);

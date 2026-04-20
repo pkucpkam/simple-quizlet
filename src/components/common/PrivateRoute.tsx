@@ -1,11 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
+import LoadingScreen from './LoadingScreen';
 
 export default function PrivateRoute() {
-    const storedUser = sessionStorage.getItem('user');
+    const { user, loading } = useAuth();
 
-    // Kiểm tra xem user có tồn tại và đã login không
-    const isAuthenticated = storedUser && JSON.parse(storedUser).isLoggedIn;
+    if (loading) {
+        return <LoadingScreen />;
+    }
 
-    // Nếu chưa đăng nhập, chuyển hướng về trang Login
-    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+    return user?.isLoggedIn ? <Outlet /> : <Navigate to="/login" replace />;
 }

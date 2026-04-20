@@ -1,11 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { lessonService, type PaginatedLessonsResult } from "../service/lessonService";
+import { folderService } from "../service/folderService";
 import toast from "react-hot-toast";
 import ConfirmModal from "../components/common/ConfirmModal";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import ActivityHeatmap from "../components/common/ActivityHeatmap";
 import Pagination from "../components/common/Pagination";
+import type { Folder } from "../types/folder";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 
 interface Lesson {
   id: string;
@@ -16,79 +19,89 @@ interface Lesson {
   description: string;
   wordCount: number;
   isPrivate: boolean;
+  isOfficial?: boolean;
 }
 
 type SortField = "title" | "creator" | "wordCount" | "createdAt";
 type SortOrder = "asc" | "desc";
 
+import { useAuth } from "../hooks/useAuth";
+
 export default function Home() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const currentUserId = user?.uid || null;
+  const currentUsername = user?.username || null;
+
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [officialFolders, setOfficialFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [foldersLoading, setFoldersLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedTerm, setDebouncedTerm] = useState(""); // Debounce state
+  const [debouncedTerm, setDebouncedTerm] = useState("");
 
-  const [sortField, setSortField] = useState<SortField>("createdAt");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [confirmPrivacy, setConfirmPrivacy] = useState<{ id: string; isPrivate: boolean } | null>(null);
-
-  // Pagination state
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [pageCursors, setPageCursors] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(
     new Map([[1, null]])
   );
 
-  const navigate = useNavigate();
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
 
-  const storedUser = sessionStorage.getItem("user");
-  const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-  const currentUsername = parsedUser ? parsedUser.username : null;
-  const currentUserId = parsedUser ? parsedUser.uid : null;
+  // Hover & Menu state
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
 
-  // Debounce effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedTerm(searchTerm);
       if (searchTerm !== debouncedTerm) {
-        setCurrentPage(1); // Reset page only if term actually changed
+        setCurrentPage(1);
       }
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchTerm, debouncedTerm]);
 
-  // Main Fetch Effect (Handles both Search and Pagination)
+  useEffect(() => {
+    const fetchFolders = async () => {
+      setFoldersLoading(true);
+      try {
+        const folders = await folderService.getOfficialFolders();
+        setOfficialFolders(folders);
+      } catch (err) {
+        console.error("Lỗi khi tải thư mục hệ thống:", err);
+      } finally {
+        setFoldersLoading(false);
+      }
+    };
+    fetchFolders();
+  }, []);
+
   useEffect(() => {
     const fetchLessons = async () => {
       try {
         setLoading(true);
-
         if (debouncedTerm.trim()) {
-          // --- MODE 1: REAL SEARCH ---
-          // Fetch all matches from server
           const results = await lessonService.searchLessons(debouncedTerm);
           setTotalItems(results.length);
-
-          // Client-side paginate the search results
           const start = (currentPage - 1) * itemsPerPage;
           const end = start + itemsPerPage;
-          setLessons(results.slice(start, end));
-
+          setLessons(results.slice(start, end) as Lesson[]);
         } else {
-          // --- MODE 2: OPTIMIZED CURSOR PAGINATION ---
           const cursor = pageCursors.get(currentPage) || null;
           const result: PaginatedLessonsResult = await lessonService.getLessonsPaginated(
             itemsPerPage,
             cursor
           );
-
-          setLessons(result.lessons);
+          setLessons(result.lessons as Lesson[]);
           setTotalItems(result.total);
-
-          // Cache next page cursor
           if (result.hasMore && result.lastVisible) {
             setPageCursors(prev => {
               const newMap = new Map(prev);
@@ -97,97 +110,87 @@ export default function Home() {
             });
           }
         }
-      } catch {
-        setError("Không thể tải danh sách bài học. Vui lòng thử lại.");
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Không thể tải bài học.";
+        setError(message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchLessons();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, itemsPerPage, debouncedTerm]);
+  }, [debouncedTerm, currentPage, itemsPerPage, pageCursors]);
 
-  const handleDelete = async (id: string) => {
-    try {
-      await lessonService.deleteLessonById(id);
-      setLessons((prev) => prev.filter((l) => l.id !== id));
-      setTotalItems((prev) => prev - 1);
-      toast.success("Bài học đã được xóa thành công");
-    } catch {
-      toast.error("Không thể xóa bài học. Vui lòng thử lại.");
-    }
-  };
-
-  const handleTogglePrivacy = async (id: string, isPrivate: boolean) => {
-    try {
-      await lessonService.togglePrivacyLesson(id, isPrivate);
-      setLessons((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, isPrivate } : l))
-      );
-      toast.success(`Bài học đã được chuyển sang ${isPrivate ? "riêng tư" : "công khai"}`);
-    } catch {
-      toast.error("Không thể cập nhật trạng thái bài học.");
-    }
-  };
+  // Handle click outside menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder("desc");
+      setSortOrder("asc");
     }
   };
 
-  // Client-side sorting (within current page / search results)
-  const filteredAndSortedLessons = useMemo(() => {
-    // Note: Filtering by searchTerm is redundant here if we use searchLessons (server-side),
-    // BUT we keep it for immediate feedback or sorting logic.
-    // Actually, we should just Sort here. Filtering is handled by fetchLessons.
+  const confirmDelete = async () => {
+    if (!lessonToDelete) return;
+    try {
+      await lessonService.deleteLessonById(lessonToDelete);
+      setLessons(lessons.filter((l) => l.id !== lessonToDelete));
+      toast.success("Đã xóa bài học!");
+    } catch {
+      toast.error("Lỗi khi xóa bài học.");
+    } finally {
+      setLessonToDelete(null);
+    }
+  };
 
-    const filtered = [...lessons]; // Copy array
+  const toggleLessonPrivacy = async (lesson: Lesson) => {
+    try {
+      const newPrivacy = !lesson.isPrivate;
+      await lessonService.togglePrivacyLesson(lesson.id, newPrivacy);
+      setLessons(lessons.map(l => l.id === lesson.id ? { ...l, isPrivate: newPrivacy } : l));
+      toast.success(newPrivacy ? "Đã đặt thành riêng tư" : "Đã công khai bài học");
+      setActiveMenuId(null);
+    } catch {
+      toast.error("Cập nhật thất bại");
+    }
+  };
 
+  const sortedLessons = useMemo(() => {
+    const filtered = [...lessons];
     filtered.sort((a, b) => {
       const aVal = a[sortField];
       const bVal = b[sortField];
-
       if (sortField === "createdAt") {
-        const timeA = new Date(aVal as Date).getTime();
-        const timeB = new Date(bVal as Date).getTime();
-        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
-      }
-
-      if (typeof aVal === "string" && typeof bVal === "string") {
         return sortOrder === "asc"
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
+          ? new Date(aVal as Date).getTime() - new Date(bVal as Date).getTime()
+          : new Date(bVal as Date).getTime() - new Date(aVal as Date).getTime();
       }
-
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortOrder === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
       }
-
       return 0;
     });
-
     return filtered;
   }, [lessons, sortField, sortOrder]);
-
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <span className="text-gray-400">⇅</span>;
     return sortOrder === "asc" ? <span>↑</span> : <span>↓</span>;
   };
 
-  // Pagination calculations
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -195,27 +198,57 @@ export default function Home() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleItemsPerPageChange = (newSize: number) => {
     setItemsPerPage(newSize);
     setCurrentPage(1);
-    setPageCursors(new Map([[1, null]])); // Reset cursors
+    setPageCursors(new Map([[1, null]]));
   };
-
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {/* Activity Heatmap */}
       {currentUserId && (
-        <ActivityHeatmap userId={currentUserId} />
+        <div className="mb-8">
+          <ActivityHeatmap userId={currentUserId} />
+        </div>
       )}
+
+      {/* Official Folders Section */}
+      <div className="mb-10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">Thư mục hệ thống</h2>
+          <Link to="/admin" className="text-blue-600 text-sm hover:underline">Xem tất cả</Link>
+        </div>
+
+        {foldersLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse"></div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {officialFolders.map((folder) => (
+              <Link
+                key={folder.id}
+                to={`/folder/${folder.id}`}
+                className="flex flex-col items-center bg-white p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all group"
+              >
+                <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">{folder.icon}</span>
+                <span className="font-bold text-gray-800 text-center text-sm truncate w-full">{folder.name}</span>
+                <span className="text-xs text-gray-500 mt-1">{folder.lessonCount} bài học</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-blue-700 mb-4">Danh sách bài học</h1>
 
-        {/* Search bar and items per page selector */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="w-full sm:w-96">
             <input
@@ -244,8 +277,8 @@ export default function Home() {
         </div>
       </div>
 
-      {loading && <p className="text-gray-500 text-center">Đang tải...</p>}
-      {error && <p className="text-red-500 text-center">{error}</p>}
+      {loading && !lessons.length && <p className="text-gray-500 text-center py-10">Đang tải...</p>}
+      {error && <p className="text-red-500 text-center py-10">{error}</p>}
 
       {!loading && !error && lessons.length === 0 && (
         <div className="text-center py-12">
@@ -259,209 +292,147 @@ export default function Home() {
         </div>
       )}
 
-      {/* Show table if loading (skeleton?) or if we have lessons */}
       {(!loading || lessons.length > 0) && (
         <>
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
                   <tr>
-                    <th
-                      className="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
-                      onClick={() => handleSort("title")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Tên bài học <SortIcon field="title" />
-                      </div>
+                    <th className="px-6 py-4 text-left font-semibold cursor-pointer" onClick={() => handleSort("title")}>
+                      <div className="flex items-center gap-2">Tên bài học <SortIcon field="title" /></div>
                     </th>
-                    <th
-                      className="px-6 py-4 text-left font-semibold cursor-pointer hover:bg-blue-700 transition-colors hidden md:table-cell"
-                      onClick={() => handleSort("creator")}
-                    >
-                      <div className="flex items-center gap-2">
-                        Người tạo <SortIcon field="creator" />
-                      </div>
+                    <th className="px-6 py-4 text-left font-semibold cursor-pointer hidden md:table-cell" onClick={() => handleSort("creator")}>
+                      <div className="flex items-center gap-2">Người tạo <SortIcon field="creator" /></div>
                     </th>
-                    <th
-                      className="px-6 py-4 text-center font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
-                      onClick={() => handleSort("wordCount")}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        Số từ <SortIcon field="wordCount" />
-                      </div>
+                    <th className="px-6 py-4 text-center font-semibold cursor-pointer" onClick={() => handleSort("wordCount")}>
+                      <div className="flex items-center justify-center gap-2">Số từ <SortIcon field="wordCount" /></div>
                     </th>
-                    <th
-                      className="px-6 py-4 text-center font-semibold cursor-pointer hover:bg-blue-700 transition-colors hidden lg:table-cell"
-                      onClick={() => handleSort("createdAt")}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        Ngày tạo <SortIcon field="createdAt" />
-                      </div>
+                    <th className="px-6 py-4 text-center font-semibold cursor-pointer hidden lg:table-cell" onClick={() => handleSort("createdAt")}>
+                      <div className="flex items-center justify-center gap-2">Ngày tạo <SortIcon field="createdAt" /></div>
                     </th>
-                    <th className="px-6 py-4 text-center font-semibold">Trạng thái</th>
-                    <th className="px-6 py-4 text-center font-semibold">Hành động</th>
+                    <th className="px-6 py-4 text-right font-semibold">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {/* Handle Empty Search Result */}
-                  {filteredAndSortedLessons.length === 0 && !loading ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-8 text-gray-500">
-                        Không tìm thấy bài học nào phù hợp.
+                  {sortedLessons.map((lesson) => (
+                    <tr key={lesson.id} className="hover:bg-blue-50 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Link to={`/lesson/${lesson.id}`} className="font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+                            {lesson.title}
+                          </Link>
+                          {lesson.isOfficial && (
+                            <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">Official</span>
+                          )}
+                          {lesson.isPrivate && !lesson.isOfficial && (
+                            <span className="text-[10px] text-gray-400 border border-gray-300 px-1.5 rounded uppercase">Riêng tư</span>
+                          )}
+                        </div>
+                        {lesson.description && <p className="text-sm text-gray-500 mt-1 line-clamp-1">{lesson.description}</p>}
                       </td>
-                    </tr>
-                  ) : (
-                    filteredAndSortedLessons.map((lesson, index) => {
-                      const isCreator = currentUsername === lesson.creator;
-                      return (
-                        <tr
-                          key={lesson.id}
-                          className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }`}
-                        >
-                          <td className="px-6 py-4">
-                            <div
-                              className="cursor-pointer"
-                              onClick={() =>
-                                navigate(`/study/${lesson.id}`, {
-                                  state: {
-                                    vocabId: lesson.vocabId,
-                                    lessonId: lesson.id,
-                                    lessonTitle: lesson.title
-                                  },
-                                })
-                              }
-                            >
-                              <div className="font-semibold text-blue-600 hover:text-blue-800 hover:underline">
-                                {lesson.title}
-                              </div>
-                              <div className="text-sm text-gray-500 mt-1 line-clamp-1">
-                                {lesson.description}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 hidden md:table-cell">
-                            {lesson.creator}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                              {lesson.wordCount} từ
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center text-gray-600 text-sm hidden lg:table-cell">
-                            {formatDate(lesson.createdAt)}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            {lesson.isPrivate ? (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                🔒 Riêng tư
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                🌐 Công khai
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-2">
+                      <td className="px-6 py-4 hidden md:table-cell text-gray-600">{lesson.creator}</td>
+                      <td className="px-6 py-4 text-center text-gray-600 font-medium">{lesson.wordCount}</td>
+                      <td className="px-6 py-4 text-center hidden lg:table-cell text-gray-500">
+                        {new Date(lesson.createdAt).toLocaleDateString("vi-VN")}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end items-center gap-1">
+                          <button
+                            onClick={() => navigate(`/study/${lesson.id}`)}
+                            className="px-3 py-1.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          >
+                            Học ngay
+                          </button>
+                          <button
+                            onClick={() => setSelectedLessonForReview(lesson.id)}
+                            className="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                          >
+                            Ôn tập
+                          </button>
+                          <button
+                            onClick={() => navigate(`/test/${lesson.id}`)}
+                            className="px-3 py-1.5 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg hover:bg-amber-600 hover:text-white transition-all shadow-sm"
+                          >
+                            Kiểm tra
+                          </button>
+
+                          {/* Owner Only Menu */}
+                          {lesson.creator === currentUsername && (
+                            <div className="relative ml-2" ref={activeMenuId === lesson.id ? menuRef : null}>
                               <button
-                                onClick={() =>
-                                  navigate(`/study/${lesson.id}`, {
-                                    state: {
-                                      vocabId: lesson.vocabId,
-                                      lessonId: lesson.id,
-                                      lessonTitle: lesson.title
-                                    },
-                                  })
-                                }
-                                className="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm border border-blue-100 hover:shadow-md active:scale-90"
-                                title="Học ngay"
+                                onClick={() => setActiveMenuId(activeMenuId === lesson.id ? null : lesson.id)}
+                                className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
                               >
-                                <span className="text-lg">📖</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
                               </button>
-                              {isCreator && (
-                                <>
+
+                              {activeMenuId === lesson.id && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
                                   <button
-                                    onClick={() => setConfirmPrivacy({ id: lesson.id, isPrivate: !lesson.isPrivate })}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-300 shadow-sm border active:scale-90 ${
-                                      lesson.isPrivate 
-                                        ? "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white" 
-                                        : "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white"
-                                    }`}
-                                    title={lesson.isPrivate ? "Chuyển công khai" : "Chuyển riêng tư"}
+                                    onClick={() => navigate(`/edit/${lesson.id}`)}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 font-bold transition-colors"
                                   >
-                                    <span className="text-lg">{lesson.isPrivate ? "🔒" : "🔓"}</span>
+                                    Chỉnh sửa bài học
                                   </button>
+                                  {!lesson.isOfficial && (
+                                    <button
+                                      onClick={() => toggleLessonPrivacy(lesson)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 font-bold transition-colors"
+                                    >
+                                      {lesson.isPrivate ? "Chế độ công khai" : "Chế độ riêng tư"}
+                                    </button>
+                                  )}
+                                  <div className="h-px bg-gray-100 my-1 mx-2"></div>
                                   <button
-                                    onClick={() => setConfirmDelete(lesson.id)}
-                                    className="w-10 h-10 flex items-center justify-center bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm border border-red-100 hover:shadow-md active:scale-90"
-                                    title="Xóa bài học"
+                                    onClick={() => {
+                                      setLessonToDelete(lesson.id);
+                                      setActiveMenuId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold transition-colors"
                                   >
-                                    <span className="text-lg">🗑️</span>
+                                    Xóa bài học
                                   </button>
-                                </>
+                                </div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Pagination Footer */}
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                {/* Pagination info */}
-                <p className="text-sm text-gray-600">
-                  Hiển thị <span className="font-semibold">{startItem}</span> đến{' '}
-                  <span className="font-semibold">{endItem}</span> trong tổng số{' '}
-                  <span className="font-semibold">{totalItems}</span> bài học
-                </p>
-
-                {/* Pagination controls */}
-                {/* Pagination components */}
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  activeColor="bg-blue-600"
-                />
-              </div>
-            </div>
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-gray-600">
+              Hiển thị {startItem}-{endItem} trong tổng số {totalItems} bài học
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         </>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
-        open={confirmDelete !== null}
-        title="Xác nhận xóa"
-        message={`Bạn có chắc chắn muốn xóa bài học này không?`}
-        onConfirm={async () => {
-          if (confirmDelete) {
-            await handleDelete(confirmDelete);
-            setConfirmDelete(null);
-          }
-        }}
-        onCancel={() => setConfirmDelete(null)}
+        open={!!lessonToDelete}
+        title="Xóa bài học"
+        message="Bạn có chắc chắn muốn xóa bài học này? Hành động này không thể hoàn tác."
+        onConfirm={confirmDelete}
+        onCancel={() => setLessonToDelete(null)}
       />
 
-      {/* Privacy Toggle Confirmation Modal */}
-      <ConfirmModal
-        open={confirmPrivacy !== null}
-        title="Thay đổi quyền riêng tư"
-        message={`Bạn có chắc chắn muốn ${confirmPrivacy?.isPrivate ? "chuyển sang riêng tư" : "chuyển sang công khai"} bài học này không?`}
-        onConfirm={async () => {
-          if (confirmPrivacy) {
-            await handleTogglePrivacy(confirmPrivacy.id, confirmPrivacy.isPrivate);
-            setConfirmPrivacy(null);
-          }
-        }}
-        onCancel={() => setConfirmPrivacy(null)}
+      <ExerciseSelectionModal
+        open={selectedLessonForReview !== null}
+        onClose={() => setSelectedLessonForReview(null)}
+        lessonId={selectedLessonForReview || ""}
       />
     </div>
   );

@@ -6,7 +6,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Study from './pages/Study';
 import MyLessons from './pages/users/MyLessons';
-import FolderDetailPage from './pages/users/FolderDetailPage';
 import EditLesson from './pages/users/EditLesson';
 import StudyHistory from './pages/StudyHistory';
 import ReviewLessonPage from './pages/ReviewLessonPage';
@@ -22,6 +21,11 @@ import SRSReviewPage from './pages/SRSReviewPage';
 import { Toaster } from 'react-hot-toast';
 
 import PrivateRoute from './components/common/PrivateRoute';
+import AdminRoute from './components/common/AdminRoute';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminCreateLesson from './pages/admin/AdminCreateLesson';
+import LessonView from './pages/LessonView';
+import FolderView from './pages/FolderView';
 
 function App() {
   return (
@@ -35,6 +39,12 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         {/* <Route path="/migration" element={<Migration />} /> */}
 
+        {/* Admin Routes */}
+        <Route element={<AdminRoute />}>
+           <Route path="/admin" element={<AdminDashboard />} />
+           <Route path="/admin/create-lesson" element={<AdminCreateLesson />} />
+        </Route>
+
         {/* Protected Routes - Login Required */}
         <Route element={<PrivateRoute />}>
           <Route path="/" element={<Home />} />
@@ -44,7 +54,7 @@ function App() {
           <Route path="/srs-review" element={<SRSReviewPage />} />
           <Route path="/create-lesson" element={<CreateLesson />} />
           <Route path="/my-lessons" element={<MyLessons />} />
-          <Route path="/folder/:folderId" element={<FolderDetailPage />} />
+          <Route path="/folder/:folderId" element={<FolderView />} />
           <Route path="/edit/:lessonId" element={<EditLesson />} />
           <Route path="/study/:lessonId" element={<Study />} />
           <Route path="/study-history" element={<StudyHistory />} />
@@ -52,6 +62,7 @@ function App() {
           <Route path="/review/:lessonId" element={<ReviewPage />} />
           <Route path="/test-page" element={<TestLessonPage />} />
           <Route path="/test/:lessonId" element={<TestPage />} />
+          <Route path="/lesson/:lessonId" element={<LessonView />} />
         </Route>
       </Routes>
     </div>
