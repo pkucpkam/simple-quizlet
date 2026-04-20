@@ -8,6 +8,7 @@ import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import ActivityHeatmap from "../components/common/ActivityHeatmap";
 import Pagination from "../components/common/Pagination";
 import type { Folder } from "../types/folder";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 
 interface Lesson {
   id: string;
@@ -56,6 +57,7 @@ export default function Home() {
   // Hover & Menu state
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -196,7 +198,6 @@ export default function Home() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -344,7 +345,7 @@ export default function Home() {
                             Học ngay
                           </button>
                           <button
-                            onClick={() => navigate(`/review/${lesson.id}`)}
+                            onClick={() => setSelectedLessonForReview(lesson.id)}
                             className="px-3 py-1.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                           >
                             Ôn tập
@@ -426,6 +427,12 @@ export default function Home() {
         message="Bạn có chắc chắn muốn xóa bài học này? Hành động này không thể hoàn tác."
         onConfirm={confirmDelete}
         onCancel={() => setLessonToDelete(null)}
+      />
+
+      <ExerciseSelectionModal
+        open={selectedLessonForReview !== null}
+        onClose={() => setSelectedLessonForReview(null)}
+        lessonId={selectedLessonForReview || ""}
       />
     </div>
   );

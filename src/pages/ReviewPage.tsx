@@ -8,9 +8,12 @@ import { lessonService } from "../service/lessonService";
 import ReviewResult from "../components/review/ReviewResult";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
+import LoadingScreen from "../components/common/LoadingScreen";
 
-const quizTypes = ["normal", "reverse", "practice", "matching"] as const;
-type QuizType = (typeof quizTypes)[number];
+import { useSearchParams } from "react-router-dom";
+
+const allQuizTypes = ["normal", "reverse", "practice", "matching"] as const;
+type QuizType = (typeof allQuizTypes)[number];
 
 const ReviewPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -28,6 +31,8 @@ const ReviewPage = () => {
   const [lessonTitle, setLessonTitle] = useState("");
 
 
+  const [searchParams] = useSearchParams();
+  const [quizTypes, setQuizTypes] = useState<QuizType[]>(["normal", "reverse", "practice", "matching"]);
   const [quizType, setQuizType] = useState<QuizType>("normal");
 
   const WORDS_PER_SESSION = 5;
@@ -45,7 +50,18 @@ const ReviewPage = () => {
         const shuffledVocabData = [...vocabData].sort(() => Math.random() - 0.5);
         setFullVocabList(vocabData);
         setVocabList(shuffledVocabData);
-        setQuizType(quizTypes[Math.floor(Math.random() * quizTypes.length)]);
+
+        // Parse types from URL
+        const typesParam = searchParams.get("types");
+        let filteredTypes: QuizType[] = [...allQuizTypes];
+        if (typesParam) {
+          const requestedTypes = typesParam.split(",") as QuizType[];
+          filteredTypes = allQuizTypes.filter(t => requestedTypes.includes(t));
+        }
+        
+        if (filteredTypes.length === 0) filteredTypes = [...allQuizTypes];
+        setQuizTypes(filteredTypes);
+        setQuizType(filteredTypes[Math.floor(Math.random() * filteredTypes.length)]);
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu bài học:", error);
       } finally {
@@ -53,7 +69,7 @@ const ReviewPage = () => {
       }
     };
     fetchLesson();
-  }, [lessonId]);
+  }, [lessonId, searchParams]);
 
   useEffect(() => {
     if (currentIndex >= vocabList.length && vocabList.length > 0 && !hasSaved) {
@@ -115,7 +131,7 @@ const ReviewPage = () => {
 
 
   if (loading) {
-    return <div className="p-6 text-center text-lg">Đang tải dữ liệu...</div>;
+    return <LoadingScreen />;
   }
 
   if (currentIndex >= vocabList.length) {

@@ -153,7 +153,9 @@ const LessonView: React.FC = () => {
                                 <tr className="bg-gray-50/50 border-b border-gray-50">
                                     <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Từ vựng</th>
                                     <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Phiên âm</th>
-                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Định nghĩa & Nghĩa</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Loại từ</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Nghĩa</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-gray-400">Ví dụ</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -163,10 +165,27 @@ const LessonView: React.FC = () => {
                                             <span className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors tracking-tight">{item.word}</span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">/{item.ipa || "..."}/</span>
+                                            <span className="font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">{item.ipa ? `/${item.ipa}/` : '—'}</span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            {item.wordType ? (
+                                                <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-2 py-1 rounded-full">{item.wordType}</span>
+                                            ) : (
+                                                <span className="text-gray-300">&mdash;</span>
+                                            )}
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className="text-sm font-bold text-gray-600 leading-relaxed">{item.definition}</span>
+                                        </td>
+                                        <td className="px-8 py-6 max-w-xs">
+                                            {item.exampleEn ? (
+                                                <div>
+                                                    <p className="text-sm text-gray-700 italic">"{item.exampleEn}"</p>
+                                                    {item.exampleVi && <p className="text-xs text-gray-400 mt-1">{item.exampleVi}</p>}
+                                                </div>
+                                            ) : (
+                                                <span className="text-gray-300">&mdash;</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

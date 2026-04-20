@@ -4,6 +4,7 @@ import { lessonService } from "../service/lessonService";
 import toast from "react-hot-toast";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
+import LoadingScreen from "../components/common/LoadingScreen";
 
 interface VocabItem {
     term: string;
@@ -164,11 +165,7 @@ export default function TestPage() {
     };
 
     if (loading) {
-        return (
-            <div className="p-8 flex justify-center items-center">
-                <p className="text-gray-500 text-lg">Đang tải bài kiểm tra...</p>
-            </div>
-        );
+        return <LoadingScreen />;
     }
 
     if (showResults) {

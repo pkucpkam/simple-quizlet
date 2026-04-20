@@ -6,6 +6,9 @@ interface FlashcardData {
   term: string;
   definition: string;
   ipa?: string;
+  wordType?: string;
+  exampleEn?: string;
+  exampleVi?: string;
   status: 'know' | 'still_learning' | null;
 }
 
@@ -57,8 +60,13 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
         >
           <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] z-10">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center">{card.term}</h2>
+            {card.wordType && (
+              <span className="mt-2 mb-1 inline-block bg-amber-100 text-amber-800 text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase font-bold tracking-wider">
+                {card.wordType}
+              </span>
+            )}
             {card.ipa && (
-              <p className="mt-2 text-lg sm:text-xl text-blue-600 font-mono tracking-wide">{card.ipa}</p>
+              <p className="mt-1 text-lg sm:text-xl text-blue-600 font-mono tracking-wide">{card.ipa}</p>
             )}
             <button
               onClick={(e) => {
@@ -85,8 +93,14 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
               </svg>
             </button>
           </div>
-          <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-600">{card.definition}</p>
+          <div className="absolute w-full h-full bg-white rounded-lg shadow-lg flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-800 font-bold text-center">{card.definition}</p>
+            {card.exampleEn && (
+              <div className="mt-6 text-center max-w-[90%] border-t border-gray-100 pt-4">
+                <p className="text-sm sm:text-base text-gray-600 italic leading-relaxed">"{card.exampleEn}"</p>
+                {card.exampleVi && <p className="text-xs sm:text-sm text-gray-400 mt-2">{card.exampleVi}</p>}
+              </div>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();

@@ -1,17 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { lessonService } from "../../service/lessonService";
+import { lessonService, type VocabItem } from "../../service/lessonService";
 import EditableCard from "../../components/edit/EditedCard";
-
-interface Vocab {
-  word: string;
-  definition: string;
-}
 
 export default function EditLesson() {
   const { lessonId } = useParams<{ lessonId: string }>();
   const [title, setTitle] = useState("");
-  const [words, setWords] = useState<Vocab[]>([]);
+  const [words, setWords] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -33,11 +28,9 @@ export default function EditLesson() {
     fetchLesson();
   }, [lessonId]);
 
-  const handleChangeWord = (index: number, newWord: string, newDefinition: string) => {
+  const handleChangeWord = (index: number, newItem: VocabItem) => {
     setWords((prev) =>
-      prev.map((item, i) =>
-        i === index ? { word: newWord, definition: newDefinition } : item
-      )
+      prev.map((item, i) => (i === index ? newItem : item))
     );
   };
 
@@ -46,7 +39,7 @@ export default function EditLesson() {
   };
 
   const handleAddWord = () => {
-    setWords((prev) => [...prev, { word: "", definition: "" }]);
+    setWords((prev) => [...prev, { word: "", definition: "", ipa: "", wordType: "", exampleEn: "", exampleVi: "" }]);
   };
 
   const handleSave = async () => {
@@ -81,9 +74,8 @@ export default function EditLesson() {
         {words.map((word, index) => (
           <EditableCard
             key={index}
-            word={word.word}
-            definition={word.definition}
-            onChange={(w, d) => handleChangeWord(index, w, d)}
+            item={word}
+            onChange={(newItem) => handleChangeWord(index, newItem)}
             onDelete={() => handleDeleteWord(index)}
           />
         ))}

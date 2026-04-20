@@ -21,7 +21,11 @@ export interface VocabItem {
   word: string;
   definition: string;
   ipa?: string;
+  wordType?: string;    // e.g. noun, verb, adj...
+  exampleEn?: string;  // English example sentence
+  exampleVi?: string;  // Vietnamese translation of example
 }
+
 
 export interface Lesson {
   id: string;
@@ -46,10 +50,13 @@ export interface PaginatedLessonsResult {
 export const lessonService = {
   async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string, isOfficial: boolean = false) {
     try {
-      const vocabData = vocabList.map(({ word, definition, ipa }) => ({
+      const vocabData = vocabList.map(({ word, definition, ipa, wordType, exampleEn, exampleVi }) => ({
         word,
         definition,
-        ...(ipa ? { ipa } : {})
+        ...(ipa ? { ipa } : {}),
+        ...(wordType ? { wordType } : {}),
+        ...(exampleEn ? { exampleEn } : {}),
+        ...(exampleVi ? { exampleVi } : {}),
       }));
 
       const vocabRef = await addDoc(collection(db, "vocabularies"), {

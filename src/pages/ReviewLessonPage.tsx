@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import ConfirmModal from "../components/common/ConfirmModal";
 import type { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import Pagination from "../components/common/Pagination";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 
 interface Lesson {
   id: string;
@@ -31,6 +32,7 @@ export default function ReviewLessonPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmPrivacy, setConfirmPrivacy] = useState<{ id: string; isPrivate: boolean } | null>(null);
+  const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -177,7 +179,6 @@ export default function ReviewLessonPage() {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -326,7 +327,7 @@ export default function ReviewLessonPage() {
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-3">
                               <button
-                                onClick={() => navigate(`/review/${lesson.id}`)}
+                                onClick={() => setSelectedLessonForReview(lesson.id)}
                                 className="w-10 h-10 flex items-center justify-center bg-green-50 text-green-600 rounded-xl hover:bg-green-600 hover:text-white transition-all duration-300 shadow-sm border border-green-100 hover:shadow-md active:scale-90"
                                 title="Ôn tập ngay"
                               >
@@ -397,6 +398,11 @@ export default function ReviewLessonPage() {
           }
         }}
         onCancel={() => setConfirmPrivacy(null)}
+      />
+      <ExerciseSelectionModal
+        open={selectedLessonForReview !== null}
+        onClose={() => setSelectedLessonForReview(null)}
+        lessonId={selectedLessonForReview || ""}
       />
     </div>
   );
