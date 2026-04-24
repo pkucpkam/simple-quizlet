@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as XLSX from "xlsx";
 import type { VocabItem } from "../../service/lessonService";
 
@@ -6,6 +6,7 @@ interface ImportVocabModalProps {
   open: boolean;
   onClose: () => void;
   onImport: (items: VocabItem[]) => void;
+  initialText?: string;
 }
 
 type ImportTab = "text" | "csv" | "excel";
@@ -50,13 +51,21 @@ function parseCsvText(raw: string): VocabItem[] {
     .filter(Boolean) as VocabItem[];
 }
 
-export default function ImportVocabModal({ open, onClose, onImport }: ImportVocabModalProps) {
+export default function ImportVocabModal({ open, onClose, onImport, initialText = "" }: ImportVocabModalProps) {
   const [tab, setTab] = useState<ImportTab>("text");
   const [textInput, setTextInput] = useState("");
   const [preview, setPreview] = useState<VocabItem[]>([]);
   const [error, setError] = useState("");
   const [fileName, setFileName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setTextInput(initialText);
+      const items = parseTextInput(initialText);
+      setPreview(items);
+    }
+  }, [open, initialText]);
 
   if (!open) return null;
 

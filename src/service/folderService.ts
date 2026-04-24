@@ -58,10 +58,20 @@ export const folderService = {
             );
 
             const foldersSnapshot = await getDocs(q);
-            const folders: Folder[] = foldersSnapshot.docs.map((doc) => {
-                const data = doc.data();
+            
+            // Đếm số bài học cho từng thư mục cá nhân một cách chính xác
+            const folders: Folder[] = await Promise.all(foldersSnapshot.docs.map(async (folderDoc) => {
+                const data = folderDoc.data();
+                
+                const lessonsQuery = query(
+                    collection(db, "lessons"),
+                    where("folderId", "==", folderDoc.id)
+                );
+                const lessonsCountSnapshot = await getCountFromServer(lessonsQuery);
+                const actualCount = lessonsCountSnapshot.data().count;
+
                 return {
-                    id: doc.id,
+                    id: folderDoc.id,
                     name: data.name,
                     description: data.description || "",
                     creator: data.creator,
@@ -69,9 +79,9 @@ export const folderService = {
                     updatedAt: data.updatedAt?.toDate(),
                     color: data.color || "#3B82F6",
                     icon: data.icon || "📁",
-                    lessonCount: data.lessonCount || 0,
+                    lessonCount: actualCount,
                 };
-            });
+            }));
 
             return folders;
         } catch (error) {
@@ -91,6 +101,15 @@ export const folderService = {
             }
 
             const data = folderDoc.data();
+            
+            // Đếm số bài học thực tế trong thư mục này
+            const lessonsQuery = query(
+                collection(db, "lessons"),
+                where("folderId", "==", folderId)
+            );
+            const lessonsCountSnapshot = await getCountFromServer(lessonsQuery);
+            const actualCount = lessonsCountSnapshot.data().count;
+
             return {
                 id: folderDoc.id,
                 name: data.name,
@@ -100,7 +119,7 @@ export const folderService = {
                 updatedAt: data.updatedAt?.toDate(),
                 color: data.color || "#3B82F6",
                 icon: data.icon || "📁",
-                lessonCount: data.lessonCount || 0,
+                lessonCount: actualCount,
             };
         } catch (error) {
             console.error("Lỗi khi lấy thông tin thư mục:", error);
@@ -233,10 +252,21 @@ export const folderService = {
             );
 
             const foldersSnapshot = await getDocs(q);
-            const folders: Folder[] = foldersSnapshot.docs.map((doc) => {
-                const data = doc.data();
+            
+            // Đếm số bài học cho từng thư mục một cách chính xác
+            const folders: Folder[] = await Promise.all(foldersSnapshot.docs.map(async (folderDoc) => {
+                const data = folderDoc.data();
+                
+                // Query đếm số bài học thực tế có folderId này
+                const lessonsQuery = query(
+                    collection(db, "lessons"),
+                    where("folderId", "==", folderDoc.id)
+                );
+                const lessonsCountSnapshot = await getCountFromServer(lessonsQuery);
+                const actualCount = lessonsCountSnapshot.data().count;
+
                 return {
-                    id: doc.id,
+                    id: folderDoc.id,
                     name: data.name,
                     description: data.description || "",
                     creator: data.creator,
@@ -244,10 +274,10 @@ export const folderService = {
                     updatedAt: data.updatedAt?.toDate(),
                     color: data.color || "#3B82F6",
                     icon: data.icon || "📁",
-                    lessonCount: data.lessonCount || 0,
+                    lessonCount: actualCount,
                     isOfficial: true
                 };
-            });
+            }));
 
             return folders;
         } catch (error) {

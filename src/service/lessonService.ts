@@ -37,7 +37,8 @@ export interface Lesson {
   wordCount: number;
   isPrivate: boolean;
   isOfficial?: boolean;
-  vocabulary?: VocabItem[]; // Add this
+  folderId?: string | null;
+  vocabulary?: VocabItem[];
 }
 
 export interface PaginatedLessonsResult {
@@ -397,7 +398,8 @@ export const lessonService = {
         description: lessonData.description || "",
         wordCount: lessonData.wordCount || vocab.length,
         isOfficial: lessonData.isOfficial || false,
-        isPrivate: lessonData.isPrivate || false, // Add this
+        isPrivate: lessonData.isPrivate || false,
+        folderId: lessonData.folderId || null,
         vocabulary: vocab,
       };
     } catch (error) {
@@ -406,7 +408,7 @@ export const lessonService = {
     }
   },
 
-  async updateLesson(lessonId: string, title: string, vocabList: VocabItem[], description: string = "") {
+  async updateLesson(lessonId: string, title: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string | null) {
     try {
       const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
       if (!lessonDoc.exists()) {
@@ -423,6 +425,8 @@ export const lessonService = {
         title,
         description,
         wordCount: vocabList.length,
+        isPrivate,
+        folderId: folderId ?? null,
         updatedAt: new Date(),
       });
 
@@ -458,6 +462,21 @@ export const lessonService = {
     } catch (error) {
       console.error("Lỗi khi di chuyển bài học:", error);
       throw new Error("Không thể di chuyển bài học.");
+    }
+  },
+
+  // Count lessons in folder (general)
+  async countLessonsInFolderGeneral(folderId: string): Promise<number> {
+    try {
+      const q = query(
+        collection(db, "lessons"),
+        where("folderId", "==", folderId)
+      );
+      const snapshot = await getCountFromServer(q);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error("Lỗi khi đếm bài học trong thư mục:", error);
+      return 0;
     }
   },
 

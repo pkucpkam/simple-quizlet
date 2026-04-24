@@ -9,6 +9,18 @@ const LessonView: React.FC = () => {
     const [lesson, setLesson] = useState<Lesson | null>(null);
     const [words, setWords] = useState<VocabItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<{ email: string; username?: string } | null>(null);
+
+    useEffect(() => {
+        const storedUser = sessionStorage.getItem("user");
+        if (storedUser) {
+            try {
+                setCurrentUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Error parsing user from session storage", e);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         const fetchLessonData = async () => {
@@ -127,7 +139,7 @@ const LessonView: React.FC = () => {
                         </svg>
                         Ôn tập
                     </button>
-                    <button
+                     <button
                         onClick={() => navigate(`/test/${lesson.id}`)}
                         className="flex-1 min-w-[180px] bg-amber-600 hover:bg-amber-700 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-amber-100"
                     >
@@ -136,6 +148,19 @@ const LessonView: React.FC = () => {
                         </svg>
                         Kiểm tra
                     </button>
+
+                    {/* Edit Button for Owner */}
+                    {currentUser && (currentUser.username === lesson.creator || currentUser.email === lesson.creator) && (
+                        <button
+                            onClick={() => navigate(`/edit/${lesson.id}`)}
+                            className="flex-1 min-w-[180px] bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-gray-100"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            Chỉnh sửa
+                        </button>
+                    )}
                 </div>
 
                 {/* Word List Table */}

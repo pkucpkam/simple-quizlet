@@ -366,11 +366,10 @@ export default function CreateLesson() {
         <button
           onClick={handleCreate}
           disabled={loading || validWords.length === 0 || !title.trim()}
-          className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg active:scale-95 ${
-            loading || validWords.length === 0 || !title.trim()
+          className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg active:scale-95 ${loading || validWords.length === 0 || !title.trim()
               ? "bg-gray-300 cursor-not-allowed shadow-none"
               : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
-          }`}
+            }`}
         >
           {loading ? "Đang tạo..." : "🚀 Tạo bài học"}
         </button>
