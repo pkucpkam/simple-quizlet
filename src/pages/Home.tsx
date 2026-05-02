@@ -98,10 +98,10 @@ export default function Home() {
           const cursor = pageCursors.get(currentPage) || null;
           const result: PaginatedLessonsResult = await lessonService.getLessonsPaginated(
             itemsPerPage,
-            cursor
+            cursor,
+            true // Always skip expensive count query
           );
           setLessons(result.lessons as Lesson[]);
-          setTotalItems(result.total);
           if (result.hasMore && result.lastVisible) {
             setPageCursors(prev => {
               const newMap = new Map(prev);
@@ -118,7 +118,8 @@ export default function Home() {
       }
     };
     fetchLessons();
-  }, [debouncedTerm, currentPage, itemsPerPage, pageCursors]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedTerm, currentPage, itemsPerPage]);
 
   // Handle click outside menu
   useEffect(() => {
@@ -192,8 +193,6 @@ export default function Home() {
   };
 
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -239,7 +238,6 @@ export default function Home() {
               >
                 <span className="text-4xl mb-2 group-hover:scale-110 transition-transform">{folder.icon}</span>
                 <span className="font-bold text-gray-800 text-center text-sm truncate w-full">{folder.name}</span>
-                <span className="text-xs text-gray-500 mt-1">{folder.lessonCount} bài học</span>
               </Link>
             ))}
           </div>
@@ -408,10 +406,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-600">
-              Hiển thị {startItem}-{endItem} trong tổng số {totalItems} bài học
-            </p>
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-end gap-4">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

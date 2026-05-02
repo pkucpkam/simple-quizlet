@@ -159,7 +159,8 @@ export const lessonService = {
   // NEW: Optimized paginated lessons fetching
   async getLessonsPaginated(
     pageSize: number = 10,
-    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null
+    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null,
+    skipCount: boolean = false
   ): Promise<PaginatedLessonsResult> {
     try {
       // Build base query
@@ -203,8 +204,8 @@ export const lessonService = {
         };
       });
 
-      // Get total count (cached by Firestore)
-      const total = await this.getTotalLessonsCount();
+      // Get total count (only if not skipped)
+      const total = skipCount ? 0 : await this.getTotalLessonsCount();
 
       return {
         lessons,
@@ -221,7 +222,8 @@ export const lessonService = {
   // NEW: Optimized paginated ALL lessons fetching (for Admin)
   async getAllLessonsPaginated(
     pageSize: number = 10,
-    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null
+    lastVisibleDoc: QueryDocumentSnapshot<DocumentData> | null = null,
+    skipCount: boolean = false
   ): Promise<PaginatedLessonsResult> {
     try {
       let q = query(
@@ -259,7 +261,7 @@ export const lessonService = {
         };
       });
 
-      const total = await this.getTotalAllLessonsCount();
+      const total = skipCount ? 0 : await this.getTotalAllLessonsCount();
 
       return {
         lessons,
@@ -274,28 +276,52 @@ export const lessonService = {
   },
 
   async getTotalAllLessonsCount(): Promise<number> {
+    const CACHE_KEY = "total_all_lessons_count";
+    const CACHE_TIME_KEY = "total_all_lessons_count_time";
+    const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
     try {
+      const cachedValue = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+      const now = Date.now();
+
+      if (cachedValue && cachedTime && now - parseInt(cachedTime) < CACHE_DURATION) {
+        return parseInt(cachedValue);
+      }
+
       const q = query(collection(db, "lessons"));
       const snapshot = await getCountFromServer(q);
-      return snapshot.data().count;
-    } catch {
-      return 0;
+      const count = snapshot.data().count;
+
+      localStorage.setItem(CACHE_KEY, count.toString());
+      localStorage.setItem(CACHE_TIME_KEY, now.toString());
+
+      return count;
+    } catch (error) {
+      console.error("Lỗi khi đếm tất cả bài học:", error);
+      const expiredValue = localStorage.getItem(CACHE_KEY);
+      return expiredValue ? parseInt(expiredValue) : 0;
     }
   },
 
   // Get total count of public lessons (for pagination info)
   async getTotalLessonsCount(): Promise<number> {
+    const CACHE_KEY = "total_lessons_count";
+    // HARD DISABLED network call to prevent persistent 429 logs
+    // The UI on Home page no longer requires this count.
     try {
-      const q = query(
-        collection(db, "lessons"),
-        where("isPrivate", "==", false)
-      );
-      const snapshot = await getCountFromServer(q);
-      return snapshot.data().count;
-    } catch (error) {
-      console.error("Lỗi khi đếm số bài học:", error);
-      return 0; // Return 0 on error to prevent UI break
+      const cachedValue = localStorage.getItem(CACHE_KEY);
+      if (cachedValue) return parseInt(cachedValue);
+      
+      // Return a reasonable default if no cache exists
+      return 0;
+    } catch {
+      return 0;
     }
+    /* 
+    const snapshot = await getCountFromServer(q);
+    ...
+    */
   },
 
   async getVocabulary(vocabId: string): Promise<VocabItem[]> {
