@@ -37,21 +37,29 @@ const AdminDashboard: React.FC = () => {
       if (activeTab === 'users') {
         const result = await getPaginatedUsers(pageSize, cursor);
         setUsers(result.users);
-        setTotalItems(result.total);
+        setTotalItems(result.total); // Users count is cheap/required here
         if (result.hasMore && result.lastVisible) {
           setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
         }
       } else if (activeTab === 'lessons') {
-        const result = await lessonService.getAllLessonsPaginated(pageSize, cursor);
+        const result = await lessonService.getAllLessonsPaginated(
+          pageSize, 
+          cursor, 
+          totalItems > 0 // Skip count if we already have it
+        );
         setLessons(result.lessons);
-        setTotalItems(result.total);
+        if (totalItems === 0) setTotalItems(result.total);
         if (result.hasMore && result.lastVisible) {
             setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
         }
       } else if (activeTab === 'folders') {
-        const result = await folderService.getAllFoldersPaginated(pageSize, cursor);
+        const result = await folderService.getAllFoldersPaginated(
+          pageSize, 
+          cursor, 
+          totalItems > 0 // Skip count if we already have it
+        );
         setFolders(result.folders);
-        setTotalItems(result.total);
+        if (totalItems === 0) setTotalItems(result.total);
         if (result.hasMore && result.lastVisible) {
             setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
         }

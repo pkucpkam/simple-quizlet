@@ -39,8 +39,15 @@ export default function MyLessons() {
         lessonService.getMyLessons(username),
         folderService.getMyFolders(username),
       ]);
+
+      // Calculate lesson counts locally to avoid N+1 server queries and ensure accuracy
+      const enrichedFolders = fetchedFolders.map(folder => ({
+        ...folder,
+        lessonCount: fetchedLessons.filter(l => l.folderId === folder.id).length
+      }));
+
       setLessons(fetchedLessons);
-      setFolders(fetchedFolders);
+      setFolders(enrichedFolders);
     } catch {
       setError("Không thể tải dữ liệu. Vui lòng thử lại.");
     } finally {
