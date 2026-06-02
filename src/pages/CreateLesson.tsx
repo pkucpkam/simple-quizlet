@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { lessonService } from "../service/lessonService";
 import type { VocabItem } from "../service/lessonService";
 import { folderService } from "../service/folderService";
@@ -18,6 +19,9 @@ const emptyWord = (): VocabItem => ({
 });
 
 export default function CreateLesson() {
+  const [searchParams] = useSearchParams();
+  const folderIdFromUrl = searchParams.get("folderId");
+
   const [title, setTitle] = useState("");
   const [vocabItems, setVocabItems] = useState<VocabItem[]>([emptyWord(), emptyWord()]);
   const [autoFetchIpa, setAutoFetchIpa] = useState(false);
@@ -29,9 +33,10 @@ export default function CreateLesson() {
   const [showPrivateInfoModal, setShowPrivateInfoModal] = useState(false);
   const [showFolderInfoModal, setShowFolderInfoModal] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(folderIdFromUrl);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [showImportModal, setShowImportModal] = useState(false);
+
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
@@ -49,6 +54,18 @@ export default function CreateLesson() {
   const loadFolders = async (username: string) => {
     try {
       const fetchedFolders = await folderService.getMyFolders(username);
+      
+      if (folderIdFromUrl) {
+        try {
+          const specificFolder = await folderService.getFolder(folderIdFromUrl);
+          if (specificFolder && !fetchedFolders.some(f => f.id === specificFolder.id)) {
+            fetchedFolders.unshift(specificFolder);
+          }
+        } catch (err) {
+          console.error("Error fetching folder from URL:", err);
+        }
+      }
+
       setFolders(fetchedFolders);
     } catch (error) {
       console.error("Error loading folders:", error);
