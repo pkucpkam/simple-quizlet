@@ -4,6 +4,8 @@ import { folderService } from "../service/folderService";
 import type { Folder } from "../types/folder";
 import type { Lesson } from "../service/lessonService";
 import { toast } from "react-hot-toast";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
+
 
 const FolderView: React.FC = () => {
     const { folderId } = useParams<{ folderId: string }>();
@@ -11,6 +13,8 @@ const FolderView: React.FC = () => {
     const [folder, setFolder] = useState<Folder | null>(null);
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
+
 
     useEffect(() => {
         const fetchFolderData = async () => {
@@ -56,26 +60,38 @@ const FolderView: React.FC = () => {
             {/* Header Hero Area */}
             <div className={`relative overflow-hidden ${folder.isOfficial ? 'bg-gradient-to-br from-indigo-700 to-purple-900' : 'bg-gradient-to-br from-blue-700 to-blue-900'} text-white py-16 px-4`}>
                 <div className="max-w-6xl mx-auto relative z-10">
-                    <button 
-                        onClick={() => navigate(-1)} 
-                        className="mb-8 flex items-center gap-2 text-white/70 hover:text-white transition-colors font-bold uppercase tracking-widest text-xs"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Trang chủ
-                    </button>
+                    <div className="flex justify-between items-center mb-8">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors font-bold uppercase tracking-widest text-xs"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Trang chủ
+                        </button>
+
+                        <button
+                            onClick={() => navigate(`/create-lesson?folderId=${folderId}`)}
+                            className="flex items-center gap-2 bg-white/20 backdrop-blur-md hover:bg-white/35 text-white font-bold px-4 py-2.5 rounded-2xl text-xs uppercase tracking-widest transition-all active:scale-95 border border-white/25 shadow-lg"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Tạo bài học mới
+                        </button>
+                    </div>
 
                     <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
                         <div className="flex items-center justify-center w-28 h-28 bg-white/10 backdrop-blur-xl rounded-[2.5rem] text-6xl shadow-2xl border border-white/20 transition-transform hover:scale-105 duration-500">
-                           {folder.icon}
+                            {folder.icon}
                         </div>
                         <div className="flex-1 text-center md:text-left space-y-4">
                             <div className="flex flex-col md:flex-row md:items-center gap-4">
                                 <h1 className="text-4xl md:text-5xl font-black tracking-tight">{folder.name}</h1>
                                 {folder.isOfficial && (
                                     <span className="inline-block bg-white text-indigo-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest self-center">
-                                       Lộ trình Hệ thống
+                                        Lộ trình Hệ thống
                                     </span>
                                 )}
                             </div>
@@ -110,48 +126,54 @@ const FolderView: React.FC = () => {
             <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {lessons.map((lesson) => (
-                        <div 
+                        <div
                             key={lesson.id}
                             className="group bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200 border border-transparent hover:border-indigo-500 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full"
                         >
                             <div className="flex-1">
                                 <div className="flex justify-between items-start mb-4">
-                                     <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">
-                                         {lesson.wordCount} Từ vựng
-                                     </span>
-                                     <div className="text-xs font-bold text-gray-300 italic">
-                                         {new Date(lesson.createdAt).toLocaleDateString()}
-                                     </div>
+                                    <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">
+                                        {lesson.wordCount} Từ vựng
+                                    </span>
+                                    <div className="text-xs font-bold text-gray-300 italic">
+                                        {new Date(lesson.createdAt).toLocaleDateString()}
+                                    </div>
                                 </div>
                                 <h3 className="text-2xl font-black text-gray-900 group-hover:text-indigo-600 transition truncate mb-2">{lesson.title}</h3>
                                 <p className="text-gray-400 font-medium text-sm line-clamp-2 mb-6 leading-relaxed">
                                     {lesson.description || "Bấm để bắt đầu lộ trình học tập hiệu quả với bộ thẻ ghi nhớ này."}
                                 </p>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-3 mt-4">
-                                <Link 
+
+                            <div className="grid grid-cols-3 gap-2 mt-4">
+                                <Link
                                     to={`/lesson/${lesson.id}`}
-                                    className="col-span-2 bg-gray-50 hover:bg-indigo-50 text-indigo-600 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-xs transition-colors border-2 border-transparent hover:border-indigo-100"
+                                    className="col-span-3 bg-gray-50 hover:bg-indigo-50 text-indigo-600 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-xs transition-colors border-2 border-transparent hover:border-indigo-100"
                                 >
                                     Xem chi tiết →
                                 </Link>
-                                <button 
+                                <button
                                     onClick={() => navigate(`/study/${lesson.id}`)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-blue-100 active:scale-95"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-blue-100 active:scale-95"
                                 >
                                     Học ngay
                                 </button>
-                                <button 
+                                <button
+                                    onClick={() => setSelectedLessonForReview(lesson.id)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-emerald-100 active:scale-95"
+                                >
+                                    Ôn tập
+                                </button>
+                                <button
                                     onClick={() => navigate(`/test/${lesson.id}`)}
-                                    className="bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-purple-100 active:scale-95"
+                                    className="bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-purple-100 active:scale-95"
                                 >
                                     Kiểm tra
                                 </button>
                             </div>
                         </div>
                     ))}
-                    
+
                     {lessons.length === 0 && (
                         <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-100 shadow-sm">
                             <div className="text-6xl mb-6 grayscale opacity-30">📚</div>
@@ -167,6 +189,12 @@ const FolderView: React.FC = () => {
                     <div className="h-1 w-20 bg-gray-100 mx-auto rounded-full"></div>
                 </div>
             </div>
+
+            <ExerciseSelectionModal
+                open={selectedLessonForReview !== null}
+                onClose={() => setSelectedLessonForReview(null)}
+                lessonId={selectedLessonForReview || ""}
+            />
         </div>
     );
 };
