@@ -48,17 +48,31 @@ export interface PaginatedLessonsResult {
   total: number;
 }
 
+const sanitizeVocabData = (vocabList: VocabItem[]) => {
+  return vocabList.map((item, index) => {
+    const cleanItem = {
+      word: item.word ?? "",
+      definition: item.definition ?? "",
+      ...(item.ipa !== undefined ? { ipa: item.ipa } : {}),
+      ...(item.wordType !== undefined ? { wordType: item.wordType } : {}),
+      ...(item.exampleEn !== undefined ? { exampleEn: item.exampleEn } : {}),
+      ...(item.exampleVi !== undefined ? { exampleVi: item.exampleVi } : {}),
+    };
+
+    Object.entries(cleanItem).forEach(([key, value]) => {
+      if (value === undefined) {
+        console.error(`[Data Error] Lỗi dữ liệu ở dòng ${index + 1} (Từ: "${cleanItem.word}"). Trường "${key}" bị undefined. Dữ liệu gốc:`, item);
+      }
+    });
+
+    return cleanItem;
+  });
+};
+
 export const lessonService = {
   async createLesson(title: string, creator: string, vocabList: VocabItem[], description: string = "", isPrivate: boolean = false, folderId?: string, isOfficial: boolean = false) {
     try {
-      const vocabData = vocabList.map(({ word, definition, ipa, wordType, exampleEn, exampleVi }) => ({
-        word,
-        definition,
-        ...(ipa ? { ipa } : {}),
-        ...(wordType ? { wordType } : {}),
-        ...(exampleEn ? { exampleEn } : {}),
-        ...(exampleVi ? { exampleVi } : {}),
-      }));
+      const vocabData = sanitizeVocabData(vocabList);
 
       const vocabRef = await addDoc(collection(db, "vocabularies"), {
         words: vocabData,
@@ -442,14 +456,7 @@ export const lessonService = {
       }
       const { vocabId } = lessonDoc.data();
 
-      const vocabData = vocabList.map(({ word, definition, ipa, wordType, exampleEn, exampleVi }) => ({
-        word,
-        definition,
-        ...(ipa !== undefined ? { ipa } : {}),
-        ...(wordType !== undefined ? { wordType } : {}),
-        ...(exampleEn !== undefined ? { exampleEn } : {}),
-        ...(exampleVi !== undefined ? { exampleVi } : {}),
-      }));
+      const vocabData = sanitizeVocabData(vocabList);
 
       await updateDoc(doc(db, "vocabularies", vocabId), {
         words: vocabData,
