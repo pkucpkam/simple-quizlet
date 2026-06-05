@@ -5,6 +5,7 @@ import { folderService } from '../../service/folderService';
 import { useNavigate } from 'react-router-dom';
 import SuccessModal from '../../components/modal/SuccessModal';
 import ImportVocabModal from '../../components/create/ImportVocabModal';
+import AddVocabModal from '../../components/modal/AddVocabModal';
 import { toast } from 'react-hot-toast';
 import type { Folder } from '../../types/folder';
 
@@ -27,8 +28,13 @@ const AdminCreateLesson: React.FC = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [vocabItems, setVocabItems] = useState<VocabItem[]>([emptyWord(), emptyWord()]);
+  const [vocabItems, setVocabItems] = useState<VocabItem[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [autoFetchIpa, setAutoFetchIpa] = useState(true);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
+    const saved = localStorage.getItem("lesson_editor_view_mode");
+    return (saved === "table" || saved === "card") ? saved : "card";
+  });
   const [loading, setLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -72,7 +78,6 @@ const AdminCreateLesson: React.FC = () => {
     });
   };
 
-  const addWord = () => setVocabItems((prev) => [...prev, emptyWord()]);
 
   const removeWord = (index: number) => {
     setVocabItems((prev) => prev.filter((_, i) => i !== index));
@@ -173,16 +178,25 @@ const AdminCreateLesson: React.FC = () => {
             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Tạo bài học Hệ thống</h1>
             <p className="mt-2 text-base text-gray-500 font-medium">Xuất bản nội dung chính thức cho toàn bộ cộng đồng.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 hover:border-blue-300 transition-all whitespace-nowrap"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-            </svg>
-            ⚡ Import nhanh
-          </button>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all whitespace-nowrap shadow-md shadow-blue-100"
+            >
+              ➕ Thêm từ
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 hover:border-blue-300 transition-all whitespace-nowrap"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              ⚡ Import nhanh
+            </button>
+          </div>
         </div>
 
         {/* Settings Card */}
@@ -253,117 +267,271 @@ const AdminCreateLesson: React.FC = () => {
           </label>
         </div>
 
-        {/* Vocab Items */}
-        <div className="space-y-4 mb-6">
-          {vocabItems.map((item, index) => (
-            <div key={index} className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
-              {/* Card Header */}
-              <div className="flex items-center justify-between px-6 py-3 bg-gray-50/80 border-b border-gray-100">
-                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{index + 1}</span>
-                {vocabItems.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeWord(index)}
-                    disabled={loading}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Word */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Từ vựng <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 font-bold text-gray-800 transition-all"
-                    placeholder="e.g. abandon"
-                    value={item.word}
-                    onChange={(e) => updateItem(index, "word", e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Definition */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Nghĩa tiếng Việt <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-800 transition-all"
-                    placeholder="e.g. bỏ rơi, từ bỏ"
-                    value={item.definition}
-                    onChange={(e) => updateItem(index, "definition", e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* IPA */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Phiên âm (IPA)</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 font-mono text-blue-600 transition-all"
-                    placeholder="e.g. /əˈbændən/"
-                    value={item.ipa || ""}
-                    onChange={(e) => updateItem(index, "ipa", e.target.value)}
-                    disabled={loading || autoFetchIpa}
-                  />
-                </div>
-
-                {/* Word Type */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Loại từ</label>
-                  <select
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 bg-white transition-all"
-                    value={item.wordType || ""}
-                    onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                    disabled={loading}
-                  >
-                    <option value="">-- Chọn loại từ --</option>
-                    {WORD_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Example EN */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Ví dụ tiếng Anh</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 transition-all"
-                    placeholder="e.g. He abandoned his car on the highway."
-                    value={item.exampleEn || ""}
-                    onChange={(e) => updateItem(index, "exampleEn", e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Example VI */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Ví dụ tiếng Việt</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 transition-all"
-                    placeholder="e.g. Anh ấy đã bỏ lại xe trên đường cao tốc."
-                    value={item.exampleVi || ""}
-                    onChange={(e) => updateItem(index, "exampleVi", e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* View Mode Selector */}
+        <div className="flex items-center justify-between mb-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+          <span className="font-bold text-gray-700 text-sm md:text-base ml-2">Danh sách từ vựng ({vocabItems.length})</span>
+          <div className="flex bg-gray-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("card");
+                localStorage.setItem("lesson_editor_view_mode", "card");
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all ${
+                viewMode === "card"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              🗂️ Dạng thẻ
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode("table");
+                localStorage.setItem("lesson_editor_view_mode", "table");
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition-all ${
+                viewMode === "table"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              📊 Dạng bảng (Excel)
+            </button>
+          </div>
         </div>
+
+        {/* Vocab Items */}
+        {vocabItems.length === 0 ? (
+          <div className="bg-white rounded-[1.5rem] border-2 border-dashed border-gray-200 p-12 text-center mb-6 shadow-sm">
+            <div className="text-5xl mb-4">📚</div>
+            <h3 className="text-lg font-bold text-gray-700 mb-1">Chưa có từ vựng nào</h3>
+            <p className="text-gray-500 text-sm mb-4">
+              Hãy thêm từ vựng mới hoặc nhập liệu nhanh từ Excel/Text để bắt đầu.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
+            >
+              ➕ Thêm từ đầu tiên
+            </button>
+          </div>
+        ) : viewMode === "card" ? (
+          <div className="space-y-4 mb-6">
+            {vocabItems.map((item, index) => (
+              <div key={index} className="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 overflow-hidden">
+                {/* Card Header */}
+                <div className="flex items-center justify-between px-6 py-3 bg-gray-50/80 border-b border-gray-100">
+                  <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{index + 1}</span>
+                  {vocabItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeWord(index)}
+                      disabled={loading}
+                      className="text-gray-300 hover:text-red-500 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Word */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Từ vựng <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 font-bold text-gray-800 transition-all"
+                      placeholder="e.g. abandon"
+                      value={item.word}
+                      onChange={(e) => updateItem(index, "word", e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  {/* Definition */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Nghĩa tiếng Việt <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-800 transition-all"
+                      placeholder="e.g. bỏ rơi, từ bỏ"
+                      value={item.definition}
+                      onChange={(e) => updateItem(index, "definition", e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  {/* IPA */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Phiên âm (IPA)</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 font-mono text-blue-600 transition-all"
+                      placeholder="e.g. /əˈbændən/"
+                      value={item.ipa || ""}
+                      onChange={(e) => updateItem(index, "ipa", e.target.value)}
+                      disabled={loading || autoFetchIpa}
+                    />
+                  </div>
+
+                  {/* Word Type */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Loại từ</label>
+                    <select
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 bg-white transition-all"
+                      value={item.wordType || ""}
+                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="">-- Chọn loại từ --</option>
+                      {WORD_TYPES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Example EN */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Ví dụ tiếng Anh</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 transition-all"
+                      placeholder="e.g. He abandoned his car on the highway."
+                      value={item.exampleEn || ""}
+                      onChange={(e) => updateItem(index, "exampleEn", e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+
+                  {/* Example VI */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-wider">Ví dụ tiếng Việt</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 text-gray-700 transition-all"
+                      placeholder="e.g. Anh ấy đã bỏ lại xe trên đường cao tốc."
+                      value={item.exampleVi || ""}
+                      onChange={(e) => updateItem(index, "exampleVi", e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white rounded-2xl shadow-sm border border-gray-150 mb-6 max-w-full">
+            <table className="w-full border-collapse min-w-[800px] text-left">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="p-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12 border-r border-gray-200">#</th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200">Từ vựng <span className="text-red-500">*</span></th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200">Nghĩa tiếng Việt <span className="text-red-500">*</span></th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200 w-36">Phiên âm (IPA)</th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200 w-36">Loại từ</th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200">Ví dụ tiếng Anh</th>
+                  <th className="p-3 text-xs font-bold text-gray-500 uppercase tracking-wider border-r border-gray-200">Ví dụ tiếng Việt</th>
+                  <th className="p-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-150">
+                {vocabItems.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-3 text-center text-sm font-bold text-gray-400 border-r border-gray-200 bg-gray-50/30">{index + 1}</td>
+                    <td className="p-1 border-r border-gray-200">
+                      <input
+                        type="text"
+                        className="w-full bg-transparent px-2.5 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded font-semibold text-sm text-gray-800 transition-all"
+                        placeholder="e.g. abandon"
+                        value={item.word}
+                        onChange={(e) => updateItem(index, "word", e.target.value)}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td className="p-1 border-r border-gray-200">
+                      <input
+                        type="text"
+                        className="w-full bg-transparent px-2.5 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded text-sm text-gray-800 transition-all"
+                        placeholder="e.g. bỏ rơi, từ bỏ"
+                        value={item.definition}
+                        onChange={(e) => updateItem(index, "definition", e.target.value)}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td className="p-1 border-r border-gray-200">
+                      <input
+                        type="text"
+                        className="w-full bg-transparent px-2.5 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded font-mono text-sm text-blue-600 transition-all"
+                        placeholder="e.g. /əˈbændən/"
+                        value={item.ipa || ""}
+                        onChange={(e) => updateItem(index, "ipa", e.target.value)}
+                        disabled={loading || autoFetchIpa}
+                      />
+                    </td>
+                    <td className="p-1 border-r border-gray-200">
+                      <select
+                        className="w-full bg-transparent px-2 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded text-sm text-gray-700 bg-white cursor-pointer transition-all"
+                        value={item.wordType || ""}
+                        onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                        disabled={loading}
+                      >
+                        <option value="">Loại từ</option>
+                        {WORD_TYPES.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-1 border-r border-gray-200">
+                      <input
+                        type="text"
+                        className="w-full bg-transparent px-2.5 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded text-sm text-gray-700 transition-all"
+                        placeholder="e.g. He abandoned..."
+                        value={item.exampleEn || ""}
+                        onChange={(e) => updateItem(index, "exampleEn", e.target.value)}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td className="p-1 border-r border-gray-200">
+                      <input
+                        type="text"
+                        className="w-full bg-transparent px-2.5 py-2 border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white rounded text-sm text-gray-700 transition-all"
+                        placeholder="e.g. Anh ấy đã bỏ lại..."
+                        value={item.exampleVi || ""}
+                        onChange={(e) => updateItem(index, "exampleVi", e.target.value)}
+                        disabled={loading}
+                      />
+                    </td>
+                    <td className="p-2 text-center">
+                      {vocabItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeWord(index)}
+                          disabled={loading}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50 inline-flex items-center justify-center"
+                          title="Xóa từ này"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Add Word Button */}
         <button
           type="button"
-          onClick={addWord}
+          onClick={() => setShowAddModal(true)}
           disabled={loading}
           className="w-full py-4 rounded-[1.5rem] border-2 border-dashed border-blue-200 text-blue-600 font-bold hover:bg-blue-50 hover:border-blue-400 transition-colors mb-8 flex items-center justify-center gap-2"
         >
@@ -417,6 +585,13 @@ const AdminCreateLesson: React.FC = () => {
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImport={handleImport}
+      />
+
+      <AddVocabModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={(item) => setVocabItems((prev) => [...prev, item])}
+        WORD_TYPES={WORD_TYPES}
       />
 
       {/* Create Folder Modal */}
