@@ -442,8 +442,17 @@ export const lessonService = {
       }
       const { vocabId } = lessonDoc.data();
 
+      const vocabData = vocabList.map(({ word, definition, ipa, wordType, exampleEn, exampleVi }) => ({
+        word,
+        definition,
+        ...(ipa !== undefined ? { ipa } : {}),
+        ...(wordType !== undefined ? { wordType } : {}),
+        ...(exampleEn !== undefined ? { exampleEn } : {}),
+        ...(exampleVi !== undefined ? { exampleVi } : {}),
+      }));
+
       await updateDoc(doc(db, "vocabularies", vocabId), {
-        words: vocabList,
+        words: vocabData,
         updatedAt: new Date(),
       });
 
