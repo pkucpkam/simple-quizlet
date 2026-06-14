@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
 import LoadingScreen from "../components/common/LoadingScreen";
+import Button from "../components/ui/Button";
 
 interface VocabItem {
     term: string;
@@ -44,7 +45,6 @@ export default function TestPage() {
                     definition: item.definition,
                 }));
 
-                // Shuffle the vocabulary list
                 const shuffled = [...vocabData].sort(() => Math.random() - 0.5);
                 setVocabList(shuffled);
             } catch (error) {
@@ -80,12 +80,10 @@ export default function TestPage() {
             },
         ]);
 
-        // Move to next question
         if (currentIndex < vocabList.length - 1) {
             setCurrentIndex(currentIndex + 1);
             setUserInput("");
         } else {
-            // Test completed
             setShowResults(true);
         }
     };
@@ -156,7 +154,7 @@ export default function TestPage() {
             return (
                 <span
                     key={index}
-                    className="inline-flex items-center justify-center w-8 h-10 mx-0.5 border-b-2 border-purple-600 text-lg font-semibold"
+                    className="inline-flex items-center justify-center w-8 h-10 mx-0.5 border-b-2 border-claude-accent text-claude-text text-lg font-semibold"
                 >
                     {isRevealed ? char : "_"}
                 </span>
@@ -175,31 +173,31 @@ export default function TestPage() {
         const incorrectResults = results.filter((r) => !r.isCorrect);
 
         return (
-            <div className="p-8 max-w-4xl mx-auto">
-                <div className="bg-white rounded-xl shadow-lg p-8">
-                    <h1 className="text-3xl font-bold text-purple-700 mb-6 text-center">
+            <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in">
+                <div className="bg-claude-surface rounded-claude-lg shadow-claude border border-claude-border p-6 md:p-8">
+                    <h1 className="text-3xl font-bold text-claude-text mb-6 text-center">
                         Kết quả kiểm tra: {lessonTitle}
                     </h1>
 
                     {/* Score Summary */}
-                    <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-6 mb-6">
+                    <div className="bg-claude-surface-2 border border-claude-border rounded-claude-md p-6 mb-6">
                         <div className="text-center">
-                            <div className="text-5xl font-bold text-purple-700 mb-2">
+                            <div className="text-5xl font-bold text-claude-accent mb-2">
                                 {percentage}%
                             </div>
-                            <div className="text-lg text-gray-700">
+                            <div className="text-lg text-claude-text-2">
                                 {correctCount} / {totalCount} câu đúng
                             </div>
                         </div>
 
                         <div className="mt-4 flex justify-center gap-4">
                             <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 bg-green-500 rounded-full"></span>
-                                <span className="text-sm">Đúng: {correctCount}</span>
+                                <span className="w-3.5 h-3.5 bg-claude-success rounded-full"></span>
+                                <span className="text-sm text-claude-text-2">Đúng: {correctCount}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="w-4 h-4 bg-red-500 rounded-full"></span>
-                                <span className="text-sm">Sai: {totalCount - correctCount}</span>
+                                <span className="w-3.5 h-3.5 bg-claude-error rounded-full"></span>
+                                <span className="text-sm text-claude-text-2">Sai: {totalCount - correctCount}</span>
                             </div>
                         </div>
                     </div>
@@ -207,27 +205,27 @@ export default function TestPage() {
                     {/* Wrong Answers */}
                     {incorrectResults.length > 0 && (
                         <div className="mb-6">
-                            <h2 className="text-xl font-semibold text-red-600 mb-4">
+                            <h2 className="text-xl font-semibold text-claude-error mb-4">
                                 Các từ cần ôn lại ({incorrectResults.length})
                             </h2>
                             <div className="space-y-3">
                                 {incorrectResults.map((result, index) => (
                                     <div
                                         key={index}
-                                        className="bg-red-50 border border-red-200 rounded-lg p-4"
+                                        className="bg-claude-error-light border border-claude-error/20 rounded-claude p-4"
                                     >
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                                             <div>
-                                                <span className="text-xs text-gray-500 font-medium">Nghĩa:</span>
-                                                <p className="text-gray-800 font-medium">{result.definition}</p>
+                                                <span className="text-xs text-claude-text-3 font-medium uppercase tracking-wider">Nghĩa:</span>
+                                                <p className="text-claude-text font-medium mt-0.5">{result.definition}</p>
                                             </div>
                                             <div>
-                                                <span className="text-xs text-gray-500 font-medium">Đáp án đúng:</span>
-                                                <p className="text-green-700 font-semibold">{result.term}</p>
+                                                <span className="text-xs text-claude-text-3 font-medium uppercase tracking-wider">Đáp án đúng:</span>
+                                                <p className="text-claude-success font-semibold mt-0.5">{result.term}</p>
                                             </div>
                                             <div>
-                                                <span className="text-xs text-gray-500 font-medium">Câu trả lời của bạn:</span>
-                                                <p className="text-red-700 font-semibold">
+                                                <span className="text-xs text-claude-text-3 font-medium uppercase tracking-wider">Câu trả lời của bạn:</span>
+                                                <p className="text-claude-error font-semibold mt-0.5">
                                                     {result.userAnswer || "(Bỏ qua)"}
                                                 </p>
                                             </div>
@@ -239,19 +237,21 @@ export default function TestPage() {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-4 justify-center">
-                        <button
+                    <div className="flex flex-wrap gap-4 justify-center border-t border-claude-border pt-6 mt-6">
+                        <Button
                             onClick={handleRestart}
-                            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-md"
+                            variant="primary"
+                            className="px-8"
                         >
                             🔄 Làm lại
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={() => navigate("/")}
-                            className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-md"
+                            variant="secondary"
+                            className="px-8"
                         >
                             🏠 Về trang chủ
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -259,33 +259,33 @@ export default function TestPage() {
     }
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in">
+            <div className="bg-claude-surface rounded-claude-lg shadow-claude border border-claude-border p-6 md:p-8">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-purple-700">
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold text-claude-text truncate max-w-[70%]">
                         Kiểm tra: {lessonTitle}
                     </h1>
-                    <div className="text-sm text-gray-600 font-medium">
+                    <div className="text-sm text-claude-text-3 font-medium">
                         Câu {currentIndex + 1} / {vocabList.length}
                     </div>
                 </div>
 
                 {/* Progress Bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-8">
+                <div className="w-full bg-claude-border rounded-full h-2 mb-8 overflow-hidden">
                     <div
-                        className="bg-purple-600 h-2.5 rounded-full transition-all duration-300"
+                        className="bg-claude-accent h-2 rounded-full transition-all duration-300"
                         style={{ width: `${((currentIndex + 1) / vocabList.length) * 100}%` }}
                     ></div>
                 </div>
 
                 {/* Definition (Question) */}
-                <div className="mb-8">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div className="mb-6">
+                    <label className="block text-xs font-bold text-claude-text-2 mb-2 uppercase tracking-wider">
                         Nghĩa tiếng Việt:
                     </label>
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-                        <p className="text-2xl text-gray-800 font-medium text-center">
+                    <div className="bg-claude-accent-lighter border-2 border-claude-accent-light rounded-claude-md p-6">
+                        <p className="text-2xl text-claude-text font-medium text-center">
                             {currentVocab.definition}
                         </p>
                     </div>
@@ -293,7 +293,7 @@ export default function TestPage() {
 
                 {/* Word with Underscores */}
                 <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                    <label className="block text-xs font-bold text-claude-text-2 mb-2 uppercase tracking-wider">
                         Từ tiếng Anh:
                     </label>
                     <div className="flex justify-center flex-wrap gap-1 mb-4 min-h-[60px]">
@@ -302,45 +302,47 @@ export default function TestPage() {
                 </div>
 
                 {/* Input Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-2">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-1.5">
+                        <label className="block text-sm font-medium text-claude-text">
                             Nhập câu trả lời:
                         </label>
                         <input
                             type="text"
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 text-lg"
+                            className="w-full px-4 py-3 bg-claude-surface border border-claude-border rounded-claude focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-lg text-claude-text"
                             placeholder="Gõ từ tiếng Anh..."
                             autoFocus
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-claude-text-3 font-medium">
                             Gợi ý: Từ có {currentVocab.term.length} ký tự
                         </p>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-4">
-                        <button
+                    <div className="flex gap-4 border-t border-claude-border pt-4">
+                        <Button
                             type="submit"
-                            className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-md"
+                            variant="primary"
+                            className="flex-1 py-3"
                         >
                             ✓ Xác nhận
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
                             onClick={handleSkip}
-                            className="px-6 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium shadow-md"
+                            variant="secondary"
+                            className="flex-1 py-3"
                         >
                             ⏭ Bỏ qua
-                        </button>
+                        </Button>
                     </div>
                 </form>
 
                 {/* Hint */}
-                <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-gray-700">
+                <div className="mt-6 p-4 bg-claude-accent-lighter border border-claude-accent-light rounded-claude text-sm">
+                    <p className="text-claude-text-2 leading-relaxed">
                         💡 <strong>Mẹo:</strong> Mỗi dấu gạch dưới (_) đại diện cho một ký tự.
                         Khi bạn gõ đúng, ký tự sẽ hiện ra dần.
                     </p>

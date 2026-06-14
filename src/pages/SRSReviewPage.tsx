@@ -6,6 +6,7 @@ import type { SRSCard, ReviewRating } from "../types/srs";
 import toast from "react-hot-toast";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
+import Button from "../components/ui/Button";
 
 export default function ReviewPage() {
     const navigate = useNavigate();
@@ -130,10 +131,10 @@ export default function ReviewPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex items-center justify-center min-h-[60vh] py-20">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Đang tải thẻ ôn tập...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-claude-border border-t-claude-accent mx-auto mb-4"></div>
+                    <p className="text-claude-text-2 font-medium">Đang tải thẻ ôn tập...</p>
                 </div>
             </div>
         );
@@ -141,21 +142,22 @@ export default function ReviewPage() {
 
     if (cards.length === 0) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
+            <div className="flex items-center justify-center min-h-[60vh] py-20 animate-fade-in">
+                <div className="text-center max-w-md bg-claude-surface border border-claude-border rounded-claude-lg p-8 shadow-claude">
                     <div className="text-6xl mb-4">🎉</div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    <h2 className="text-2xl font-bold text-claude-text mb-2">
                         Tuyệt vời!
                     </h2>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-claude-text-2 mb-6">
                         Bạn đã hoàn thành hết bài ôn hôm nay
                     </p>
-                    <button
+                    <Button
                         onClick={() => navigate("/")}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        variant="primary"
+                        className="w-full"
                     >
                         Về trang chủ
-                    </button>
+                    </Button>
                 </div>
             </div>
         );
@@ -164,19 +166,19 @@ export default function ReviewPage() {
     const currentCard = cards[currentIndex];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+        <div className="max-w-2xl mx-auto py-8 px-4 animate-fade-in">
             {/* Header */}
-            <div className="max-w-2xl mx-auto mb-6">
+            <div className="mb-6">
                 <div className="flex justify-between items-center">
                     <button
                         onClick={() => navigate("/")}
-                        className="text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                        className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
                     >
                         <span className="text-xl">←</span> Thoát
                     </button>
-                    <div className="text-sm text-gray-600">
-                        <span className="font-semibold text-green-600">{correctCount}</span> đúng •{" "}
-                        <span className="font-semibold text-red-600">{incorrectCount}</span> sai
+                    <div className="text-sm text-claude-text-2">
+                        <span className="font-semibold text-claude-success">{correctCount}</span> đúng •{" "}
+                        <span className="font-semibold text-claude-error">{incorrectCount}</span> sai
                     </div>
                 </div>
             </div>
@@ -192,9 +194,9 @@ export default function ReviewPage() {
             />
 
             {/* Keyboard shortcuts hint */}
-            <div className="max-w-2xl mx-auto mt-8 text-center">
-                <p className="text-sm text-gray-500">
-                    💡 Tip: Sử dụng phím <kbd className="px-2 py-1 bg-gray-200 rounded">Space</kbd> để hiện đáp án
+            <div className="mt-8 text-center">
+                <p className="text-sm text-claude-text-3 font-medium">
+                    💡 Gợi ý: Sử dụng phím <kbd className="px-2 py-1 bg-claude-surface border border-claude-border shadow-claude-sm rounded text-xs">Space</kbd> để hiện đáp án
                 </p>
             </div>
         </div>

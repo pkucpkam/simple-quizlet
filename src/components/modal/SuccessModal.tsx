@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -8,10 +10,8 @@ interface SuccessModalProps {
   onClose: () => void;
 }
 
-const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose }) => {
+const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, title, wordCount }) => {
   const navigate = useNavigate();
-
-  if (!isOpen) return null;
 
   const handleClose = () => {
     onClose();
@@ -19,21 +19,27 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl transform transition-all duration-300 scale-100">
-        <h2 className="text-2xl font-bold text-blue-700 mb-4 text-center">
-          Tạo bài học thành công!
-        </h2>
-        <div className="flex justify-center">
-          <button
-            onClick={handleClose}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200"
-          >
-            OK
-          </button>
-        </div>
+    <Modal
+      open={isOpen}
+      onClose={handleClose}
+      title="Tạo bài học thành công!"
+      size="sm"
+    >
+      <div className="flex flex-col items-center justify-center py-4 text-center">
+        <div className="text-5xl mb-4">🎉</div>
+        <p className="text-claude-text-2 mb-6">
+          {title || "Bài học của bạn đã được tạo thành công."}
+          {wordCount > 0 && ` Đã thêm ${wordCount} từ vựng vào bài học.`}
+        </p>
+        <Button
+          onClick={handleClose}
+          variant="primary"
+          className="w-full"
+        >
+          OK
+        </Button>
       </div>
-    </div>
+    </Modal>
   );
 };
 

@@ -2,18 +2,17 @@ interface Props {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  activeColor?: string; // Tailwind class like 'bg-blue-600'
+  activeColor?: string; // kept for backward compatibility (ignored – uses Claude tokens)
 }
 
 export default function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  activeColor = "bg-blue-600",
 }: Props) {
   if (totalPages <= 1) return null;
 
-  const delta = 2; // Show 2 pages before and after current
+  const delta = 2;
   const range: number[] = [];
   const rangeWithDots: (number | string)[] = [];
 
@@ -26,7 +25,7 @@ export default function Pagination({
   }
 
   if (currentPage - delta > 2) {
-    rangeWithDots.push(1, "...");
+    rangeWithDots.push(1, '...');
   } else {
     rangeWithDots.push(1);
   }
@@ -34,53 +33,47 @@ export default function Pagination({
   rangeWithDots.push(...range);
 
   if (currentPage + delta < totalPages - 1) {
-    rangeWithDots.push("...", totalPages);
+    rangeWithDots.push('...', totalPages);
   } else if (totalPages > 1) {
     rangeWithDots.push(totalPages);
   }
 
+  const navBtn = (disabled: boolean, onClick: () => void, label: string) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="h-8 px-3 text-xs font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface
+                 hover:bg-claude-surface-2 hover:text-claude-text transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="flex justify-center items-center gap-2 mt-8">
-      <button
-        onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-        disabled={currentPage === 1}
-        className="px-4 py-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 hover:bg-gray-50 hover:text-gray-700 transition-all font-bold text-gray-600 shadow-sm"
-      >
-        Trước
-      </button>
+    <div className="flex items-center gap-1">
+      {navBtn(currentPage === 1, () => onPageChange(Math.max(currentPage - 1, 1)), '←')}
 
-      <div className="flex gap-1.5">
-        {rangeWithDots.map((pageNum, index) =>
-          pageNum === "..." ? (
-            <span
-              key={`dots-${index}`}
-              className="w-11 h-11 flex items-center justify-center text-gray-400"
-            >
-              ...
-            </span>
-          ) : (
-            <button
-              key={pageNum}
-              onClick={() => onPageChange(pageNum as number)}
-              className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all font-bold shadow-sm ${
-                currentPage === pageNum
-                  ? `${activeColor} text-white shadow-lg`
-                  : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
-              }`}
-            >
-              {pageNum}
-            </button>
-          )
-        )}
-      </div>
+      {rangeWithDots.map((pageNum, index) =>
+        pageNum === '...' ? (
+          <span key={`dots-${index}`} className="w-8 h-8 flex items-center justify-center text-claude-text-3 text-xs">
+            ···
+          </span>
+        ) : (
+          <button
+            key={pageNum}
+            onClick={() => onPageChange(pageNum as number)}
+            className={`w-8 h-8 flex items-center justify-center rounded-claude text-xs font-medium transition-colors ${
+              currentPage === pageNum
+                ? 'bg-claude-accent text-white border border-claude-accent'
+                : 'bg-claude-surface text-claude-text-2 border border-claude-border hover:bg-claude-surface-2 hover:text-claude-text'
+            }`}
+          >
+            {pageNum}
+          </button>
+        )
+      )}
 
-      <button
-        onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-        disabled={currentPage === totalPages}
-        className="px-4 py-2 bg-white border border-gray-200 rounded-xl disabled:opacity-30 hover:bg-gray-50 hover:text-gray-700 transition-all font-bold text-gray-600 shadow-sm"
-      >
-        Sau
-      </button>
+      {navBtn(currentPage === totalPages, () => onPageChange(Math.min(currentPage + 1, totalPages)), '→')}
     </div>
   );
 }

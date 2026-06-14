@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Folder } from "../../types/folder";
 import { folderService } from "../../service/folderService";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
 
 interface Props {
     isOpen: boolean;
@@ -38,42 +40,46 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col">
-                <div className="p-6 border-b">
-                    <h2 className="text-2xl font-bold text-gray-800">Chọn thư mục</h2>
-                    <p className="text-sm text-gray-600 mt-1">Chọn thư mục để lưu bài học này</p>
-                </div>
+        <Modal
+            open={isOpen}
+            onClose={onClose}
+            title="Chọn thư mục"
+            size="md"
+        >
+            <div className="flex flex-col h-full max-h-[60vh]">
+                <p className="text-sm text-claude-text-2 mb-4">Chọn thư mục để lưu bài học này</p>
 
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[150px]">
                     {loading ? (
-                        <p className="text-center text-gray-500">Đang tải...</p>
+                        <div className="space-y-3">
+                            <div className="h-16 skeleton w-full rounded-claude" />
+                            <div className="h-16 skeleton w-full rounded-claude" />
+                            <div className="h-16 skeleton w-full rounded-claude" />
+                        </div>
                     ) : folders.length === 0 ? (
                         <div className="text-center py-8">
-                            <p className="text-gray-500 mb-2">Bạn chưa có thư mục nào</p>
-                            <p className="text-sm text-gray-400">Hãy tạo thư mục mới để tổ chức bài học</p>
+                            <p className="text-claude-text-2 mb-1">Bạn chưa có thư mục nào</p>
+                            <p className="text-sm text-claude-text-3">Hãy tạo thư mục mới để tổ chức bài học</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {/* Option: No folder */}
                             <div
                                 onClick={() => setSelectedFolderId(null)}
-                                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedFolderId === null
-                                    ? "border-blue-500 bg-blue-50"
-                                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                className={`p-4 rounded-claude border-2 cursor-pointer transition-all ${selectedFolderId === null
+                                    ? "border-claude-accent bg-claude-accent-lighter"
+                                    : "border-claude-border hover:border-claude-border-strong hover:bg-claude-surface-2"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="text-2xl">📂</span>
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-800">Không có thư mục</h3>
-                                        <p className="text-sm text-gray-600">Bài học sẽ không thuộc thư mục nào</p>
+                                        <h3 className="font-semibold text-claude-text">Không có thư mục</h3>
+                                        <p className="text-sm text-claude-text-2">Bài học sẽ không thuộc thư mục nào</p>
                                     </div>
                                     {selectedFolderId === null && (
-                                        <span className="text-blue-500 text-xl">✓</span>
+                                        <span className="text-claude-accent text-xl">✓</span>
                                     )}
                                 </div>
                             </div>
@@ -83,9 +89,9 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                 <div
                                     key={folder.id}
                                     onClick={() => setSelectedFolderId(folder.id)}
-                                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${selectedFolderId === folder.id
-                                        ? "border-blue-500 bg-blue-50"
-                                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                    className={`p-4 rounded-claude border-2 cursor-pointer transition-all ${selectedFolderId === folder.id
+                                        ? "border-claude-accent bg-claude-accent-lighter"
+                                        : "border-claude-border hover:border-claude-border-strong hover:bg-claude-surface-2"
                                         }`}
                                     style={{
                                         borderLeftWidth: "4px",
@@ -95,16 +101,16 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                     <div className="flex items-center gap-3">
                                         <span className="text-2xl">{folder.icon}</span>
                                         <div className="flex-1">
-                                            <h3 className="font-semibold text-gray-800">{folder.name}</h3>
+                                            <h3 className="font-semibold text-claude-text">{folder.name}</h3>
                                             {folder.description && (
-                                                <p className="text-sm text-gray-600">{folder.description}</p>
+                                                <p className="text-sm text-claude-text-2 truncate max-w-[250px]">{folder.description}</p>
                                             )}
-                                            <p className="text-xs text-gray-400 mt-1">
+                                            <p className="text-xs text-claude-text-3 mt-1">
                                                 {folder.lessonCount || 0} bài học
                                             </p>
                                         </div>
                                         {selectedFolderId === folder.id && (
-                                            <span className="text-blue-500 text-xl">✓</span>
+                                            <span className="text-claude-accent text-xl">✓</span>
                                         )}
                                     </div>
                                 </div>
@@ -113,23 +119,23 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                     )}
                 </div>
 
-                <div className="p-6 border-t bg-gray-50">
-                    <div className="flex gap-3">
-                        <button
-                            onClick={onClose}
-                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
-                        >
-                            Hủy
-                        </button>
-                        <button
-                            onClick={handleSubmit}
-                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Xác nhận
-                        </button>
-                    </div>
+                <div className="flex gap-3 pt-6 mt-4 border-t border-claude-border">
+                    <Button
+                        variant="secondary"
+                        onClick={onClose}
+                        className="flex-1"
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={handleSubmit}
+                        className="flex-1"
+                    >
+                        Xác nhận
+                    </Button>
                 </div>
             </div>
-        </div>
+        </Modal>
     );
 }

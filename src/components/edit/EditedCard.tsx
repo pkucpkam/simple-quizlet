@@ -24,45 +24,45 @@ export default function EditableCard({ item, onChange, onDelete }: EditableCardP
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full">
+    <div className="bg-claude-surface rounded-claude-lg shadow-claude border border-claude-border overflow-hidden flex flex-col h-full transition-all duration-200">
       <div className="p-4 grid grid-cols-1 gap-3 flex-1">
         <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Từ vựng *</label>
+          <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Từ vựng *</label>
           <input
             type="text"
             value={localItem.word}
             onChange={(e) => updateField("word", e.target.value)}
-            className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 font-bold text-gray-800 transition-colors"
+            className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent font-bold text-claude-text bg-claude-surface-2 transition-colors text-sm"
             placeholder="e.g. abandon"
           />
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nghĩa *</label>
+          <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Nghĩa *</label>
           <input
             type="text"
             value={localItem.definition}
             onChange={(e) => updateField("definition", e.target.value)}
-            className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-800 transition-colors"
+            className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text bg-claude-surface-2 transition-colors text-sm"
             placeholder="e.g. bỏ rơi"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
             <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">IPA</label>
+                <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">IPA</label>
                 <input
                     type="text"
                     value={localItem.ipa || ""}
                     onChange={(e) => updateField("ipa", e.target.value)}
-                    className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 font-mono text-blue-600 text-sm transition-colors"
+                    className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent font-mono text-claude-accent bg-claude-surface-2 text-sm transition-colors"
                     placeholder="/əˈbændən/"
                 />
             </div>
             <div>
-                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Loại từ</label>
+                <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Loại từ</label>
                 <select
                     value={localItem.wordType || ""}
                     onChange={(e) => updateField("wordType", e.target.value)}
-                    className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-700 bg-white text-sm transition-colors"
+                    className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text bg-claude-surface-2 text-sm transition-colors"
                 >
                     <option value="">-- Chọn --</option>
                     {WORD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -70,30 +70,30 @@ export default function EditableCard({ item, onChange, onDelete }: EditableCardP
             </div>
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ví dụ EN</label>
+          <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Ví dụ EN</label>
           <input
             type="text"
             value={localItem.exampleEn || ""}
             onChange={(e) => updateField("exampleEn", e.target.value)}
-            className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-700 text-sm transition-colors"
+            className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text-2 bg-claude-surface-2 text-sm transition-colors"
             placeholder="e.g. He abandoned the car."
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ví dụ VI</label>
+          <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Ví dụ VI</label>
           <input
             type="text"
             value={localItem.exampleVi || ""}
             onChange={(e) => updateField("exampleVi", e.target.value)}
-            className="w-full border-2 border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 text-gray-700 text-sm transition-colors"
+            className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text-2 bg-claude-surface-2 text-sm transition-colors"
             placeholder="e.g. Anh ấy bỏ lại xe."
           />
         </div>
       </div>
-      <div className="bg-gray-50 border-t border-gray-100 px-4 py-2 flex justify-end">
+      <div className="bg-claude-surface-2 border-t border-claude-border px-4 py-2 flex justify-end">
         <button
           onClick={onDelete}
-          className="text-red-500 hover:text-red-700 text-sm font-bold transition-colors"
+          className="text-claude-error hover:text-red-700 text-sm font-semibold transition-colors"
         >
           Xóa
         </button>

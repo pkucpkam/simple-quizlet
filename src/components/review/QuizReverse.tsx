@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Button from "../ui/Button";
 
 interface QuizReverseProps {
   vocab: { term: string; definition: string };
@@ -20,8 +21,6 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
 
   useEffect(() => {
     const allTerms = allVocabs.map((v) => v.term);
-
-    // Lấy tối đa 3 đáp án sai từ allTerms
     const wrongOptions = allTerms
       .filter((term) => term !== vocab.term)
       .sort(() => Math.random() - 0.5)
@@ -33,10 +32,9 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
       .map(({ value }) => value);
 
     setOptions(shuffledOptions);
-    setSelectedAnswer(""); // reset lựa chọn cũ
+    setSelectedAnswer("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vocab.term]); // chỉ chạy khi vocab.term thay đổi
-
+  }, [vocab.term]);
 
   const handleSelect = (answer: string) => {
     if (showResult) return;
@@ -45,26 +43,28 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="max-w-2xl mx-auto bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude p-8 animate-fade-in">
       <div className="text-center mb-8">
-        <p className="text-gray-600 mb-4 text-lg">Từ tiếng Anh nào có nghĩa là:</p>
-        <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-200 rounded-lg p-8 mb-8">
-          <p className="text-4xl font-bold text-purple-800">{vocab.definition}</p>
+        <p className="text-claude-text-2 mb-4 text-lg font-medium">Từ tiếng Anh nào có nghĩa là:</p>
+        <div className="bg-claude-accent-lighter border-2 border-claude-accent-light rounded-claude-md p-8 mb-8">
+          <p className="text-4xl font-bold text-claude-accent">{vocab.definition}</p>
         </div>
       </div>
 
       <div className="space-y-4">
         {options.map((option, idx) => {
           const baseClasses =
-            "w-full p-4 text-left rounded-lg border-2 transition-all duration-200";
+            "w-full p-4 text-left rounded-claude border-2 transition-all duration-150 active:scale-[0.99]";
           let styleClasses =
-            "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-25 hover:shadow-md";
+            "border-claude-border bg-claude-surface hover:border-claude-accent hover:bg-claude-accent-lighter hover:shadow-claude-sm text-claude-text";
 
           if (showResult) {
             if (option === vocab.term) {
-              styleClasses = "border-green-400 bg-green-100 text-green-800";
+              styleClasses = "border-claude-success bg-claude-success-light text-claude-success font-semibold";
             } else if (option === selectedAnswer && option !== vocab.term) {
-              styleClasses = "border-red-400 bg-red-100 text-red-800";
+              styleClasses = "border-claude-error bg-claude-error-light text-claude-error font-semibold";
+            } else {
+              styleClasses = "border-claude-border bg-claude-surface opacity-50";
             }
           }
 
@@ -76,8 +76,8 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
               disabled={showResult}
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-medium">{option}</span>
-                <span className="text-gray-400 font-bold text-xl">
+                <span className="text-base font-medium">{option}</span>
+                <span className="text-claude-text-3 font-bold text-lg">
                   {String.fromCharCode(65 + idx)}
                 </span>
               </div>
@@ -88,12 +88,14 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
 
       {showResult && selectedAnswer !== vocab.term && (
         <div className="mt-6 text-center">
-          <button
+          <Button
             onClick={onNext}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            variant="primary"
+            size="lg"
+            className="px-8"
           >
             Tiếp theo
-          </button>
+          </Button>
         </div>
       )}
     </div>

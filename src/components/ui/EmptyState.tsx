@@ -1,0 +1,44 @@
+import React from 'react';
+import Button from './Button';
+
+interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  className?: string;
+}
+
+const DefaultIcon = () => (
+  <svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
+  title,
+  description,
+  action,
+  className = '',
+}) => (
+  <div className={`flex flex-col items-center justify-center py-16 px-6 text-center ${className}`}>
+    <div className="mb-4 p-4 rounded-full bg-claude-surface-2 border border-claude-border">
+      {icon || <DefaultIcon />}
+    </div>
+    <h3 className="text-base font-semibold text-claude-text mb-2">{title}</h3>
+    {description && (
+      <p className="text-sm text-claude-text-2 mb-6 max-w-sm">{description}</p>
+    )}
+    {action && (
+      <Button variant="primary" onClick={action.onClick}>
+        {action.label}
+      </Button>
+    )}
+  </div>
+);
+
+export default EmptyState;
