@@ -1,75 +1,201 @@
-import { collection, getDocs, orderBy, query, addDoc, serverTimestamp, setDoc, doc, increment, getDoc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  increment,
+  getDoc,
+  serverTimestamp,
+  writeBatch,
+  Timestamp,
+} from "firebase/firestore";
 import { db } from "./firebase_setup";
-import type { StudySession, StudyStats } from "../types/history";
+import type { StudyAggregateStats, ModeStats } from "../types/history";
 
+type StudyMode = "flashcard" | "review" | "test";
+
+/** Map các studyMode cũ → nhóm mode mới */
+const toModeGroup = (mode: string): StudyMode => {
+  if (mode === "flashcard") return "flashcard";
+  if (mode === "test") return "test";
+  // quiz, review, srs_review → review
+  return "review";
+};
+
+const STATS_DOC = (userId: string) =>
+  doc(db, `history/${userId}/aggregate`, "studyStats");
+
+// ─────────────────────────────────────────────
+// 1. Ghi dồn sau mỗi lần học
+// ─────────────────────────────────────────────
 export const historyService = {
-  async saveStudySession(
+  async incrementStudyStats(
     userId: string,
-    sessionData: Pick<StudySession, "setId" | "setName" | "lessonId" | "lessonTitle" | "timeSpent" | "knowCount" | "totalCount" | "studyMode">
+    mode: StudyMode,
+    timeSpent: number
   ) {
     try {
-      const ref = collection(db, `history/${userId}/sessions`);
-      const docRef = await addDoc(ref, {
-        setId: sessionData.setId || "",
-        setName: sessionData.setName || "",
-        lessonId: sessionData.lessonId || "",
-        lessonTitle: sessionData.lessonTitle || "",
-        timeSpent: sessionData.timeSpent || 0,
-        knowCount: sessionData.knowCount || 0,
-        totalCount: sessionData.totalCount || 0,
-        studyMode: sessionData.studyMode || "flashcard",
-        studyTime: serverTimestamp(),
+      await setDoc(
+        STATS_DOC(userId),
+        {
+          [mode]: {
+            sessions: increment(1),
+            totalTime: increment(timeSpent),
+            lastStudied: serverTimestamp(),
+          },
+          totalSessions: increment(1),
+          totalTime: increment(timeSpent),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      // Giữ heatmap dailyLog
+      const today = new Date();
+      const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      const dailyRef = doc(db, `history/${userId}/aggregate`, "dailyLog");
+      await setDoc(dailyRef, { [dateString]: increment(1) }, { merge: true });
+    } catch (error) {
+      console.error("[History] Error incrementing study stats:", error);
+    }
+  },
+
+  // ─────────────────────────────────────────────
+  // 2. Đọc aggregate stats (1 document duy nhất)
+  // ─────────────────────────────────────────────
+  async getStudyAggregateStats(
+    userId: string
+  ): Promise<StudyAggregateStats | null> {
+    try {
+      const snap = await getDoc(STATS_DOC(userId));
+      if (!snap.exists()) return null;
+      const d = snap.data();
+
+      const parseMode = (raw: Record<string, unknown> | undefined): ModeStats => ({
+        sessions: (raw?.sessions as number) || 0,
+        totalTime: (raw?.totalTime as number) || 0,
+        lastStudied: raw?.lastStudied
+          ? (raw.lastStudied as Timestamp).toDate?.()
+          : undefined,
       });
 
-      // Update daily aggregate heatmap log
-      const today = new Date();
-      // Format to YYYY-MM-DD local time
-      const dateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const dailyRef = doc(db, `history/${userId}/aggregate`, "dailyLog");
-      await setDoc(dailyRef, {
-        [dateString]: increment(1)
-      }, { merge: true }).catch(err => console.error("Error updating daily log:", err));
-
-      return docRef.id;
+      return {
+        flashcard: parseMode(d.flashcard),
+        review: parseMode(d.review),
+        test: parseMode(d.test),
+        totalTime: (d.totalTime as number) || 0,
+        totalSessions: (d.totalSessions as number) || 0,
+        migrated: (d.migrated as boolean) || false,
+        updatedAt: d.updatedAt
+          ? (d.updatedAt as Timestamp).toDate?.()
+          : undefined,
+      };
     } catch (error) {
-      console.error("[History] Error saving study session:", error);
+      console.error("[History] Error fetching aggregate stats:", error);
+      return null;
     }
   },
 
-  async getUserStudyHistory(userId: string): Promise<StudySession[]> {
+  // ─────────────────────────────────────────────
+  // 3. Migration: tổng hợp sessions cũ → aggregate → xóa sessions
+  // ─────────────────────────────────────────────
+  async migrateUserHistory(userId: string): Promise<void> {
     try {
-      const q = query(
-        collection(db, `history/${userId}/sessions`),
-        orderBy("studyTime", "desc")
+      // Kiểm tra đã migrate chưa
+      const statsSnap = await getDoc(STATS_DOC(userId));
+      if (statsSnap.exists() && statsSnap.data()?.migrated === true) return;
+
+      // Đọc toàn bộ sessions cũ
+      const sessionsRef = collection(db, `history/${userId}/sessions`);
+      const snapshot = await getDocs(sessionsRef);
+
+      if (snapshot.empty) {
+        // Không có sessions cũ → chỉ set migrated flag
+        await setDoc(STATS_DOC(userId), { migrated: true }, { merge: true });
+        return;
+      }
+
+      // Tổng hợp
+      const acc: Record<StudyMode, ModeStats & { latestMs: number }> = {
+        flashcard: { sessions: 0, totalTime: 0, latestMs: 0 },
+        review: { sessions: 0, totalTime: 0, latestMs: 0 },
+        test: { sessions: 0, totalTime: 0, latestMs: 0 },
+      };
+      let totalTime = 0;
+      let totalSessions = 0;
+
+      snapshot.docs.forEach((d) => {
+        const data = d.data();
+        const group = toModeGroup(data.studyMode || "review");
+        const time = (data.timeSpent as number) || 0;
+        const ts: Timestamp | undefined = data.studyTime;
+        const ms = ts?.toMillis?.() ?? 0;
+
+        acc[group].sessions += 1;
+        acc[group].totalTime += time;
+        if (ms > acc[group].latestMs) {
+          acc[group].latestMs = ms;
+          acc[group].lastStudied = ts?.toDate?.();
+        }
+        totalTime += time;
+        totalSessions += 1;
+      });
+
+      // Ghi aggregate document
+      await setDoc(STATS_DOC(userId), {
+        flashcard: {
+          sessions: acc.flashcard.sessions,
+          totalTime: acc.flashcard.totalTime,
+          lastStudied: acc.flashcard.lastStudied
+            ? Timestamp.fromDate(acc.flashcard.lastStudied)
+            : null,
+        },
+        review: {
+          sessions: acc.review.sessions,
+          totalTime: acc.review.totalTime,
+          lastStudied: acc.review.lastStudied
+            ? Timestamp.fromDate(acc.review.lastStudied)
+            : null,
+        },
+        test: {
+          sessions: acc.test.sessions,
+          totalTime: acc.test.totalTime,
+          lastStudied: acc.test.lastStudied
+            ? Timestamp.fromDate(acc.test.lastStudied)
+            : null,
+        },
+        totalTime,
+        totalSessions,
+        migrated: true,
+        updatedAt: serverTimestamp(),
+      });
+
+      // Batch delete sessions cũ (max 500/batch)
+      const allDocs = snapshot.docs;
+      for (let i = 0; i < allDocs.length; i += 500) {
+        const batch = writeBatch(db);
+        allDocs.slice(i, i + 500).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+
+      console.log(
+        `[History] Migrated ${totalSessions} sessions for user ${userId}`
       );
-      const querySnapshot = await getDocs(q);
-      const sessions: StudySession[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        userId,
-        setId: doc.data().setId || "",
-        setName: doc.data().setName || "",
-        lessonId: doc.data().lessonId || "",
-        lessonTitle: doc.data().lessonTitle || "",
-        studyTime: doc.data().studyTime?.toDate?.() || new Date(),
-        timeSpent: doc.data().timeSpent || 0,
-        knowCount: doc.data().knowCount || 0,
-        totalCount: doc.data().totalCount || 0,
-        studyMode: doc.data().studyMode || "flashcard",
-      }));
-      return sessions;
     } catch (error) {
-      console.error("[History] Error fetching user history:", error);
-      return [];
+      console.error("[History] Migration error:", error);
     }
   },
 
-  async getUserDailyActivity(userId: string): Promise<Record<string, number>> {
+  // ─────────────────────────────────────────────
+  // 4. Heatmap daily activity (giữ nguyên)
+  // ─────────────────────────────────────────────
+  async getUserDailyActivity(
+    userId: string
+  ): Promise<Record<string, number>> {
     try {
       const dailyRef = doc(db, `history/${userId}/aggregate`, "dailyLog");
       const docSnap = await getDoc(dailyRef);
-      if (docSnap.exists()) {
-        return docSnap.data() as Record<string, number>;
-      }
+      if (docSnap.exists()) return docSnap.data() as Record<string, number>;
       return {};
     } catch (error) {
       console.error("[History] Error fetching daily activity:", error);
@@ -77,54 +203,27 @@ export const historyService = {
     }
   },
 
-  getStudyStats(sessions: StudySession[]): StudyStats {
-    if (sessions.length === 0) {
-      return {
-        totalSessions: 0,
-        totalTimeSpent: 0,
-        popularMode: "",
-        totalSetsStudied: 0,
-        flashcardStats: { sessions: 0, timeSpent: 0 },
-        reviewStats: { sessions: 0, timeSpent: 0 },
-        testStats: { sessions: 0, timeSpent: 0 },
-      };
+  // ─────────────────────────────────────────────
+  // Legacy – kept for backward compat, delegates to increment
+  // ─────────────────────────────────────────────
+  async saveStudySession(
+    userId: string,
+    sessionData: {
+      timeSpent: number;
+      studyMode: string;
+      // các trường cũ giữ signature nhưng bỏ qua
+      setId?: string;
+      setName?: string;
+      lessonId?: string;
+      lessonTitle?: string;
+      knowCount?: number;
+      totalCount?: number;
     }
-
-    const totalTimeSpent = sessions.reduce((sum, s) => sum + (s.timeSpent || 0), 0);
-    const uniqueSets = new Set(sessions.map((s) => s.setId)).size;
-
-    const modes = sessions.reduce((acc, s) => {
-      acc[s.studyMode] = (acc[s.studyMode] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    const popularMode = Object.keys(modes).reduce((a, b) => (modes[a] > modes[b] ? a : b), "");
-
-    const flashcardStats = { sessions: 0, timeSpent: 0 };
-    const reviewStats = { sessions: 0, timeSpent: 0 };
-    const testStats = { sessions: 0, timeSpent: 0 };
-
-    sessions.forEach(session => {
-      const time = session.timeSpent || 0;
-      if (session.studyMode === "flashcard") {
-        flashcardStats.sessions++;
-        flashcardStats.timeSpent += time;
-      } else if (session.studyMode === "quiz" || session.studyMode === "review" || session.studyMode === "srs_review") {
-        reviewStats.sessions++;
-        reviewStats.timeSpent += time;
-      } else if (session.studyMode === "test") {
-        testStats.sessions++;
-        testStats.timeSpent += time;
-      }
-    });
-
-    return {
-      totalSessions: sessions.length,
-      totalTimeSpent,
-      popularMode,
-      totalSetsStudied: uniqueSets,
-      flashcardStats,
-      reviewStats,
-      testStats,
-    };
+  ) {
+    return this.incrementStudyStats(
+      userId,
+      toModeGroup(sessionData.studyMode),
+      sessionData.timeSpent || 0
+    );
   },
 };

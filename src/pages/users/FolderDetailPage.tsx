@@ -6,7 +6,8 @@ import LessonCard from "../../components/LessonCard";
 import type { Folder } from "../../types/folder";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
-import { ChevronLeft, ChevronDown, Folder as FolderIcon, FolderMinus, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronDown, Folder as FolderFallback, FolderMinus, BookOpen } from "lucide-react";
+import FolderIcon from "../../components/ui/FolderIcon";
 
 import type { Lesson } from "../../types/lesson";
 
@@ -138,7 +139,7 @@ export default function FolderDetailPage() {
     if (error || !folder) {
         return (
             <div className="p-8 flex flex-col items-center gap-6 py-20">
-                <FolderIcon className="w-16 h-16 text-claude-text-3" strokeWidth={1.2} />
+                <FolderFallback className="w-16 h-16 text-claude-text-3" strokeWidth={1.2} />
                 <p className="text-claude-error font-bold text-xl">{error || "Không tìm thấy thư mục"}</p>
                 <button
                     onClick={() => navigate("/my-lessons")}
@@ -166,8 +167,11 @@ export default function FolderDetailPage() {
                     style={{ borderLeftColor: folder.color }}
                 >
                     <div className="flex flex-col md:flex-row items-center gap-6">
-                        <div className="flex items-center justify-center w-20 h-20 bg-claude-surface-2 border border-claude-border rounded-claude-md text-5xl shadow-inner">
-                            {folder.icon}
+                        <div
+                            className="flex items-center justify-center w-20 h-20 rounded-claude-md shadow-inner"
+                            style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                        >
+                            <FolderIcon name={folder.icon} className="h-10 w-10" style={{ color: folder.color || '#3B82F6' }} />
                         </div>
                         <div className="flex-1 text-center md:text-left">
                             <div className="flex flex-col md:flex-row md:items-center gap-3">

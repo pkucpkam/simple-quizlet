@@ -11,7 +11,8 @@ import type { Folder } from '../../types/folder';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
-import { ChevronLeft, Plus, Zap, LayoutGrid, Table, BookOpen, Trash2, Rocket } from 'lucide-react';
+import { ChevronLeft, Plus, Zap, LayoutGrid, Table, BookOpen, Trash2, Rocket, ChevronDown } from 'lucide-react';
+import { FOLDER_ICONS } from '../../components/ui/folderIcons';
 
 interface DictionaryPhonetic {
   text?: string;
@@ -50,7 +51,7 @@ const AdminCreateLesson: React.FC = () => {
   // Folder modal state
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [newFolderIcon, setNewFolderIcon] = useState('📁');
+  const [newFolderIcon, setNewFolderIcon] = useState('Folder');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   useEffect(() => {
@@ -232,17 +233,22 @@ const AdminCreateLesson: React.FC = () => {
                 + Tạo thư mục mới
               </button>
             </div>
-            <select
-              value={selectedFolderId || ""}
-              onChange={(e) => setSelectedFolderId(e.target.value || null)}
-              className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors bg-white cursor-pointer"
-              disabled={loading}
-            >
-              <option value="">-- Không có thư mục --</option>
-              {officialFolders.map((folder) => (
-                <option key={folder.id} value={folder.id}>{folder.icon} {folder.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedFolderId || ""}
+                onChange={(e) => setSelectedFolderId(e.target.value || null)}
+                className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                disabled={loading}
+              >
+                <option value="">-- Không có thư mục --</option>
+                {officialFolders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                <ChevronDown className="w-4 h-4" strokeWidth={2} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -372,17 +378,22 @@ const AdminCreateLesson: React.FC = () => {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-claude-text">Loại từ</label>
-                  <select
-                    className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors bg-white"
-                    value={item.wordType || ""}
-                    onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                    disabled={loading}
-                  >
-                    <option value="">-- Chọn loại từ --</option>
-                    {WORD_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                      value={item.wordType || ""}
+                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="">-- Chọn loại từ --</option>
+                      {WORD_TYPES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                      <ChevronDown className="w-4 h-4" strokeWidth={2} />
+                    </div>
+                  </div>
                 </div>
 
                 <Input
@@ -454,17 +465,22 @@ const AdminCreateLesson: React.FC = () => {
                     />
                   </td>
                   <td className="p-1 border-r border-claude-border">
-                    <select
-                      className="w-full bg-transparent px-2 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text bg-white cursor-pointer transition-all"
-                      value={item.wordType || ""}
-                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                      disabled={loading}
-                    >
-                      <option value="">Loại từ</option>
-                      {WORD_TYPES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        className="appearance-none w-full bg-transparent pl-2 pr-6 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text cursor-pointer transition-all"
+                        value={item.wordType || ""}
+                        onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                        disabled={loading}
+                      >
+                        <option value="" className="bg-claude-surface text-claude-text">Loại từ</option>
+                        {WORD_TYPES.map((t) => (
+                          <option key={t} value={t} className="bg-claude-surface text-claude-text">{t}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center text-claude-text-3">
+                        <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
+                      </div>
+                    </div>
                   </td>
                   <td className="p-1 border-r border-claude-border">
                     <input
@@ -580,19 +596,23 @@ const AdminCreateLesson: React.FC = () => {
           />
           <div className="space-y-2">
             <label className="block text-sm font-medium text-claude-text">Icon đại diện</label>
-            <div className="grid grid-cols-5 gap-3">
-              {['📁', '🎓', '📚', '🚀', '⭐'].map(icon => (
+            <div className="grid grid-cols-5 gap-2">
+              {FOLDER_ICONS.slice(0, 10).map(({ name, label, Icon }) => (
                 <button
-                  key={icon}
+                  key={name}
                   type="button"
-                  onClick={() => setNewFolderIcon(icon)}
-                  className={`text-2xl p-3 rounded-claude transition-all border-2 ${
-                    newFolderIcon === icon 
+                  title={label}
+                  onClick={() => setNewFolderIcon(name)}
+                  className={`flex items-center justify-center p-3 rounded-claude transition-all border-2 ${
+                    newFolderIcon === name 
                       ? 'bg-claude-accent-lighter border-claude-accent' 
                       : 'bg-claude-surface-2 border-transparent hover:border-claude-border'
                   }`}
                 >
-                  {icon}
+                  <Icon
+                    className={`h-5 w-5 ${ newFolderIcon === name ? 'text-claude-accent' : 'text-claude-text-2'}`}
+                    strokeWidth={1.8}
+                  />
                 </button>
               ))}
             </div>

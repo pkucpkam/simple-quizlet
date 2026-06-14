@@ -24,17 +24,16 @@ export const leaderboardService = {
         const username = userDoc.data().username || "Người dùng ẩn danh";
         const photoURL = userDoc.data().photoURL || null;
         
-        const history = await historyService.getUserStudyHistory(userId);
-        if (history.length > 0) {
-          const stats = historyService.getStudyStats(history);
+        const stats = await historyService.getStudyAggregateStats(userId);
+        if (stats && stats.totalTime > 0) {
           return {
             userId,
             username,
             photoURL,
-            totalTimeSpent: stats.totalTimeSpent,
-            flashcardTime: stats.flashcardStats?.timeSpent || 0,
-            reviewTime: stats.reviewStats?.timeSpent || 0,
-            testTime: stats.testStats?.timeSpent || 0,
+            totalTimeSpent: stats.totalTime,
+            flashcardTime: stats.flashcard?.totalTime || 0,
+            reviewTime: stats.review?.totalTime || 0,
+            testTime: stats.test?.totalTime || 0,
           } as LeaderboardEntry;
         }
         return null;

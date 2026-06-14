@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Folder } from "../types/folder";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import FolderIcon from "./ui/FolderIcon";
 
 interface Props {
   folder: Folder;
@@ -19,8 +20,11 @@ export default function FolderCard({ folder, onClick, onEdit, onDelete }: Props)
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-12 h-12 rounded-claude-md bg-claude-surface-2 border border-claude-border flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-105 transition-transform">
-            {folder.icon}
+          <div
+            className="w-12 h-12 rounded-claude-md flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+            style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+          >
+            <FolderIcon name={folder.icon} className="h-6 w-6" style={{ color: folder.color || '#3B82F6' }} />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold text-claude-text truncate group-hover:text-claude-accent transition-colors">{folder.name}</h3>

@@ -103,16 +103,7 @@ export default function ReviewPage() {
 
             const userId = auth.currentUser?.uid;
             if (userId) {
-                await historyService.saveStudySession(userId, {
-                    setId: "srs_daily",
-                    setName: "Ôn tập thông minh (SRS)",
-                    lessonId: "srs",
-                    lessonTitle: "Ôn tập thông minh",
-                    timeSpent: totalTime,
-                    knowCount: correctCount + (showAnswer ? 1 : 0),
-                    totalCount: cards.length,
-                    studyMode: "srs_review", 
-                });
+                await historyService.incrementStudyStats(userId, "review", totalTime);
             }
 
             // Show completion modal

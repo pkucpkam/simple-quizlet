@@ -11,7 +11,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Modal from "../components/ui/Modal";
 import FolderSelect from "../components/ui/FolderSelect";
-import { Info, LayoutGrid, Table, Trash2, Plus, BookOpen, Zap, AlertCircle, Rocket } from "lucide-react";
+import { Info, LayoutGrid, Table, Trash2, Plus, BookOpen, Zap, AlertCircle, Rocket, ChevronDown } from "lucide-react";
 
 const WORD_TYPES = ["noun", "verb", "adjective", "adverb", "phrase", "idiom", "other"];
 
@@ -374,17 +374,22 @@ export default function CreateLesson() {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-claude-text">Loại từ</label>
-                  <select
-                    className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors bg-white"
-                    value={item.wordType || ""}
-                    onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                    disabled={loading}
-                  >
-                    <option value="">-- Chọn loại từ --</option>
-                    {WORD_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                      value={item.wordType || ""}
+                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="">-- Chọn loại từ --</option>
+                      {WORD_TYPES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                      <ChevronDown className="w-4 h-4" strokeWidth={2} />
+                    </div>
+                  </div>
                 </div>
 
                 <Input
@@ -456,17 +461,22 @@ export default function CreateLesson() {
                     />
                   </td>
                   <td className="p-1 border-r border-claude-border">
-                    <select
-                      className="w-full bg-transparent px-2 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text bg-white cursor-pointer transition-all"
-                      value={item.wordType || ""}
-                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                      disabled={loading}
-                    >
-                      <option value="">Loại từ</option>
-                      {WORD_TYPES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        className="appearance-none w-full bg-transparent pl-2 pr-6 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text cursor-pointer transition-all"
+                        value={item.wordType || ""}
+                        onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                        disabled={loading}
+                      >
+                        <option value="" className="bg-claude-surface text-claude-text">Loại từ</option>
+                        {WORD_TYPES.map((t) => (
+                          <option key={t} value={t} className="bg-claude-surface text-claude-text">{t}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center text-claude-text-3">
+                        <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
+                      </div>
+                    </div>
                   </td>
                   <td className="p-1 border-r border-claude-border">
                     <input

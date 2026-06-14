@@ -11,7 +11,8 @@ import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import Badge from '../../components/ui/Badge';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ChevronDown } from 'lucide-react';
+import FolderIcon from '../../components/ui/FolderIcon';
 
 type TabType = 'users' | 'lessons' | 'folders';
 
@@ -309,17 +310,20 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider">Icon</label>
-                      <select
-                        className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent"
-                        value={newFolderIcon}
-                        onChange={(e) => setNewFolderIcon(e.target.value)}
-                      >
-                        <option value="📁">📁 Mặc định</option>
-                        <option value="🎓">🎓 Học tập</option>
-                        <option value="⭐">⭐ Quan trọng</option>
-                        <option value="🚀">🚀 Nâng cao</option>
-                        <option value="📚">📚 Tổng hợp</option>
-                      </select>
+                      <div className="relative">
+                        <select
+                          className="appearance-none w-full pl-3 pr-8 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer"
+                          value={newFolderIcon}
+                          onChange={(e) => setNewFolderIcon(e.target.value)}
+                        >
+                          <option value="📁">📁 Mặc định</option>
+                          <option value="🎓">🎓 Học tập</option>
+                          <option value="⭐">⭐ Quan trọng</option>
+                          <option value="🚀">🚀 Nâng cao</option>
+                          <option value="📚">📚 Tổng hợp</option>
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-claude-text-3 pointer-events-none" />
+                      </div>
                     </div>
                     <div className="flex items-end">
                       <button
@@ -349,8 +353,11 @@ const AdminDashboard: React.FC = () => {
                       className="group bg-claude-surface border border-claude-border rounded-claude-md p-4 hover:border-purple-300 hover:shadow-claude transition-all"
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <div className="text-2xl bg-claude-surface-2 w-12 h-12 flex items-center justify-center rounded-claude-md group-hover:scale-105 transition-transform">
-                          {folder.icon}
+                        <div
+                          className="text-2xl bg-claude-surface-2 w-12 h-12 flex items-center justify-center rounded-claude-md group-hover:scale-105 transition-transform"
+                          style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                        >
+                          <FolderIcon name={folder.icon} className="h-6 w-6" style={{ color: folder.color || '#3B82F6' }} />
                         </div>
                         <button
                           onClick={() => handleDeleteFolder(folder.id)}
