@@ -168,10 +168,10 @@ export default function MyLessons() {
           <button
             key={opt.value}
             onClick={() => setViewMode(opt.value)}
-            className={`px-3 py-1.5 rounded-claude text-sm font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-claude border text-sm font-medium transition-all ${
               viewMode === opt.value
-                ? 'bg-claude-surface border border-claude-border text-claude-text shadow-claude-sm'
-                : 'text-claude-text-2 hover:text-claude-text'
+                ? 'bg-claude-surface border-claude-border text-claude-text shadow-claude-sm'
+                : 'border-transparent text-claude-text-2 hover:text-claude-text'
             }`}
           >
             {opt.label}

@@ -338,10 +338,10 @@ export default function EditLesson() {
               setViewMode("card");
               localStorage.setItem("lesson_editor_view_mode", "card");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude text-xs md:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
               viewMode === "card"
-                ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
-                : "text-claude-text-2 hover:text-claude-text"
+                ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
             🗂️ Dạng thẻ
@@ -352,10 +352,10 @@ export default function EditLesson() {
               setViewMode("table");
               localStorage.setItem("lesson_editor_view_mode", "table");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude text-xs md:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
               viewMode === "table"
-                ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
-                : "text-claude-text-2 hover:text-claude-text"
+                ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
             📊 Dạng bảng (Excel)
