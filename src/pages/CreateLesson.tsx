@@ -11,6 +11,7 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Modal from "../components/ui/Modal";
 import FolderSelect from "../components/ui/FolderSelect";
+import { Info, LayoutGrid, Table, Trash2, Plus, BookOpen, Zap, AlertCircle, Rocket } from "lucide-react";
 
 const WORD_TYPES = ["noun", "verb", "adjective", "adverb", "phrase", "idiom", "other"];
 
@@ -171,11 +172,7 @@ export default function CreateLesson() {
     );
   }
 
-  const InfoIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 flex-shrink-0">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-    </svg>
-  );
+  const InfoIcon = () => <Info className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />;
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 animate-fade-in">
@@ -192,24 +189,27 @@ export default function CreateLesson() {
               onClick={() => setShowAddModal(true)}
               variant="primary"
               size="md"
+              icon={<Plus className="h-4 w-4" />}
             >
-              ➕ Thêm từ
+              Thêm từ
             </Button>
             <Button
               type="button"
               onClick={() => setShowImportModal(true)}
               variant="secondary"
               size="md"
+              icon={<Zap className="h-4 w-4" />}
             >
-              ⚡ Import nhanh
+              Import nhanh
             </Button>
           </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-claude-error-light border border-claude-error/20 text-claude-error px-4 py-3 rounded-claude mb-6 font-medium">
-          ⚠️ {error}
+        <div className="bg-claude-error-light border border-claude-error/20 text-claude-error px-4 py-3 rounded-claude mb-6 font-medium flex items-center gap-2">
+          <AlertCircle className="h-5 w-5" />
+          {error}
         </div>
       )}
 
@@ -289,7 +289,7 @@ export default function CreateLesson() {
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            🗂️ Dạng thẻ
+            <LayoutGrid className="w-4 h-4" /> Dạng thẻ
           </button>
           <button
             type="button"
@@ -303,7 +303,7 @@ export default function CreateLesson() {
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            📊 Dạng bảng (Excel)
+            <Table className="w-4 h-4" /> Dạng bảng (Excel)
           </button>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function CreateLesson() {
       {/* Vocab Items */}
       {vocabItems.length === 0 ? (
         <div className="bg-claude-surface rounded-claude-md border-2 border-dashed border-claude-border p-12 text-center mb-6 shadow-claude-sm">
-          <div className="text-5xl mb-4">📚</div>
+          <BookOpen className="w-12 h-12 text-claude-text-3 mx-auto mb-4" strokeWidth={1.2} />
           <h3 className="text-lg font-bold text-claude-text mb-1">Chưa có từ vựng nào</h3>
           <p className="text-claude-text-2 text-sm mb-4">
             Hãy thêm từ vựng mới hoặc nhập liệu nhanh từ Excel/Text để bắt đầu.
@@ -320,8 +320,9 @@ export default function CreateLesson() {
             type="button"
             onClick={() => setShowAddModal(true)}
             variant="primary"
+            icon={<Plus className="h-4 w-4" />}
           >
-            ➕ Thêm từ đầu tiên
+            Thêm từ đầu tiên
           </Button>
         </div>
       ) : viewMode === "card" ? (
@@ -339,9 +340,7 @@ export default function CreateLesson() {
                     className="text-claude-text-3 hover:text-claude-error transition-colors"
                     title="Xóa từ này"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Trash2 className="h-5 w-5" strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -498,9 +497,7 @@ export default function CreateLesson() {
                         className="text-claude-text-3 hover:text-claude-error transition-colors p-1.5 rounded hover:bg-claude-error-light inline-flex items-center justify-center"
                         title="Xóa từ này"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
                       </button>
                     )}
                   </td>
@@ -518,9 +515,7 @@ export default function CreateLesson() {
         disabled={loading}
         className="w-full py-4 rounded-claude-md border-2 border-dashed border-claude-accent/30 text-claude-accent font-bold hover:bg-claude-accent-lighter hover:border-claude-accent/50 transition-colors mb-8 flex items-center justify-center gap-2"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-        </svg>
+        <Plus className="h-5 w-5" strokeWidth={2} />
         Thêm từ mới
       </button>
 
@@ -534,8 +529,9 @@ export default function CreateLesson() {
           disabled={loading || validWords.length === 0 || !title.trim()}
           loading={loading}
           variant="primary"
+          icon={<Rocket className="h-4 w-4" />}
         >
-          🚀 Tạo bài học
+          Tạo bài học
         </Button>
       </div>
 

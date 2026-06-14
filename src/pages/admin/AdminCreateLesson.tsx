@@ -11,6 +11,7 @@ import type { Folder } from '../../types/folder';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
+import { ChevronLeft, Plus, Zap, LayoutGrid, Table, BookOpen, Trash2, Rocket } from 'lucide-react';
 
 interface DictionaryPhonetic {
   text?: string;
@@ -177,9 +178,7 @@ const AdminCreateLesson: React.FC = () => {
             className="text-claude-text-3 hover:text-claude-accent transition-colors mt-1"
             title="Quay lại"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
           </button>
           <div>
             <h1 className="text-3xl font-bold text-claude-text">Tạo bài học Hệ thống</h1>
@@ -192,16 +191,18 @@ const AdminCreateLesson: React.FC = () => {
             onClick={() => setShowAddModal(true)}
             variant="primary"
             size="md"
+            icon={<Plus className="h-4 w-4" />}
           >
-            ➕ Thêm từ
+            Thêm từ
           </Button>
           <Button
             type="button"
             onClick={() => setShowImportModal(true)}
             variant="secondary"
             size="md"
+            icon={<Zap className="h-4 w-4" />}
           >
-            ⚡ Import nhanh
+            Import nhanh
           </Button>
         </div>
       </div>
@@ -286,7 +287,7 @@ const AdminCreateLesson: React.FC = () => {
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            🗂️ Dạng thẻ
+            <LayoutGrid className="w-4 h-4" /> Dạng thẻ
           </button>
           <button
             type="button"
@@ -300,7 +301,7 @@ const AdminCreateLesson: React.FC = () => {
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            📊 Dạng bảng (Excel)
+            <Table className="w-4 h-4" /> Dạng bảng (Excel)
           </button>
         </div>
       </div>
@@ -308,7 +309,7 @@ const AdminCreateLesson: React.FC = () => {
       {/* Vocab Items */}
       {vocabItems.length === 0 ? (
         <div className="bg-claude-surface rounded-claude-md border-2 border-dashed border-claude-border p-12 text-center mb-6 shadow-claude-sm">
-          <div className="text-5xl mb-4">📚</div>
+          <BookOpen className="w-12 h-12 text-claude-text-3 mx-auto mb-4" strokeWidth={1.2} />
           <h3 className="text-lg font-bold text-claude-text mb-1">Chưa có từ vựng nào</h3>
           <p className="text-claude-text-2 text-sm mb-4">
             Hãy thêm từ vựng mới hoặc nhập liệu nhanh từ Excel/Text để bắt đầu.
@@ -317,8 +318,9 @@ const AdminCreateLesson: React.FC = () => {
             type="button"
             onClick={() => setShowAddModal(true)}
             variant="primary"
+            icon={<Plus className="h-4 w-4" />}
           >
-            ➕ Thêm từ đầu tiên
+            Thêm từ đầu tiên
           </Button>
         </div>
       ) : viewMode === "card" ? (
@@ -336,9 +338,7 @@ const AdminCreateLesson: React.FC = () => {
                     className="text-claude-text-3 hover:text-claude-error transition-colors"
                     title="Xóa từ này"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Trash2 className="h-5 w-5" strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -495,9 +495,7 @@ const AdminCreateLesson: React.FC = () => {
                         className="text-claude-text-3 hover:text-claude-error transition-colors p-1.5 rounded hover:bg-claude-error-light inline-flex items-center justify-center"
                         title="Xóa từ này"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
                       </button>
                     )}
                   </td>
@@ -515,9 +513,7 @@ const AdminCreateLesson: React.FC = () => {
         disabled={loading}
         className="w-full py-4 rounded-claude-md border-2 border-dashed border-claude-accent/30 text-claude-accent font-bold hover:bg-claude-accent-lighter hover:border-claude-accent/50 transition-colors mb-8 flex items-center justify-center gap-2"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-        </svg>
+        <Plus className="h-5 w-5" strokeWidth={2} />
         Thêm từ mới
       </button>
 
@@ -539,8 +535,9 @@ const AdminCreateLesson: React.FC = () => {
             disabled={loading || validWords.length === 0 || !title.trim()}
             loading={loading}
             variant="primary"
+            icon={<Rocket className="h-4 w-4" />}
           >
-            🚀 Xuất bản bài học
+            Xuất bản bài học
           </Button>
         </div>
       </div>

@@ -6,6 +6,7 @@ import LessonCard from "../../components/LessonCard";
 import type { Folder } from "../../types/folder";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
+import { ChevronLeft, ChevronDown, Folder as FolderIcon, FolderMinus, BookOpen } from "lucide-react";
 
 import type { Lesson } from "../../types/lesson";
 
@@ -137,7 +138,7 @@ export default function FolderDetailPage() {
     if (error || !folder) {
         return (
             <div className="p-8 flex flex-col items-center gap-6 py-20">
-                <div className="text-6xl text-claude-text-3">📁</div>
+                <FolderIcon className="w-16 h-16 text-claude-text-3" strokeWidth={1.2} />
                 <p className="text-claude-error font-bold text-xl">{error || "Không tìm thấy thư mục"}</p>
                 <button
                     onClick={() => navigate("/my-lessons")}
@@ -158,9 +159,7 @@ export default function FolderDetailPage() {
                     className="p-3 bg-claude-surface shadow-claude-sm border border-claude-border text-claude-text-2 hover:text-claude-accent rounded-claude hover:shadow-claude transition-all"
                     title="Quay lại"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
                 </button>
                 <div
                     className="flex-1 w-full bg-claude-surface shadow-claude border border-claude-border rounded-claude-lg p-6 border-l-8 md:p-8"
@@ -178,8 +177,8 @@ export default function FolderDetailPage() {
                             {folder.description && (
                                 <p className="text-claude-text-2 mt-3 text-lg">{folder.description}</p>
                             )}
-                            <p className="text-sm text-claude-text-3 mt-4 font-medium flex items-center justify-center md:justify-start gap-1">
-                                📚 {lessons.length} bài học • <span className="text-claude-text-3">Tạo bởi bạn</span>
+                            <p className="text-sm text-claude-text-3 mt-4 font-medium flex items-center justify-center md:justify-start gap-1.5">
+                                <BookOpen className="w-4 h-4 text-claude-text-3" strokeWidth={2} /> {lessons.length} bài học • <span className="text-claude-text-3">Tạo bởi bạn</span>
                             </p>
                         </div>
                     </div>
@@ -210,9 +209,7 @@ export default function FolderDetailPage() {
                             <option value="name-desc">Tên (Z-A)</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-claude-text-3">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4 4 4-4" />
-                            </svg>
+                            <ChevronDown className="w-5 h-5" strokeWidth={2} />
                         </div>
                     </div>
                 </div>
@@ -221,8 +218,8 @@ export default function FolderDetailPage() {
             {/* Lessons Grid */}
             <div className="min-h-[400px]">
                 {lessons.length === 0 ? (
-                    <div className="bg-claude-surface shadow-claude border-2 border-dashed border-claude-border rounded-claude-lg p-16 text-center">
-                        <div className="text-6xl mb-6 opacity-30">📚</div>
+                    <div className="bg-claude-surface shadow-claude border-2 border-dashed border-claude-border rounded-claude-lg p-16 flex flex-col items-center text-center">
+                        <BookOpen className="w-16 h-16 mb-6 text-claude-text-3 opacity-30" strokeWidth={1.2} />
                         <p className="text-claude-text-3 text-xl font-medium">Chưa có bài học nào trong thư mục này</p>
                         <button
                             onClick={() => navigate("/create")}
@@ -242,7 +239,7 @@ export default function FolderDetailPage() {
                                 onEdit={(id) => navigate(`/edit/${id}`)}
                                 onFolderAction={handleRemoveFromFolder}
                                 folderActionLabel="Xóa khỏi thư mục"
-                                folderActionIcon="📤"
+                                folderActionIcon={<FolderMinus className="h-4 w-4" strokeWidth={2} />}
                             />
                         ))}
                     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSpeechSynthesis } from "../../hooks/useSpeechSynthesis";
 import Button from "../ui/Button";
+import { Volume2, Lightbulb } from "lucide-react";
 
 interface ListenPracticeCard {
   term: string;
@@ -118,20 +119,7 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
             aria-label="Phát âm thuật ngữ"
             type="button"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-10 h-10 text-claude-accent group-hover:text-claude-accent-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
-              />
-            </svg>
+            <Volume2 className="w-10 h-10 text-claude-accent group-hover:text-claude-accent-2" />
           </button>
           <p className="text-sm text-claude-text-2 font-medium mt-2">
             Nhấn hoặc <kbd className="px-2 py-1 bg-claude-surface-2 border border-claude-border rounded-claude text-xs mx-1 text-claude-text">Ctrl</kbd> để nghe lại
@@ -241,9 +229,7 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
               className="flex items-center gap-2 text-amber-700 hover:text-amber-800 font-semibold px-4 py-2 rounded-claude hover:bg-claude-accent-lighter transition disabled:opacity-50 disabled:cursor-not-allowed text-sm select-none"
               title={hints.size >= vocab.term.length - 1 ? "Không thể gợi ý hết toàn bộ từ" : "Hiển thị gợi ý một chữ cái"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+              <Lightbulb className="h-5 w-5" />
               <span>Gợi ý ({Math.max(0, vocab.term.length - 1 - hints.size)})</span>
             </button>
 

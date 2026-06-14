@@ -13,6 +13,7 @@ import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import { SkeletonTable } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
+import { Search, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 
 interface Lesson {
   id: string;
@@ -156,8 +157,10 @@ export default function Home() {
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <span className="text-claude-text-3 text-xs">⇅</span>;
-    return <span className="text-claude-accent text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>;
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-claude-text-3" />;
+    return sortOrder === "asc"
+      ? <ArrowUp className="h-3 w-3 text-claude-accent" />
+      : <ArrowDown className="h-3 w-3 text-claude-accent" />;
   };
 
   const thClass = "px-4 py-3 text-left text-xs font-semibold text-claude-text-2 uppercase tracking-wider cursor-pointer select-none hover:text-claude-text transition-colors";
@@ -213,9 +216,7 @@ export default function Home() {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Search */}
             <div className="relative flex-1 sm:w-72">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-claude-text-3" strokeWidth={2} />
               <input
                 type="text"
                 placeholder="Tìm kiếm bài học..."
@@ -329,9 +330,7 @@ export default function Home() {
                                       onClick={() => setActiveMenuId(activeMenuId === lesson.id ? null : lesson.id)}
                                       className="p-1.5 text-claude-text-3 hover:bg-claude-sidebar-hover hover:text-claude-text rounded-claude transition-colors"
                                     >
-                                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                      </svg>
+                                      <MoreVertical className="h-4 w-4" />
                                     </button>
                                     {activeMenuId === lesson.id && (
                                       <div className="absolute right-0 mt-1 w-44 bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-md z-20 py-1 animate-fade-in">

@@ -5,12 +5,9 @@ import { toast } from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Badge from "../components/ui/Badge";
 import { SkeletonTable } from "../components/ui/Skeleton";
+import { ArrowLeft, Layers, BookOpen, FileText, Pencil } from "lucide-react";
 
-const BackIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-);
+const BackIcon = () => <ArrowLeft className="h-4 w-4" strokeWidth={2} />;
 
 const LessonView: React.FC = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -66,8 +63,8 @@ const LessonView: React.FC = () => {
   const isOwner = currentUser && (currentUser.username === lesson.creator || currentUser.email === lesson.creator);
 
   const ActionButton = ({
-    onClick, label, variant = 'default'
-  }: { onClick: () => void; label: string; variant?: 'default' | 'success' | 'warning' | 'gray' }) => {
+    onClick, label, icon, variant = 'default'
+  }: { onClick: () => void; label: string; icon?: React.ReactNode; variant?: 'default' | 'success' | 'warning' | 'gray' }) => {
     const styles = {
       default: 'bg-claude-accent text-white hover:bg-claude-accent-2 shadow-claude-sm',
       success: 'bg-claude-success text-white hover:bg-green-700 shadow-claude-sm',
@@ -79,7 +76,8 @@ const LessonView: React.FC = () => {
         onClick={onClick}
         className={`flex-1 min-w-[140px] px-4 py-3 rounded-claude-md font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${styles[variant]}`}
       >
-        {label}
+        {icon}
+        <span>{label}</span>
       </button>
     );
   };
@@ -131,11 +129,11 @@ const LessonView: React.FC = () => {
       {/* Action Bar */}
       <div className="px-6 -mt-5 relative z-10">
         <div className="bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude-md p-3 flex flex-wrap gap-2">
-          <ActionButton onClick={() => navigate(`/study/${lesson.id}`)} label="🃏 Flashcards" variant="default" />
-          <ActionButton onClick={() => setIsReviewModalOpen(true)} label="✍️ Ôn tập" variant="success" />
-          <ActionButton onClick={() => navigate(`/test/${lesson.id}`)} label="📝 Kiểm tra" variant="warning" />
+          <ActionButton onClick={() => navigate(`/study/${lesson.id}`)} label="Flashcards" icon={<Layers className="h-4 w-4" />} variant="default" />
+          <ActionButton onClick={() => setIsReviewModalOpen(true)} label="Ôn tập" icon={<BookOpen className="h-4 w-4" />} variant="success" />
+          <ActionButton onClick={() => navigate(`/test/${lesson.id}`)} label="Kiểm tra" icon={<FileText className="h-4 w-4" />} variant="warning" />
           {isOwner && (
-            <ActionButton onClick={() => navigate(`/edit/${lesson.id}`)} label="✏️ Chỉnh sửa" variant="gray" />
+            <ActionButton onClick={() => navigate(`/edit/${lesson.id}`)} label="Chỉnh sửa" icon={<Pencil className="h-4 w-4" />} variant="gray" />
           )}
         </div>
       </div>

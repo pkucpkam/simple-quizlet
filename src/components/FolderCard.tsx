@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Folder } from "../types/folder";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 
 interface Props {
   folder: Folder;
@@ -38,9 +39,7 @@ export default function FolderCard({ folder, onClick, onEdit, onDelete }: Props)
               className="p-1.5 text-claude-text-3 hover:text-claude-text hover:bg-claude-sidebar-hover rounded-claude transition-colors opacity-0 group-hover:opacity-100"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
+              <MoreVertical className="h-4 w-4" />
             </button>
             {isMenuOpen && (
               <div className="absolute right-0 mt-1 w-40 bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-md z-20 py-1 animate-fade-in">
@@ -49,7 +48,7 @@ export default function FolderCard({ folder, onClick, onEdit, onDelete }: Props)
                     className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-claude-text hover:bg-claude-surface-2 transition-colors"
                     onClick={() => { onEdit(folder.id); setIsMenuOpen(false); }}
                   >
-                    <svg className="h-3.5 w-3.5 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    <Pencil className="h-3.5 w-3.5 text-claude-text-3" strokeWidth={2} />
                     Chỉnh sửa
                   </button>
                 )}
@@ -60,7 +59,7 @@ export default function FolderCard({ folder, onClick, onEdit, onDelete }: Props)
                       className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-claude-error hover:bg-claude-error-light transition-colors"
                       onClick={() => { onDelete(folder.id); setIsMenuOpen(false); }}
                     >
-                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
                       Xóa thư mục
                     </button>
                   </>

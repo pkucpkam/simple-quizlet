@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { logoutUser } from '../../service/authService';
 import { useAuth } from '../../hooks/useAuth';
+import { ChevronDown, Menu } from 'lucide-react';
 
 
 const Header: React.FC = () => {
@@ -69,9 +70,7 @@ const Header: React.FC = () => {
                   className="flex items-center gap-2 rounded-md bg-gray-100 px-4 py-2 transition hover:bg-gray-200"
                 >
                   <span className="text-sm font-medium text-gray-700">Xin chào, {username}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <ChevronDown className="h-4 w-4 text-gray-600" strokeWidth={2} />
                 </button>
                 {dropdownOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 rounded-md border border-gray-100 bg-white shadow-lg z-50">
@@ -125,16 +124,7 @@ const Header: React.FC = () => {
               className="block rounded-sm bg-gray-100 p-2.5 text-gray-600 transition hover:text-gray-600/75 md:hidden"
             >
               <span className="sr-only">Toggle menu</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="h-5 w-5" strokeWidth={2} />
             </button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { getUserInfo, updateUserAvatar } from '../service/userService';
 import type { User } from 'firebase/auth';
 import { toast } from 'react-hot-toast';
 import { Skeleton } from '../components/ui/Skeleton';
+import { Camera, Loader2, User as UserIcon, Mail, Calendar } from 'lucide-react';
 
 interface UserProfileData {
   username?: string;
@@ -12,12 +13,7 @@ interface UserProfileData {
   createdAt?: string | number;
 }
 
-const CameraIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
+const CameraIcon = () => <Camera className="h-5 w-5 text-white drop-shadow-md" />;
 
 const FieldRow = ({ label, icon, value }: { label: string; icon: React.ReactNode; value: string }) => (
   <div>
@@ -105,10 +101,7 @@ const Profile: React.FC = () => {
           >
             {uploading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-10">
-                <svg className="h-5 w-5 animate-spin text-claude-accent" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
+                <Loader2 className="h-5 w-5 animate-spin text-claude-accent" />
               </div>
             )}
             {userInfo?.photoURL ? (
@@ -153,21 +146,21 @@ const Profile: React.FC = () => {
             </div>
           ) : userInfo ? (
             <div className="space-y-4">
-              <FieldRow
-                label="Tên người dùng"
-                icon={<svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
-                value={userInfo.username || '—'}
-              />
-              <FieldRow
-                label="Email"
-                icon={<svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>}
-                value={userInfo.email || 'Chưa cập nhật'}
-              />
-              <FieldRow
-                label="Ngày tham gia"
-                icon={<svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" /></svg>}
-                value={userInfo.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('vi-VN') : 'Không rõ'}
-              />
+               <FieldRow
+                 label="Tên người dùng"
+                 icon={<UserIcon className="h-4 w-4" />}
+                 value={userInfo.username || '—'}
+               />
+               <FieldRow
+                 label="Email"
+                 icon={<Mail className="h-4 w-4" />}
+                 value={userInfo.email || 'Chưa cập nhật'}
+               />
+               <FieldRow
+                 label="Ngày tham gia"
+                 icon={<Calendar className="h-4 w-4" />}
+                 value={userInfo.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('vi-VN') : 'Không rõ'}
+               />
 
               <div className="pt-4 border-t border-claude-border flex justify-end">
                 <button

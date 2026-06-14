@@ -4,6 +4,7 @@ import { historyService } from '../service/historyService';
 import StudyHistoryCard from '../components/StudyHistoryCard';
 import { SkeletonCard } from '../components/ui/Skeleton';
 import EmptyState from '../components/ui/EmptyState';
+import { Layers, Brain, FileText, Clock } from 'lucide-react';
 
 type FilterMode = 'all' | 'flashcard' | 'review' | 'test';
 
@@ -15,17 +16,17 @@ const filterOptions: { value: FilterMode; label: string }[] = [
 ];
 
 interface MetricCardProps {
-  emoji: string;
+  icon: React.ReactNode;
   label: string;
   time: string;
   sessions: number;
   accent: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ emoji, label, time, sessions, accent }) => (
+const MetricCard: React.FC<MetricCardProps> = ({ icon, label, time, sessions, accent }) => (
   <div className={`bg-claude-surface border border-claude-border rounded-claude-md p-5 shadow-claude-sm hover:shadow-claude transition-shadow`}>
     <div className="flex items-start justify-between mb-3">
-      <span className="text-2xl">{emoji}</span>
+      <div className="text-claude-text-2">{icon}</div>
       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${accent}`}>
         {sessions} phiên
       </span>
@@ -110,21 +111,21 @@ const StudyHistory: React.FC = () => {
       ) : stats ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <MetricCard
-            emoji="🃏"
+            icon={<Layers className="h-5 w-5 text-claude-info" />}
             label="Thẻ ghi nhớ"
             time={formatTime(stats.flashcardStats?.timeSpent || 0)}
             sessions={stats.flashcardStats?.sessions || 0}
             accent="bg-claude-info-light text-claude-info"
           />
           <MetricCard
-            emoji="🧠"
+            icon={<Brain className="h-5 w-5 text-purple-600" />}
             label="Ôn tập (Review/SRS)"
             time={formatTime(stats.reviewStats?.timeSpent || 0)}
             sessions={stats.reviewStats?.sessions || 0}
             accent="bg-purple-50 text-purple-600"
           />
           <MetricCard
-            emoji="📝"
+            icon={<FileText className="h-5 w-5 text-claude-success" />}
             label="Kiểm tra (Test)"
             time={formatTime(stats.testStats?.timeSpent || 0)}
             sessions={stats.testStats?.sessions || 0}
@@ -201,7 +202,7 @@ const StudyHistory: React.FC = () => {
           <EmptyState
             title="Chưa có lịch sử học tập"
             description="Bắt đầu học một bài học để thấy lịch sử tại đây!"
-            icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+            icon={<Clock className="h-10 w-10 text-claude-text-3" strokeWidth={1.2} />}
           />
         </div>
       )}
