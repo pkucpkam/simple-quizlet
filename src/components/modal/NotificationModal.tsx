@@ -2,6 +2,8 @@ import React from "react";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 
+import { Info } from "lucide-react";
+
 interface NotificationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,9 +14,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
     <div className="text-center">
       {/* Icon */}
       <div className="w-10 h-10 rounded-full bg-claude-info-light border border-blue-200 flex items-center justify-center mx-auto mb-4">
-        <svg className="h-5 w-5 text-claude-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <Info className="h-5 w-5 text-claude-info" strokeWidth={2} />
       </div>
 
       <h2 className="text-base font-semibold text-claude-text mb-3">Thông báo cập nhật</h2>

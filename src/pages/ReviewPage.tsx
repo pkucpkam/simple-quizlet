@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import Quiz from "../components/review/Quiz";
 import QuizReverse from "../components/review/QuizReverse";
 import Practice from "../components/review/Practice";
@@ -10,14 +10,16 @@ import ReviewResult from "../components/review/ReviewResult";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
 import LoadingScreen from "../components/common/LoadingScreen";
-
-import { useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const allQuizTypes = ["normal", "reverse", "practice", "matching", "listen"] as const;
 type QuizType = (typeof allQuizTypes)[number];
 
 const ReviewPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = location.state?.from || (lessonId ? `/lesson/${lessonId}` : "/");
 
   const [fullVocabList, setFullVocabList] = useState<{ term: string; definition: string }[]>([]);
   const [vocabList, setVocabList] = useState<{ term: string; definition: string }[]>([]);
@@ -78,16 +80,7 @@ const ReviewPage = () => {
       if (!userId) return;
 
       const timeSpent = Math.round((Date.now() - startTime) / 1000);
-      historyService.saveStudySession(userId, {
-        setId: lessonId || "",
-        setName: lessonTitle || "Bài học không tên",
-        lessonId: lessonId || "",
-        lessonTitle: lessonTitle || "Bài học không tên",
-        timeSpent,
-        knowCount: correctAnswers,
-        totalCount: vocabList.length,
-        studyMode: "review",
-      });
+      historyService.incrementStudyStats(userId, "review", timeSpent);
       setHasSaved(true);
     }
   }, [currentIndex, vocabList.length, hasSaved, lessonId, lessonTitle, startTime, correctAnswers]);
@@ -141,6 +134,8 @@ const ReviewPage = () => {
         correctAnswers={correctAnswers}
         totalQuestions={vocabList.length}
         onRestart={handleRestart}
+        fromPath={fromPath}
+        onBack={() => navigate(fromPath)}
       />
     );
   }
@@ -149,6 +144,15 @@ const ReviewPage = () => {
 
   return (
     <div className="w-full mx-auto p-6 h-full">
+      <div className="max-w-2xl mx-auto mb-6 flex justify-start">
+        <button
+          onClick={() => navigate(fromPath)}
+          className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> Thoát
+        </button>
+      </div>
+
       <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Ôn tập từ vựng
       </h1>

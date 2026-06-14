@@ -11,6 +11,8 @@ import type { Folder } from '../../types/folder';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Modal from '../../components/ui/Modal';
+import { ChevronLeft, Plus, Zap, LayoutGrid, Table, BookOpen, Trash2, Rocket, ChevronDown } from 'lucide-react';
+import { FOLDER_ICONS } from '../../components/ui/folderIcons';
 
 interface DictionaryPhonetic {
   text?: string;
@@ -49,7 +51,7 @@ const AdminCreateLesson: React.FC = () => {
   // Folder modal state
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  const [newFolderIcon, setNewFolderIcon] = useState('📁');
+  const [newFolderIcon, setNewFolderIcon] = useState('Folder');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   useEffect(() => {
@@ -177,9 +179,7 @@ const AdminCreateLesson: React.FC = () => {
             className="text-claude-text-3 hover:text-claude-accent transition-colors mt-1"
             title="Quay lại"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
           </button>
           <div>
             <h1 className="text-3xl font-bold text-claude-text">Tạo bài học Hệ thống</h1>
@@ -192,16 +192,18 @@ const AdminCreateLesson: React.FC = () => {
             onClick={() => setShowAddModal(true)}
             variant="primary"
             size="md"
+            icon={<Plus className="h-4 w-4" />}
           >
-            ➕ Thêm từ
+            Thêm từ
           </Button>
           <Button
             type="button"
             onClick={() => setShowImportModal(true)}
             variant="secondary"
             size="md"
+            icon={<Zap className="h-4 w-4" />}
           >
-            ⚡ Import nhanh
+            Import nhanh
           </Button>
         </div>
       </div>
@@ -231,17 +233,22 @@ const AdminCreateLesson: React.FC = () => {
                 + Tạo thư mục mới
               </button>
             </div>
-            <select
-              value={selectedFolderId || ""}
-              onChange={(e) => setSelectedFolderId(e.target.value || null)}
-              className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors bg-white cursor-pointer"
-              disabled={loading}
-            >
-              <option value="">-- Không có thư mục --</option>
-              {officialFolders.map((folder) => (
-                <option key={folder.id} value={folder.id}>{folder.icon} {folder.name}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedFolderId || ""}
+                onChange={(e) => setSelectedFolderId(e.target.value || null)}
+                className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                disabled={loading}
+              >
+                <option value="">-- Không có thư mục --</option>
+                {officialFolders.map((folder) => (
+                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                <ChevronDown className="w-4 h-4" strokeWidth={2} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -280,13 +287,13 @@ const AdminCreateLesson: React.FC = () => {
               setViewMode("card");
               localStorage.setItem("lesson_editor_view_mode", "card");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude text-xs md:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
               viewMode === "card"
                 ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
-                : "text-claude-text-2 hover:text-claude-text"
+                : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            🗂️ Dạng thẻ
+            <LayoutGrid className="w-4 h-4" /> Dạng thẻ
           </button>
           <button
             type="button"
@@ -294,13 +301,13 @@ const AdminCreateLesson: React.FC = () => {
               setViewMode("table");
               localStorage.setItem("lesson_editor_view_mode", "table");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude text-xs md:text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
               viewMode === "table"
                 ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
-                : "text-claude-text-2 hover:text-claude-text"
+                : "border-transparent text-claude-text-2 hover:text-claude-text"
             }`}
           >
-            📊 Dạng bảng (Excel)
+            <Table className="w-4 h-4" /> Dạng bảng (Excel)
           </button>
         </div>
       </div>
@@ -308,7 +315,7 @@ const AdminCreateLesson: React.FC = () => {
       {/* Vocab Items */}
       {vocabItems.length === 0 ? (
         <div className="bg-claude-surface rounded-claude-md border-2 border-dashed border-claude-border p-12 text-center mb-6 shadow-claude-sm">
-          <div className="text-5xl mb-4">📚</div>
+          <BookOpen className="w-12 h-12 text-claude-text-3 mx-auto mb-4" strokeWidth={1.2} />
           <h3 className="text-lg font-bold text-claude-text mb-1">Chưa có từ vựng nào</h3>
           <p className="text-claude-text-2 text-sm mb-4">
             Hãy thêm từ vựng mới hoặc nhập liệu nhanh từ Excel/Text để bắt đầu.
@@ -317,8 +324,9 @@ const AdminCreateLesson: React.FC = () => {
             type="button"
             onClick={() => setShowAddModal(true)}
             variant="primary"
+            icon={<Plus className="h-4 w-4" />}
           >
-            ➕ Thêm từ đầu tiên
+            Thêm từ đầu tiên
           </Button>
         </div>
       ) : viewMode === "card" ? (
@@ -336,9 +344,7 @@ const AdminCreateLesson: React.FC = () => {
                     className="text-claude-text-3 hover:text-claude-error transition-colors"
                     title="Xóa từ này"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Trash2 className="h-5 w-5" strokeWidth={2} />
                   </button>
                 )}
               </div>
@@ -372,17 +378,22 @@ const AdminCreateLesson: React.FC = () => {
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-medium text-claude-text">Loại từ</label>
-                  <select
-                    className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors bg-white"
-                    value={item.wordType || ""}
-                    onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                    disabled={loading}
-                  >
-                    <option value="">-- Chọn loại từ --</option>
-                    {WORD_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                      value={item.wordType || ""}
+                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="">-- Chọn loại từ --</option>
+                      {WORD_TYPES.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                      <ChevronDown className="w-4 h-4" strokeWidth={2} />
+                    </div>
+                  </div>
                 </div>
 
                 <Input
@@ -454,17 +465,22 @@ const AdminCreateLesson: React.FC = () => {
                     />
                   </td>
                   <td className="p-1 border-r border-claude-border">
-                    <select
-                      className="w-full bg-transparent px-2 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text bg-white cursor-pointer transition-all"
-                      value={item.wordType || ""}
-                      onChange={(e) => updateItem(index, "wordType", e.target.value)}
-                      disabled={loading}
-                    >
-                      <option value="">Loại từ</option>
-                      {WORD_TYPES.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        className="appearance-none w-full bg-transparent pl-2 pr-6 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:bg-claude-surface rounded text-sm text-claude-text cursor-pointer transition-all"
+                        value={item.wordType || ""}
+                        onChange={(e) => updateItem(index, "wordType", e.target.value)}
+                        disabled={loading}
+                      >
+                        <option value="" className="bg-claude-surface text-claude-text">Loại từ</option>
+                        {WORD_TYPES.map((t) => (
+                          <option key={t} value={t} className="bg-claude-surface text-claude-text">{t}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-1 flex items-center text-claude-text-3">
+                        <ChevronDown className="w-3.5 h-3.5" strokeWidth={2} />
+                      </div>
+                    </div>
                   </td>
                   <td className="p-1 border-r border-claude-border">
                     <input
@@ -495,9 +511,7 @@ const AdminCreateLesson: React.FC = () => {
                         className="text-claude-text-3 hover:text-claude-error transition-colors p-1.5 rounded hover:bg-claude-error-light inline-flex items-center justify-center"
                         title="Xóa từ này"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <Trash2 className="h-4 w-4" strokeWidth={2} />
                       </button>
                     )}
                   </td>
@@ -515,9 +529,7 @@ const AdminCreateLesson: React.FC = () => {
         disabled={loading}
         className="w-full py-4 rounded-claude-md border-2 border-dashed border-claude-accent/30 text-claude-accent font-bold hover:bg-claude-accent-lighter hover:border-claude-accent/50 transition-colors mb-8 flex items-center justify-center gap-2"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-        </svg>
+        <Plus className="h-5 w-5" strokeWidth={2} />
         Thêm từ mới
       </button>
 
@@ -539,8 +551,9 @@ const AdminCreateLesson: React.FC = () => {
             disabled={loading || validWords.length === 0 || !title.trim()}
             loading={loading}
             variant="primary"
+            icon={<Rocket className="h-4 w-4" />}
           >
-            🚀 Xuất bản bài học
+            Xuất bản bài học
           </Button>
         </div>
       </div>
@@ -583,19 +596,23 @@ const AdminCreateLesson: React.FC = () => {
           />
           <div className="space-y-2">
             <label className="block text-sm font-medium text-claude-text">Icon đại diện</label>
-            <div className="grid grid-cols-5 gap-3">
-              {['📁', '🎓', '📚', '🚀', '⭐'].map(icon => (
+            <div className="grid grid-cols-5 gap-2">
+              {FOLDER_ICONS.slice(0, 10).map(({ name, label, Icon }) => (
                 <button
-                  key={icon}
+                  key={name}
                   type="button"
-                  onClick={() => setNewFolderIcon(icon)}
-                  className={`text-2xl p-3 rounded-claude transition-all border-2 ${
-                    newFolderIcon === icon 
+                  title={label}
+                  onClick={() => setNewFolderIcon(name)}
+                  className={`flex items-center justify-center p-3 rounded-claude transition-all border-2 ${
+                    newFolderIcon === name 
                       ? 'bg-claude-accent-lighter border-claude-accent' 
                       : 'bg-claude-surface-2 border-transparent hover:border-claude-border'
                   }`}
                 >
-                  {icon}
+                  <Icon
+                    className={`h-5 w-5 ${ newFolderIcon === name ? 'text-claude-accent' : 'text-claude-text-2'}`}
+                    strokeWidth={1.8}
+                  />
                 </button>
               ))}
             </div>

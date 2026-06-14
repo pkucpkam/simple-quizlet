@@ -3,6 +3,8 @@ import type { CreateFolderData } from "../../types/folder";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import { Check, Folder } from "lucide-react";
+import { FOLDER_ICONS } from "../ui/folderIcons";
 
 interface Props {
     isOpen: boolean;
@@ -11,6 +13,8 @@ interface Props {
     initialData?: CreateFolderData & { id?: string };
     isEdit?: boolean;
 }
+
+// ─── Color presets ────────────────────────────────────────────────────────────
 
 const PRESET_COLORS = [
     { name: "Xanh dương", value: "#3B82F6" },
@@ -23,13 +27,13 @@ const PRESET_COLORS = [
     { name: "Xanh ngọc", value: "#14B8A6" },
 ];
 
-const PRESET_ICONS = ["📁", "📚", "🎓", "💼", "🎯", "🌟", "🔥", "💡", "🚀", "📖", "✨", "🎨"];
+// ─── Modal ────────────────────────────────────────────────────────────────────
 
 export default function CreateFolderModal({ isOpen, onClose, onSubmit, initialData, isEdit }: Props) {
     const [name, setName] = useState(initialData?.name || "");
     const [description, setDescription] = useState(initialData?.description || "");
     const [color, setColor] = useState(initialData?.color || "#3B82F6");
-    const [icon, setIcon] = useState(initialData?.icon || "📁");
+    const [iconName, setIconName] = useState(initialData?.icon || "Folder");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -42,12 +46,11 @@ export default function CreateFolderModal({ isOpen, onClose, onSubmit, initialDa
 
         setIsSubmitting(true);
         try {
-            await onSubmit({ name: name.trim(), description: description.trim(), color, icon });
-            // Reset form
+            await onSubmit({ name: name.trim(), description: description.trim(), color, icon: iconName });
             setName("");
             setDescription("");
             setColor("#3B82F6");
-            setIcon("📁");
+            setIconName("Folder");
             onClose();
         } catch (error) {
             console.error("Error submitting folder:", error);
@@ -56,125 +59,131 @@ export default function CreateFolderModal({ isOpen, onClose, onSubmit, initialDa
         }
     };
 
+    const selectedEntry = FOLDER_ICONS.find((i) => i.name === iconName);
+    const PreviewIcon = selectedEntry?.Icon ?? Folder;
+
     return (
         <Modal
             open={isOpen}
             onClose={onClose}
             title={isEdit ? "Chỉnh sửa thư mục" : "Tạo thư mục mới"}
-            size="md"
+            size="lg"
         >
-            <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Tên thư mục */}
-                <Input
-                    label="Tên thư mục *"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="VD: Tiếng Anh giao tiếp"
-                    maxLength={50}
-                    required
-                />
-
-                {/* Mô tả */}
-                <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-claude-text">
-                        Mô tả
-                    </label>
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="w-full bg-claude-surface border border-claude-border rounded-claude text-sm text-claude-text placeholder:text-claude-text-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors duration-150 resize-none"
-                        placeholder="Mô tả ngắn về thư mục này..."
-                        rows={3}
-                        maxLength={200}
+            <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[70vh]">
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto px-3 py-2 space-y-5 min-h-[200px]">
+                    {/* Tên thư mục */}
+                    <Input
+                        label="Tên thư mục *"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="VD: Tiếng Anh giao tiếp"
+                        maxLength={50}
+                        required
                     />
-                </div>
 
-                {/* Chọn icon */}
-                <div>
-                    <label className="block text-sm font-medium text-claude-text mb-2">
-                        Chọn biểu tượng
-                    </label>
-                    <div className="grid grid-cols-6 gap-2">
-                        {PRESET_ICONS.map((presetIcon) => (
-                            <button
-                                key={presetIcon}
-                                type="button"
-                                onClick={() => setIcon(presetIcon)}
-                                className={`text-2xl p-3 rounded-claude border-2 transition-all ${icon === presetIcon
+                    {/* Mô tả */}
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-claude-text">Mô tả</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full bg-claude-surface border border-claude-border rounded-claude text-sm text-claude-text placeholder:text-claude-text-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors duration-150 resize-none"
+                            placeholder="Mô tả ngắn về thư mục này..."
+                            rows={3}
+                            maxLength={200}
+                        />
+                    </div>
+
+                    {/* Chọn icon */}
+                    <div>
+                        <label className="block text-sm font-medium text-claude-text mb-2">
+                            Chọn biểu tượng
+                        </label>
+                        <div className="grid grid-cols-8 gap-2">
+                            {FOLDER_ICONS.map(({ name: n, label, Icon }) => (
+                                <button
+                                    key={n}
+                                    type="button"
+                                    title={label}
+                                    onClick={() => setIconName(n)}
+                                    className={`flex items-center justify-center p-2.5 rounded-claude border-2 transition-all ${iconName === n
                                         ? "border-claude-accent bg-claude-accent-lighter scale-110"
                                         : "border-claude-border hover:border-claude-border-strong hover:bg-claude-surface-2"
-                                    }`}
-                            >
-                                {presetIcon}
-                            </button>
-                        ))}
+                                        }`}
+                                >
+                                    <Icon
+                                        className={`h-5 w-5 ${iconName === n ? "text-claude-accent" : "text-claude-text-2"}`}
+                                        strokeWidth={1.8}
+                                    />
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Chọn màu */}
-                <div>
-                    <label className="block text-sm font-medium text-claude-text mb-2">
-                        Chọn màu sắc
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                        {PRESET_COLORS.map((presetColor) => (
-                            <button
-                                key={presetColor.value}
-                                type="button"
-                                onClick={() => setColor(presetColor.value)}
-                                className={`p-3 rounded-claude border-2 transition-all ${color === presetColor.value
+                    {/* Chọn màu */}
+                    <div>
+                        <label className="block text-sm font-medium text-claude-text mb-2">
+                            Chọn màu sắc
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {PRESET_COLORS.map((presetColor) => (
+                                <button
+                                    key={presetColor.value}
+                                    type="button"
+                                    onClick={() => setColor(presetColor.value)}
+                                    className={`p-3 rounded-claude border-2 transition-all flex items-center justify-center ${color === presetColor.value
                                         ? "border-claude-text-2 scale-105"
                                         : "border-claude-border hover:border-claude-border-strong"
-                                    }`}
-                                style={{ backgroundColor: presetColor.value }}
-                                title={presetColor.name}
-                            >
-                                {color === presetColor.value && (
-                                    <span className="text-white text-lg">✓</span>
-                                )}
-                            </button>
-                        ))}
+                                        }`}
+                                    style={{ backgroundColor: presetColor.value }}
+                                    title={presetColor.name}
+                                >
+                                    {color === presetColor.value && (
+                                        <Check className="h-4 w-4 text-white" strokeWidth={2.5} />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Preview */}
-                <div className="bg-claude-surface-2 p-4 rounded-claude border-2 border-dashed border-claude-border">
-                    <p className="text-xs text-claude-text-2 mb-2">Xem trước:</p>
-                    <div
-                        className="bg-claude-surface p-4 rounded-claude border-l-4 shadow-claude-sm"
-                        style={{ borderLeftColor: color }}
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="text-3xl">{icon}</span>
-                            <div>
-                                <h3 className="font-semibold text-claude-text">
-                                    {name || "Tên thư mục"}
-                                </h3>
-                                <p className="text-sm text-claude-text-2">
-                                    {description || "Mô tả thư mục"}
-                                </p>
+                    {/* Preview */}
+                    <div className="bg-claude-surface-2 p-4 rounded-claude border-2 border-dashed border-claude-border">
+                        <p className="text-xs text-claude-text-2 mb-2">Xem trước:</p>
+                        <div
+                            className="bg-claude-surface p-4 rounded-claude border-l-4 shadow-claude-sm"
+                            style={{ borderLeftColor: color }}
+                        >
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="w-10 h-10 rounded-claude-md flex items-center justify-center shrink-0"
+                                    style={{ backgroundColor: color + "22" }}
+                                >
+                                    <PreviewIcon
+                                        className="h-5 w-5"
+                                        style={{ color }}
+                                        strokeWidth={1.8}
+                                    />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-claude-text">
+                                        {name || "Tên thư mục"}
+                                    </h3>
+                                    <p className="text-sm text-claude-text-2">
+                                        {description || "Mô tả thư mục"}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Buttons */}
-                <div className="flex gap-3 pt-2">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={onClose}
-                        className="flex-1"
-                        disabled={isSubmitting}
-                    >
+                <div className="flex gap-3 pt-4 mt-4 border-t border-claude-border">
+                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1" disabled={isSubmitting}>
                         Hủy
                     </Button>
-                    <Button
-                        type="submit"
-                        variant="primary"
-                        className="flex-1"
-                        loading={isSubmitting}
-                    >
+                    <Button type="submit" variant="primary" className="flex-1" loading={isSubmitting}>
                         {isEdit ? "Cập nhật" : "Tạo thư mục"}
                     </Button>
                 </div>

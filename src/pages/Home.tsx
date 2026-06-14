@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { lessonService, type PaginatedLessonsResult } from "../service/lessonService";
 import { folderService } from "../service/folderService";
 import toast from "react-hot-toast";
@@ -13,6 +13,9 @@ import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import { SkeletonTable } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
+import { Search, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import Dropdown from "../components/ui/Dropdown";
+import FolderIcon from "../components/ui/FolderIcon";
 
 interface Lesson {
   id: string;
@@ -31,6 +34,7 @@ type SortOrder = "asc" | "desc";
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const currentUserId = user?.uid || null;
@@ -156,8 +160,10 @@ export default function Home() {
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <span className="text-claude-text-3 text-xs">⇅</span>;
-    return <span className="text-claude-accent text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>;
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-claude-text-3" />;
+    return sortOrder === "asc"
+      ? <ArrowUp className="h-3 w-3 text-claude-accent" />
+      : <ArrowDown className="h-3 w-3 text-claude-accent" />;
   };
 
   const thClass = "px-4 py-3 text-left text-xs font-semibold text-claude-text-2 uppercase tracking-wider cursor-pointer select-none hover:text-claude-text transition-colors";
@@ -197,7 +203,12 @@ export default function Home() {
                 className="flex flex-col items-center bg-claude-surface border border-claude-border rounded-claude-md p-4
                            hover:border-claude-accent hover:shadow-claude transition-all group"
               >
-                <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{folder.icon}</span>
+                <div
+                  className="w-10 h-10 rounded-claude-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                >
+                  <FolderIcon name={folder.icon} className="h-5 w-5" style={{ color: folder.color || '#3B82F6' }} />
+                </div>
                 <span className="text-xs font-medium text-claude-text text-center truncate w-full">{folder.name}</span>
               </Link>
             ))}
@@ -213,9 +224,7 @@ export default function Home() {
           <div className="flex items-center gap-3 w-full sm:w-auto">
             {/* Search */}
             <div className="relative flex-1 sm:w-72">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-claude-text-3" strokeWidth={2} />
               <input
                 type="text"
                 placeholder="Tìm kiếm bài học..."
@@ -226,14 +235,22 @@ export default function Home() {
               />
             </div>
             {/* Items per page */}
-            <select
+            <Dropdown
               value={itemsPerPage}
-              onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); setPageCursors(new Map([[1, null]])); }}
-              className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text
-                         focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer"
-            >
-              {[5,10,20,50].map(n => <option key={n} value={n}>{n} / trang</option>)}
-            </select>
+              onChange={(val) => {
+                setItemsPerPage(val);
+                setCurrentPage(1);
+                setPageCursors(new Map([[1, null]]));
+              }}
+              options={[
+                { value: 5, label: "5 / trang" },
+                { value: 10, label: "10 / trang" },
+                { value: 20, label: "20 / trang" },
+                { value: 50, label: "50 / trang" },
+              ]}
+              align="right"
+              className="w-28"
+            />
           </div>
         </div>
 
@@ -304,20 +321,20 @@ export default function Home() {
                             <td className="px-4 py-3.5">
                               <div className="flex justify-end items-center gap-1">
                                 <button
-                                  onClick={() => navigate(`/study/${lesson.id}`)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-accent-light text-claude-accent hover:bg-claude-accent hover:text-white transition-all"
+                                  onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Học
                                 </button>
                                 <button
                                   onClick={() => setSelectedLessonForReview(lesson.id)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-success-light text-claude-success hover:bg-claude-success hover:text-white transition-all"
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-success-light text-claude-success hover:bg-claude-success hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Ôn tập
                                 </button>
                                 <button
-                                  onClick={() => navigate(`/test/${lesson.id}`)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all"
+                                  onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Kiểm tra
                                 </button>
@@ -329,9 +346,7 @@ export default function Home() {
                                       onClick={() => setActiveMenuId(activeMenuId === lesson.id ? null : lesson.id)}
                                       className="p-1.5 text-claude-text-3 hover:bg-claude-sidebar-hover hover:text-claude-text rounded-claude transition-colors"
                                     >
-                                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                      </svg>
+                                      <MoreVertical className="h-4 w-4" />
                                     </button>
                                     {activeMenuId === lesson.id && (
                                       <div className="absolute right-0 mt-1 w-44 bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-md z-20 py-1 animate-fade-in">

@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { lessonService, type VocabItem, type Lesson } from "../service/lessonService";
 import { toast } from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Badge from "../components/ui/Badge";
 import { SkeletonTable } from "../components/ui/Skeleton";
+import { ArrowLeft, Layers, BookOpen, FileText, Pencil } from "lucide-react";
 
-const BackIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-);
+const BackIcon = () => <ArrowLeft className="h-4 w-4" strokeWidth={2} />;
 
 const LessonView: React.FC = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [words, setWords] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,14 +46,34 @@ const LessonView: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto animate-fade-in space-y-4">
-        <div className="h-6 w-32 skeleton rounded" />
-        <div className="h-8 w-2/3 skeleton rounded" />
-        <div className="h-4 w-1/2 skeleton rounded" />
-        <div className="mt-6 bg-claude-surface border border-claude-border rounded-claude-md overflow-hidden">
-          <table className="w-full">
-            <SkeletonTable rows={8} cols={4} />
-          </table>
+      <div className="w-full animate-fade-in">
+        {/* Skeleton Banner */}
+        <div className="w-full bg-stone-900/5 py-8 border-b border-claude-border">
+          <div className="max-w-4xl mx-auto px-6">
+            <div className="h-4 w-20 skeleton rounded mb-5" />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+              <div className="flex items-center gap-5 flex-1 w-full">
+                <div className="w-16 h-16 skeleton rounded-claude-lg flex-shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-6 w-1/3 skeleton rounded" />
+                  <div className="h-4 w-2/3 skeleton rounded" />
+                  <div className="h-3 w-1/4 skeleton rounded" />
+                </div>
+              </div>
+              <div className="w-20 h-16 skeleton rounded-claude-lg flex-shrink-0 self-start md:self-auto" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Skeleton Content */}
+        <div className="max-w-4xl mx-auto px-6 mt-8">
+          <div className="h-14 w-full skeleton rounded-claude-lg mb-6" />
+          <div className="h-5 w-40 skeleton rounded mb-3" />
+          <div className="bg-claude-surface border border-claude-border rounded-claude-md overflow-hidden">
+            <table className="w-full">
+              <SkeletonTable rows={8} cols={4} />
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -66,33 +84,32 @@ const LessonView: React.FC = () => {
   const isOwner = currentUser && (currentUser.username === lesson.creator || currentUser.email === lesson.creator);
 
   const ActionButton = ({
-    onClick, label, variant = 'default'
-  }: { onClick: () => void; label: string; variant?: 'default' | 'success' | 'warning' | 'gray' }) => {
+    onClick, label, icon, variant = 'default'
+  }: { onClick: () => void; label: string; icon?: React.ReactNode; variant?: 'default' | 'success' | 'warning' | 'gray' | 'info' }) => {
     const styles = {
       default: 'bg-claude-accent text-white hover:bg-claude-accent-2 shadow-claude-sm',
       success: 'bg-claude-success text-white hover:bg-green-700 shadow-claude-sm',
       warning: 'bg-amber-600 text-white hover:bg-amber-700 shadow-claude-sm',
       gray: 'bg-claude-surface-2 text-claude-text border border-claude-border hover:bg-claude-border',
+      info: 'bg-blue-600 text-white hover:bg-blue-700 shadow-claude-sm',
     };
     return (
       <button
         onClick={onClick}
         className={`flex-1 min-w-[140px] px-4 py-3 rounded-claude-md font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${styles[variant]}`}
       >
-        {label}
+        {icon}
+        <span>{label}</span>
       </button>
     );
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-12 animate-fade-in">
-      {/* Hero Header */}
-      <div className={`relative overflow-hidden ${lesson.isOfficial ? 'bg-gradient-to-br from-stone-800 to-stone-900' : 'bg-gradient-to-br from-stone-700 to-stone-800'} text-white px-6 py-10`}>
-        {/* Subtle abstract elements */}
-        <div className="absolute top-0 right-0 -translate-y-1/3 translate-x-1/3 w-64 h-64 bg-claude-accent/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/3 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10">
+    <div className="w-full pb-12 animate-fade-in">
+      {/* Header Banner - Full Width */}
+      <div className={`w-full bg-gradient-to-br ${lesson.isOfficial ? 'from-stone-800 to-stone-900' : 'from-stone-700 to-stone-800'} text-white py-8 relative overflow-hidden`}>
+        <div className="absolute top-0 right-0 -translate-y-1/3 translate-x-1/3 w-48 h-48 bg-claude-accent/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
           <button
             onClick={() => navigate(-1)}
             className="mb-5 flex items-center gap-1.5 text-white/60 hover:text-white transition-colors text-xs font-medium"
@@ -101,47 +118,53 @@ const LessonView: React.FC = () => {
             Quay lại
           </button>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-5">
-            <div className="space-y-3 max-w-2xl">
-              <div className="flex items-center gap-2 flex-wrap">
-                {lesson.isOfficial && <Badge variant="official">Chương trình hệ thống</Badge>}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+            <div className="flex items-center gap-5">
+              <div
+                className="flex items-center justify-center w-16 h-16 backdrop-blur-sm rounded-claude-lg flex-shrink-0 border border-white/10"
+                style={{ backgroundColor: 'rgba(217, 119, 6, 0.2)' }}
+              >
+                <BookOpen className="h-8 w-8 text-claude-accent" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">{lesson.title}</h1>
-              <p className="text-white/60 text-sm leading-relaxed">
-                {lesson.isOfficial
-                  ? "Lộ trình học tập chính thức, được biên soạn chuyên nghiệp."
-                  : (lesson.description || "Khám phá bộ từ vựng để nâng cao vốn tiếng Anh của bạn.")}
-              </p>
-              <div className="flex items-center gap-3 text-xs text-white/40">
-                <span>Tạo bởi: {lesson.creator}</span>
-                <span>·</span>
-                <span>Cập nhật: {new Date(lesson.createdAt).toLocaleDateString()}</span>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-xl font-bold text-white">{lesson.title}</h1>
+                  {lesson.isOfficial && <Badge variant="official" size="sm">Official</Badge>}
+                </div>
+                <p className="text-sm text-white/60">
+                  {lesson.isOfficial
+                    ? "Lộ trình học tập chính thức, được biên soạn chuyên nghiệp."
+                    : (lesson.description || "Khám phá bộ từ vựng để nâng cao vốn tiếng Anh của bạn.")}
+                </p>
+                <p className="text-xs text-white/40 mt-1">
+                  Tạo bởi: {lesson.creator} · Cập nhật: {new Date(lesson.createdAt).toLocaleDateString('vi-VN')}
+                </p>
               </div>
             </div>
 
-            {/* Word count badge */}
-            <div className="bg-white/10 backdrop-blur-sm px-6 py-4 rounded-claude-lg border border-white/10 text-center flex-shrink-0">
-              <div className="text-3xl font-bold">{lesson.wordCount}</div>
-              <div className="text-[11px] text-white/50 uppercase tracking-wider mt-0.5">Từ vựng</div>
+            {/* Word count badge - Large size, on the right */}
+            <div className="bg-white/10 backdrop-blur-sm px-6 py-3.5 rounded-claude-lg border border-white/10 text-center flex-shrink-0 self-start md:self-auto">
+              <div className="text-2xl font-bold text-white">{lesson.wordCount}</div>
+              <div className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mt-0.5">Từ vựng</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Action Bar */}
-      <div className="px-6 -mt-5 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 -mt-5 relative z-10">
         <div className="bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude-md p-3 flex flex-wrap gap-2">
-          <ActionButton onClick={() => navigate(`/study/${lesson.id}`)} label="🃏 Flashcards" variant="default" />
-          <ActionButton onClick={() => setIsReviewModalOpen(true)} label="✍️ Ôn tập" variant="success" />
-          <ActionButton onClick={() => navigate(`/test/${lesson.id}`)} label="📝 Kiểm tra" variant="warning" />
+          <ActionButton onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })} label="Flashcards" icon={<Layers className="h-4 w-4" />} variant="info" />
+          <ActionButton onClick={() => setIsReviewModalOpen(true)} label="Ôn tập" icon={<BookOpen className="h-4 w-4" />} variant="success" />
+          <ActionButton onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })} label="Kiểm tra" icon={<FileText className="h-4 w-4" />} variant="warning" />
           {isOwner && (
-            <ActionButton onClick={() => navigate(`/edit/${lesson.id}`)} label="✏️ Chỉnh sửa" variant="gray" />
+            <ActionButton onClick={() => navigate(`/edit/${lesson.id}`)} label="Chỉnh sửa" icon={<Pencil className="h-4 w-4" />} variant="gray" />
           )}
         </div>
       </div>
 
       {/* Vocabulary Table */}
-      <div className="px-6 mt-8">
+      <div className="max-w-4xl mx-auto px-6 mt-8">
         <h2 className="text-sm font-semibold text-claude-text-2 uppercase tracking-wider mb-3">
           Danh sách từ vựng
         </h2>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { VocabItem } from "../../service/lessonService";
+import { ChevronDown } from "lucide-react";
 
 interface EditableCardProps {
   item: VocabItem;
@@ -59,14 +60,19 @@ export default function EditableCard({ item, onChange, onDelete }: EditableCardP
             </div>
             <div>
                 <label className="block text-[10px] font-bold text-claude-text-3 uppercase tracking-wider mb-1">Loại từ</label>
-                <select
-                    value={localItem.wordType || ""}
-                    onChange={(e) => updateField("wordType", e.target.value)}
-                    className="w-full border border-claude-border rounded-claude px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text bg-claude-surface-2 text-sm transition-colors"
-                >
-                    <option value="">-- Chọn --</option>
-                    {WORD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <div className="relative">
+                    <select
+                        value={localItem.wordType || ""}
+                        onChange={(e) => updateField("wordType", e.target.value)}
+                        className="appearance-none w-full border border-claude-border rounded-claude pl-3 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent text-claude-text bg-claude-surface-2 text-sm cursor-pointer transition-colors"
+                    >
+                        <option value="">-- Chọn --</option>
+                        {WORD_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-claude-text-3">
+                        <ChevronDown className="w-4 h-4" strokeWidth={2} />
+                    </div>
+                </div>
             </div>
         </div>
         <div>

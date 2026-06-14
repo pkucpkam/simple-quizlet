@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Folder } from '../../types/folder';
+import { ChevronDown, Search, Check } from 'lucide-react';
 
 interface FolderSelectProps {
   folders: Folder[];
@@ -92,17 +93,13 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
         </div>
         
         {/* Chevron Icon */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+        <ChevronDown
           className={[
             "w-5 h-5 text-claude-text-3 transition-transform duration-200 flex-shrink-0",
             isOpen ? "transform rotate-180" : ""
           ].join(" ")}
-        >
-          <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-        </svg>
+          strokeWidth={2}
+        />
       </button>
 
       {/* Dropdown Panel */}
@@ -112,14 +109,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
           {folders.length >= 3 && (
             <div className="p-2 border-b border-claude-border bg-claude-surface-2 flex-shrink-0">
               <div className="relative flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-4 h-4 text-claude-text-3 absolute left-2.5 pointer-events-none"
-                >
-                  <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clipRule="evenodd" />
-                </svg>
+                <Search className="w-4 h-4 text-claude-text-3 absolute left-2.5 pointer-events-none" strokeWidth={2} />
                 <input
                   type="text"
                   placeholder="Tìm kiếm thư mục..."
@@ -151,9 +141,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
                 <span className="truncate">{placeholder}</span>
               </div>
               {!selectedId && (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0 text-claude-accent">
-                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                </svg>
+                <Check className="w-4 h-4 flex-shrink-0 text-claude-accent" strokeWidth={2.5} />
               )}
             </button>
 
@@ -198,9 +186,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
                         </span>
                       )}
                       {isSelected && (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-claude-accent">
-                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-                        </svg>
+                        <Check className="w-4 h-4 text-claude-accent" strokeWidth={2.5} />
                       )}
                     </div>
                   </button>

@@ -3,6 +3,8 @@ import type { Folder } from "../../types/folder";
 import { folderService } from "../../service/folderService";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
+import FolderIcon from "../ui/FolderIcon";
+import { Check, Folder as FolderPlaceholder } from "lucide-react";
 
 interface Props {
     isOpen: boolean;
@@ -73,13 +75,15 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <span className="text-2xl">📂</span>
+                                    <div className="w-9 h-9 rounded-claude bg-claude-surface-2 flex items-center justify-center">
+                                        <FolderPlaceholder className="h-5 w-5 text-claude-text-3" strokeWidth={1.5} />
+                                    </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-claude-text">Không có thư mục</h3>
                                         <p className="text-sm text-claude-text-2">Bài học sẽ không thuộc thư mục nào</p>
                                     </div>
                                     {selectedFolderId === null && (
-                                        <span className="text-claude-accent text-xl">✓</span>
+                                        <Check className="h-5 w-5 text-claude-accent" strokeWidth={2.5} />
                                     )}
                                 </div>
                             </div>
@@ -99,7 +103,12 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                     }}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="text-2xl">{folder.icon}</span>
+                                        <div
+                                            className="w-9 h-9 rounded-claude flex items-center justify-center shrink-0"
+                                            style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                                        >
+                                            <FolderIcon name={folder.icon} className="h-5 w-5" style={{ color: folder.color || '#3B82F6' }} />
+                                        </div>
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-claude-text">{folder.name}</h3>
                                             {folder.description && (
@@ -110,7 +119,7 @@ export default function SelectFolderModal({ isOpen, onClose, onSelect, currentFo
                                             </p>
                                         </div>
                                         {selectedFolderId === folder.id && (
-                                            <span className="text-claude-accent text-xl">✓</span>
+                                            <Check className="h-5 w-5 text-claude-accent" strokeWidth={2.5} />
                                         )}
                                     </div>
                                 </div>

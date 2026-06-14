@@ -1,88 +1,125 @@
 import React, { useState, useEffect } from 'react';
-import type { StudySession, StudyStats } from '../types/history';
+import type { StudyAggregateStats } from '../types/history';
 import { historyService } from '../service/historyService';
-import StudyHistoryCard from '../components/StudyHistoryCard';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import EmptyState from '../components/ui/EmptyState';
+import { Layers, Brain, FileText, Clock, Loader2 } from 'lucide-react';
 
-type FilterMode = 'all' | 'flashcard' | 'review' | 'test';
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const filterOptions: { value: FilterMode; label: string }[] = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'flashcard', label: 'Thẻ ghi nhớ' },
-  { value: 'review', label: 'Ôn tập' },
-  { value: 'test', label: 'Kiểm tra' },
-];
+const formatTime = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${seconds}s`;
+};
 
-interface MetricCardProps {
-  emoji: string;
+const formatDate = (date?: Date): string => {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+interface StatCardProps {
+  icon: React.ReactNode;
   label: string;
-  time: string;
   sessions: number;
-  accent: string;
+  totalTime: number;
+  lastStudied?: Date;
+  accentClass: string;
+  badgeClass: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ emoji, label, time, sessions, accent }) => (
-  <div className={`bg-claude-surface border border-claude-border rounded-claude-md p-5 shadow-claude-sm hover:shadow-claude transition-shadow`}>
-    <div className="flex items-start justify-between mb-3">
-      <span className="text-2xl">{emoji}</span>
-      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${accent}`}>
-        {sessions} phiên
-      </span>
+const StatCard: React.FC<StatCardProps> = ({
+  icon,
+  label,
+  sessions,
+  totalTime,
+  lastStudied,
+  accentClass,
+  badgeClass,
+}) => (
+  <div className="bg-claude-surface border border-claude-border rounded-claude-md p-5 shadow-claude-sm hover:shadow-claude hover:border-claude-accent transition-all duration-300 group flex flex-col justify-between">
+    <div>
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-2 rounded-claude ${badgeClass} transition-transform duration-300 group-hover:scale-105`}>
+          {icon}
+        </div>
+        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${badgeClass}`}>
+          {sessions} phiên
+        </span>
+      </div>
+
+      <p className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider mb-2">{label}</p>
+      <p className={`text-2xl font-bold ${accentClass} mb-1`}>{formatTime(totalTime)}</p>
     </div>
-    <p className="text-xs font-medium text-claude-text-2 mb-1">{label}</p>
-    <p className="text-2xl font-bold text-claude-text">{time}</p>
+    <div className="text-xs text-claude-text-3 border-t border-claude-border mt-4 pt-3 flex items-center justify-between">
+      <span>Lần cuối:</span>
+      <span className="font-medium text-claude-text-2">{formatDate(lastStudied)}</span>
+    </div>
   </div>
 );
 
+interface TotalCardProps {
+  totalSessions: number;
+  totalTime: number;
+}
+
+const TotalCard: React.FC<TotalCardProps> = ({ totalSessions, totalTime }) => (
+  <div className="bg-claude-surface border border-claude-border rounded-claude-md p-6 shadow-claude-sm flex items-center justify-between relative overflow-hidden group hover:border-claude-accent transition-all duration-300">
+    <div className="space-y-1">
+      <p className="text-xs font-semibold uppercase tracking-wider text-claude-text-3">Tổng thời gian tích lũy</p>
+      <p className="text-4xl font-extrabold text-claude-text tracking-tight">{formatTime(totalTime)}</p>
+      <p className="text-sm text-claude-text-2 font-medium">
+        Đã hoàn thành <span className="text-claude-accent font-semibold">{totalSessions}</span> phiên học tập
+      </p>
+    </div>
+    <div className="p-4 bg-claude-accent-light rounded-claude-md text-claude-accent transition-transform duration-300 group-hover:scale-110">
+      <Clock className="h-7 w-7" strokeWidth={2} />
+    </div>
+  </div>
+);
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 const StudyHistory: React.FC = () => {
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
-  const [sessions, setSessions] = useState<StudySession[]>([]);
-  const [stats, setStats] = useState<StudyStats | null>(null);
+  const [stats, setStats] = useState<StudyAggregateStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterMode>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
-
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m`;
-    return `${seconds}s`;
-  };
+  const [migrating, setMigrating] = useState(false);
 
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
+    const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
       try { setUser(JSON.parse(storedUser)); } catch { setUser(null); }
     } else { setUser(null); }
   }, []);
 
   useEffect(() => {
-    const fetchHistory = async () => {
+    const init = async () => {
       if (!user) return;
       setLoading(true);
-      const history = await historyService.getUserStudyHistory(user.uid);
-      setSessions(history);
-      setStats(historyService.getStudyStats(history));
+
+      // Chạy migration lần đầu nếu cần
+      const existing = await historyService.getStudyAggregateStats(user.uid);
+      if (!existing?.migrated) {
+        setMigrating(true);
+        await historyService.migrateUserHistory(user.uid);
+        setMigrating(false);
+      }
+
+      const data = await historyService.getStudyAggregateStats(user.uid);
+      setStats(data);
       setLoading(false);
     };
-    fetchHistory();
+    init();
   }, [user]);
-
-  useEffect(() => { setCurrentPage(1); }, [filter]);
-
-  const filteredSessions = sessions.filter(session => {
-    if (filter === 'all') return true;
-    if (filter === 'flashcard') return session.studyMode === 'flashcard';
-    if (filter === 'test') return session.studyMode === 'test';
-    if (filter === 'review') return ['quiz', 'review', 'srs_review'].includes(session.studyMode);
-    return false;
-  });
-
-  const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-  const currentSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (!user) {
     return (
@@ -95,114 +132,73 @@ const StudyHistory: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in space-y-6">
-      {/* Page Header */}
+    <div className="p-6 max-w-5xl mx-auto animate-fade-in space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-xl font-semibold text-claude-text">Lịch sử học tập</h1>
-        <p className="text-sm text-claude-text-2 mt-0.5">Theo dõi tiến độ và thống kê học tập của bạn</p>
+        <p className="text-sm text-claude-text-2 mt-0.5">Thống kê tổng hợp quá trình học tập của bạn</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Migration banner */}
+      {migrating && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-claude-accent-lighter border border-claude-accent-light rounded-claude-md text-sm text-claude-accent">
+          <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+          <span>Đang chuyển đổi dữ liệu lịch sử cũ… Chỉ mất vài giây.</span>
+        </div>
+      )}
+
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+        <div className="space-y-4">
+          <div className="h-24 skeleton rounded-claude-md" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+          </div>
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <MetricCard
-            emoji="🃏"
-            label="Thẻ ghi nhớ"
-            time={formatTime(stats.flashcardStats?.timeSpent || 0)}
-            sessions={stats.flashcardStats?.sessions || 0}
-            accent="bg-claude-info-light text-claude-info"
-          />
-          <MetricCard
-            emoji="🧠"
-            label="Ôn tập (Review/SRS)"
-            time={formatTime(stats.reviewStats?.timeSpent || 0)}
-            sessions={stats.reviewStats?.sessions || 0}
-            accent="bg-purple-50 text-purple-600"
-          />
-          <MetricCard
-            emoji="📝"
-            label="Kiểm tra (Test)"
-            time={formatTime(stats.testStats?.timeSpent || 0)}
-            sessions={stats.testStats?.sessions || 0}
-            accent="bg-claude-success-light text-claude-success"
-          />
-        </div>
-      ) : null}
-
-      {/* Filter tabs */}
-      <div className="flex items-center gap-1 p-1 bg-claude-surface-2 border border-claude-border rounded-claude-md w-fit">
-        {filterOptions.map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => setFilter(opt.value)}
-            className={`px-3 py-1.5 rounded-claude text-sm font-medium transition-all ${
-              filter === opt.value
-                ? 'bg-claude-surface border border-claude-border text-claude-text shadow-claude-sm'
-                : 'text-claude-text-2 hover:text-claude-text'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Session Cards */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : currentSessions.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentSessions.map((session) => (
-              <StudyHistoryCard key={session.id} session={session} />
-            ))}
-          </div>
+          {/* Total card */}
+          <TotalCard
+            totalSessions={stats.totalSessions}
+            totalTime={stats.totalTime}
+          />
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 pt-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                className="h-8 px-3 text-xs font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                ←
-              </button>
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-claude text-xs font-medium transition-colors ${
-                    currentPage === i + 1
-                      ? 'bg-claude-accent text-white border border-claude-accent'
-                      : 'bg-claude-surface text-claude-text-2 border border-claude-border hover:bg-claude-surface-2'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="h-8 px-3 text-xs font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                →
-              </button>
-            </div>
-          )}
+          {/* Per-mode cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard
+              icon={<Layers className="h-5 w-5 text-claude-accent" />}
+              label="Thẻ ghi nhớ"
+              sessions={stats.flashcard.sessions}
+              totalTime={stats.flashcard.totalTime}
+              lastStudied={stats.flashcard.lastStudied}
+              accentClass="text-claude-accent"
+              badgeClass="bg-claude-accent-light text-claude-accent"
+            />
+            <StatCard
+              icon={<Brain className="h-5 w-5 text-claude-info" />}
+              label="Ôn tập"
+              sessions={stats.review.sessions}
+              totalTime={stats.review.totalTime}
+              lastStudied={stats.review.lastStudied}
+              accentClass="text-claude-info"
+              badgeClass="bg-claude-info-light text-claude-info"
+            />
+            <StatCard
+              icon={<FileText className="h-5 w-5 text-claude-success" />}
+              label="Kiểm tra"
+              sessions={stats.test.sessions}
+              totalTime={stats.test.totalTime}
+              lastStudied={stats.test.lastStudied}
+              accentClass="text-claude-success"
+              badgeClass="bg-claude-success-light text-claude-success"
+            />
+          </div>
         </>
       ) : (
-        <div className="bg-claude-surface border border-claude-border rounded-claude-md">
-          <EmptyState
-            title="Chưa có lịch sử học tập"
-            description="Bắt đầu học một bài học để thấy lịch sử tại đây!"
-            icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          />
+        /* Empty state */
+        <div className="bg-claude-surface border border-claude-border rounded-claude-md py-20 text-center">
+          <Clock className="h-12 w-12 text-claude-text-3 mx-auto mb-4" strokeWidth={1.2} />
+          <p className="text-sm font-medium text-claude-text">Chưa có lịch sử học tập</p>
+          <p className="text-xs text-claude-text-3 mt-1">Bắt đầu học một bài học để thấy thống kê tại đây!</p>
         </div>
       )}
     </div>

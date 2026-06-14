@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { folderService } from "../service/folderService";
 import type { Folder } from "../types/folder";
 import type { Lesson } from "../service/lessonService";
@@ -8,20 +8,23 @@ import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal"
 import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import { SkeletonCard } from "../components/ui/Skeleton";
+import { ArrowLeft, LayoutGrid, List, Plus, BookOpen } from "lucide-react";
+import FolderIcon from "../components/ui/FolderIcon";
 
-const BackIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-  </svg>
-);
+const BackIcon = () => <ArrowLeft className="h-4 w-4" strokeWidth={2} />;
 
 const FolderView: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    const saved = localStorage.getItem("folder_view_mode");
+    return (saved === "list" || saved === "grid") ? saved : "grid";
+  });
 
   useEffect(() => {
     const fetchFolderData = async () => {
@@ -72,8 +75,11 @@ const FolderView: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-5">
-            <div className="flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-claude-lg text-4xl flex-shrink-0 border border-white/10">
-              {folder.icon}
+            <div
+              className="flex items-center justify-center w-16 h-16 backdrop-blur-sm rounded-claude-lg flex-shrink-0 border border-white/10"
+              style={{ backgroundColor: (folder.color || '#3B82F6') + '33' }}
+            >
+              <FolderIcon name={folder.icon} className="h-8 w-8" style={{ color: folder.color || 'white' }} />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -94,15 +100,45 @@ const FolderView: React.FC = () => {
         {/* Action bar */}
         <div className="py-3 border-b border-claude-border bg-transparent flex items-center justify-between mt-6">
           <span className="text-sm text-claude-text-2">{lessons.length} bài học trong thư mục này</span>
-          <button
-            onClick={() => navigate(`/create-lesson?folderId=${folderId}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-claude-accent border border-claude-accent/30 rounded-claude hover:bg-claude-accent-lighter transition-colors"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            Thêm bài học
-          </button>
+          <div className="flex items-center gap-2">
+            {lessons.length > 0 && (
+              <div className="flex bg-claude-sidebar p-1 rounded-claude border border-claude-border mr-1">
+                <button
+                  onClick={() => {
+                    setViewMode("grid");
+                    localStorage.setItem("folder_view_mode", "grid");
+                  }}
+                  className={`p-1.5 rounded-claude border transition-all ${viewMode === "grid"
+                    ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                    : "border-transparent text-claude-text-3 hover:text-claude-text"
+                    }`}
+                  title="Xem dạng lưới"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </button>
+                <button
+                  onClick={() => {
+                    setViewMode("list");
+                    localStorage.setItem("folder_view_mode", "list");
+                  }}
+                  className={`p-1.5 rounded-claude border transition-all ${viewMode === "list"
+                    ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                    : "border-transparent text-claude-text-3 hover:text-claude-text"
+                    }`}
+                  title="Xem dạng danh sách"
+                >
+                  <List className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
+            <button
+              onClick={() => navigate(`/create-lesson?folderId=${folderId}`)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-claude-accent border border-claude-accent/30 rounded-claude hover:bg-claude-accent-lighter transition-colors animate-fade-in"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              Thêm bài học
+            </button>
+          </div>
         </div>
 
         {/* Lessons */}
@@ -113,59 +149,114 @@ const FolderView: React.FC = () => {
                 title="Chưa có bài học nào"
                 description="Thư mục này chưa có bài học. Hãy thêm bài học vào thư mục."
                 action={{ label: "Thêm bài học", onClick: () => navigate(`/create-lesson?folderId=${folderId}`) }}
-                icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
+                icon={<BookOpen className="h-10 w-10 text-claude-text-3" strokeWidth={1.2} />}
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {lessons.map((lesson) => (
-                <div
-                  key={lesson.id}
-                  className="group bg-claude-surface border border-claude-border rounded-claude-md p-5 hover:border-claude-accent hover:shadow-claude transition-all"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <span className="text-xs font-medium px-2 py-0.5 bg-claude-accent-light text-claude-accent rounded-full">
-                      {lesson.wordCount} từ
-                    </span>
-                    <span className="text-xs text-claude-text-3">{new Date(lesson.createdAt).toLocaleDateString('vi-VN')}</span>
-                  </div>
+            viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+                {lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className="group bg-claude-surface border border-claude-border rounded-claude-md p-5 hover:border-claude-accent hover:shadow-claude transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <span className="text-xs font-medium px-2 py-0.5 bg-claude-accent-light text-claude-accent rounded-full">
+                        {lesson.wordCount} từ
+                      </span>
+                      <span className="text-xs text-claude-text-3">{new Date(lesson.createdAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
 
-                  <h3 className="text-sm font-semibold text-claude-text group-hover:text-claude-accent transition-colors mb-1 line-clamp-2">
-                    {lesson.title}
-                  </h3>
-                  <p className="text-xs text-claude-text-2 line-clamp-2 mb-4">
-                    {lesson.description || "Bấm để bắt đầu học bài này."}
-                  </p>
+                    <h3 className="text-sm font-semibold text-claude-text group-hover:text-claude-accent transition-colors mb-1 line-clamp-2">
+                      {lesson.title}
+                    </h3>
+                    <p className="text-xs text-claude-text-2 line-clamp-2 mb-4">
+                      {lesson.description || "Bấm để bắt đầu học bài này."}
+                    </p>
 
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <Link
-                      to={`/lesson/${lesson.id}`}
-                      className="col-span-3 py-2 text-xs font-medium text-center text-claude-text-2 border border-claude-border rounded-claude hover:bg-claude-surface-2 transition-colors"
-                    >
-                      Xem chi tiết
-                    </Link>
-                    <button
-                      onClick={() => navigate(`/study/${lesson.id}`)}
-                      className="py-2 text-xs font-medium text-center text-white bg-claude-accent rounded-claude hover:bg-claude-accent-2 transition-colors"
-                    >
-                      Học ngay
-                    </button>
-                    <button
-                      onClick={() => setSelectedLessonForReview(lesson.id)}
-                      className="py-2 text-xs font-medium text-center text-claude-success bg-claude-success-light rounded-claude hover:bg-claude-success hover:text-white transition-colors"
-                    >
-                      Ôn tập
-                    </button>
-                    <button
-                      onClick={() => navigate(`/test/${lesson.id}`)}
-                      className="py-2 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
-                    >
-                      Kiểm tra
-                    </button>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <Link
+                        to={`/lesson/${lesson.id}`}
+                        className="col-span-3 py-2 text-xs font-medium text-center text-claude-text-2 border border-claude-border rounded-claude hover:bg-claude-surface-2 transition-colors"
+                      >
+                        Xem chi tiết
+                      </Link>
+                      <button
+                        onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="py-2 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
+                      >
+                        Học ngay
+                      </button>
+                      <button
+                        onClick={() => setSelectedLessonForReview(lesson.id)}
+                        className="py-2 text-xs font-medium text-center text-claude-success bg-claude-success-light rounded-claude hover:bg-claude-success hover:text-white transition-colors"
+                      >
+                        Ôn tập
+                      </button>
+                      <button
+                        onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="py-2 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
+                      >
+                        Kiểm tra
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 animate-fade-in">
+                {lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className="group bg-claude-surface border border-claude-border rounded-claude-md p-4 hover:border-claude-accent hover:shadow-claude transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <h3 className="text-sm font-semibold text-claude-text group-hover:text-claude-accent transition-colors line-clamp-1">
+                          {lesson.title}
+                        </h3>
+                        <span className="text-xs font-medium px-2 py-0.5 bg-claude-accent-light text-claude-accent rounded-full shrink-0">
+                          {lesson.wordCount} từ
+                        </span>
+                      </div>
+                      <p className="text-xs text-claude-text-2 line-clamp-1 mb-1">
+                        {lesson.description || "Bấm để bắt đầu học bài này."}
+                      </p>
+                      <span className="text-[10px] text-claude-text-3">
+                        Ngày tạo: {new Date(lesson.createdAt).toLocaleDateString('vi-VN')}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        to={`/lesson/${lesson.id}`}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-claude-text-2 border border-claude-border rounded-claude hover:bg-claude-surface-2 transition-colors"
+                      >
+                        Xem chi tiết
+                      </Link>
+                      <button
+                        onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
+                      >
+                        Học ngay
+                      </button>
+                      <button
+                        onClick={() => setSelectedLessonForReview(lesson.id)}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-claude-success bg-claude-success-light rounded-claude hover:bg-claude-success hover:text-white transition-colors"
+                      >
+                        Ôn tập
+                      </button>
+                      <button
+                        onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
+                      >
+                        Kiểm tra
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>

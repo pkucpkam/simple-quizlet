@@ -11,6 +11,8 @@ import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import Badge from '../../components/ui/Badge';
 import { SkeletonTable } from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
+import { Plus, X, ChevronDown } from 'lucide-react';
+import FolderIcon from '../../components/ui/FolderIcon';
 
 type TabType = 'users' | 'lessons' | 'folders';
 
@@ -68,7 +70,7 @@ const AdminDashboard: React.FC = () => {
       }
     } catch { toast.error('Không thể tải dữ liệu'); }
     finally { setLoading(false); }
-  }, [activeTab, currentPage, pageSize, pageCursors]);
+  }, [activeTab, currentPage, pageSize, pageCursors, totalItems]);
 
   useEffect(() => {
     fetchData();
@@ -137,9 +139,7 @@ const AdminDashboard: React.FC = () => {
           to="/admin/create-lesson"
           className="flex items-center gap-2 px-4 py-2 bg-claude-accent text-white text-sm font-medium rounded-claude hover:bg-claude-accent-2 transition-colors shadow-claude-sm"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus className="h-4 w-4" strokeWidth={2.5} />
           Bài học hệ thống
         </Link>
       </div>
@@ -310,17 +310,20 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider">Icon</label>
-                      <select
-                        className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent"
-                        value={newFolderIcon}
-                        onChange={(e) => setNewFolderIcon(e.target.value)}
-                      >
-                        <option value="📁">📁 Mặc định</option>
-                        <option value="🎓">🎓 Học tập</option>
-                        <option value="⭐">⭐ Quan trọng</option>
-                        <option value="🚀">🚀 Nâng cao</option>
-                        <option value="📚">📚 Tổng hợp</option>
-                      </select>
+                      <div className="relative">
+                        <select
+                          className="appearance-none w-full pl-3 pr-8 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer"
+                          value={newFolderIcon}
+                          onChange={(e) => setNewFolderIcon(e.target.value)}
+                        >
+                          <option value="📁">📁 Mặc định</option>
+                          <option value="🎓">🎓 Học tập</option>
+                          <option value="⭐">⭐ Quan trọng</option>
+                          <option value="🚀">🚀 Nâng cao</option>
+                          <option value="📚">📚 Tổng hợp</option>
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-claude-text-3 pointer-events-none" />
+                      </div>
                     </div>
                     <div className="flex items-end">
                       <button
@@ -350,16 +353,17 @@ const AdminDashboard: React.FC = () => {
                       className="group bg-claude-surface border border-claude-border rounded-claude-md p-4 hover:border-purple-300 hover:shadow-claude transition-all"
                     >
                       <div className="flex justify-between items-start mb-3">
-                        <div className="text-2xl bg-claude-surface-2 w-12 h-12 flex items-center justify-center rounded-claude-md group-hover:scale-105 transition-transform">
-                          {folder.icon}
+                        <div
+                          className="text-2xl bg-claude-surface-2 w-12 h-12 flex items-center justify-center rounded-claude-md group-hover:scale-105 transition-transform"
+                          style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                        >
+                          <FolderIcon name={folder.icon} className="h-6 w-6" style={{ color: folder.color || '#3B82F6' }} />
                         </div>
                         <button
                           onClick={() => handleDeleteFolder(folder.id)}
                           className="text-claude-text-3 hover:text-claude-error opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-claude hover:bg-claude-error-light"
                         >
-                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
                       <h4 className="text-sm font-semibold text-claude-text truncate group-hover:text-purple-600 transition-colors">{folder.name}</h4>

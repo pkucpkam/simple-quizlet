@@ -3,6 +3,7 @@ import type { VocabItem } from "../../service/lessonService";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import { ChevronDown, AlertCircle } from "lucide-react";
 
 interface AddVocabModalProps {
   open: boolean;
@@ -81,13 +82,14 @@ export default function AddVocabModal({ open, onClose, onAdd, WORD_TYPES }: AddV
     <Modal
       open={open}
       onClose={onClose}
-      title="➕ Thêm từ vựng mới"
+      title="Thêm từ vựng mới"
       size="md"
     >
       <div className="space-y-4">
         {validationError && (
-          <div className="bg-claude-error-light border border-claude-error/20 text-claude-error rounded-claude px-4 py-2.5 text-sm font-medium">
-            ⚠️ {validationError}
+          <div className="bg-claude-error-light border border-claude-error/20 text-claude-error rounded-claude px-4 py-2.5 text-sm font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{validationError}</span>
           </div>
         )}
 
@@ -124,18 +126,23 @@ export default function AddVocabModal({ open, onClose, onAdd, WORD_TYPES }: AddV
             <label className="text-sm font-medium text-claude-text">
               Loại từ
             </label>
-            <select
-              className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors duration-150"
-              value={wordType}
-              onChange={(e) => setWordType(e.target.value)}
-            >
-              <option value="">-- Chọn loại từ --</option>
-              {WORD_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                className="appearance-none w-full bg-claude-surface border border-claude-border rounded-claude pl-3 pr-10 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer transition-colors duration-150"
+                value={wordType}
+                onChange={(e) => setWordType(e.target.value)}
+              >
+                <option value="">-- Chọn loại từ --</option>
+                {WORD_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-claude-text-3">
+                <ChevronDown className="w-4 h-4" strokeWidth={2} />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -168,9 +175,9 @@ export default function AddVocabModal({ open, onClose, onAdd, WORD_TYPES }: AddV
             <Button
               variant="outline"
               onClick={() => handleAdd(true)}
-              className="w-full sm:w-auto border-claude-accent text-claude-accent hover:bg-claude-accent-lighter"
+              className="w-full sm:w-auto border-claude-accent text-claude-accent hover:bg-claude-accent-lighter flex items-center justify-center gap-2"
             >
-              🔄 Thêm &amp; Tiếp tục
+              <span>Thêm &amp; Tiếp tục</span>
             </Button>
             <Button
               variant="primary"

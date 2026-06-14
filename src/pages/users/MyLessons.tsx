@@ -13,6 +13,7 @@ import Pagination from "../../components/common/Pagination";
 import EmptyState from "../../components/ui/EmptyState";
 import { SkeletonCard } from "../../components/ui/Skeleton";
 import type { Lesson } from "../../types/lesson";
+import { FolderPlus, Plus, BookOpen } from "lucide-react";
 
 type ViewMode = "all" | "folders" | "lessons";
 
@@ -137,18 +138,14 @@ export default function MyLessons() {
             onClick={() => setIsCreateFolderOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
+            <FolderPlus className="h-4 w-4" strokeWidth={2} />
             Tạo thư mục
           </button>
           <button
             onClick={() => navigate("/create-lesson")}
             className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-claude-accent rounded-claude hover:bg-claude-accent-2 transition-colors shadow-claude-sm"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
             Tạo bài học
           </button>
         </div>
@@ -168,10 +165,10 @@ export default function MyLessons() {
           <button
             key={opt.value}
             onClick={() => setViewMode(opt.value)}
-            className={`px-3 py-1.5 rounded-claude text-sm font-medium transition-all ${
+            className={`px-3 py-1.5 rounded-claude border text-sm font-medium transition-all ${
               viewMode === opt.value
-                ? 'bg-claude-surface border border-claude-border text-claude-text shadow-claude-sm'
-                : 'text-claude-text-2 hover:text-claude-text'
+                ? 'bg-claude-surface border-claude-border text-claude-text shadow-claude-sm'
+                : 'border-transparent text-claude-text-2 hover:text-claude-text'
             }`}
           >
             {opt.label}
@@ -218,13 +215,18 @@ export default function MyLessons() {
           )}
 
           {/* Lessons */}
-          {(viewMode === "all" || viewMode === "lessons") && (
+          {(viewMode === "all" || viewMode === "lessons") && (currentLessons.length > 0 || viewMode === "lessons") && (
             <section>
-              {viewMode !== "all" && (
-                <div className="mb-4">
-                  <h2 className="text-sm font-semibold text-claude-text-2 uppercase tracking-wider">Bài học riêng lẻ</h2>
-                </div>
-              )}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-claude-text-2 uppercase tracking-wider">
+                  {viewMode === "all" ? "Bài học" : "Bài học riêng lẻ"}
+                </h2>
+                {viewMode === "all" && (
+                  <button onClick={() => setViewMode("lessons")} className="text-xs text-claude-accent hover:text-claude-accent-2 transition-colors">
+                    Xem tất cả →
+                  </button>
+                )}
+              </div>
               {currentLessons.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -264,7 +266,7 @@ export default function MyLessons() {
               <EmptyState
                 title="Chưa có thư mục hoặc bài học nào"
                 description="Bắt đầu tạo nội dung học tập của bạn ngay hôm nay!"
-                icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
+                icon={<BookOpen className="h-10 w-10 text-claude-text-3" strokeWidth={1.2} />}
                 action={{ label: "Tạo bài học đầu tiên", onClick: () => navigate("/create-lesson") }}
               />
             </div>

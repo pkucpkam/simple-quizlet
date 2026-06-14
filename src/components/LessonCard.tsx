@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import type { Lesson } from "../types/lesson";
 import ConfirmModal from "./common/ConfirmModal";
+import { Pencil, Trash2, Lock, Unlock, FolderPlus, MoreVertical } from "lucide-react";
 
 interface Props {
   lesson: Lesson;
@@ -11,7 +12,7 @@ interface Props {
   onEdit?: (id: string) => void;
   onFolderAction?: (id: string) => void;
   folderActionLabel?: string;
-  folderActionIcon?: string;
+  folderActionIcon?: React.ReactNode;
 }
 
 export default function LessonCard({
@@ -21,10 +22,12 @@ export default function LessonCard({
   onEdit,
   onFolderAction,
   folderActionLabel,
+  folderActionIcon,
 }: Props) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<null | "delete" | "privacy">(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const storedUser = sessionStorage.getItem("user");
@@ -44,7 +47,7 @@ export default function LessonCard({
       <div className="group bg-claude-surface border border-claude-border rounded-claude-md p-5 hover:border-claude-accent hover:shadow-claude transition-all flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 cursor-pointer" onClick={() => navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId } })}>
+          <div className="flex-1 cursor-pointer" onClick={() => navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId, from: location.pathname } })}>
             <h2 className="text-sm font-semibold text-claude-text line-clamp-2 group-hover:text-claude-accent transition-colors leading-snug">
               {lesson.title}
             </h2>
@@ -62,9 +65,7 @@ export default function LessonCard({
                 title={folderActionLabel}
                 className="p-1.5 text-claude-text-3 hover:text-claude-accent hover:bg-claude-accent-lighter rounded-claude transition-colors"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                </svg>
+                {folderActionIcon || <FolderPlus className="h-4 w-4" strokeWidth={2} />}
               </button>
             )}
 
@@ -75,9 +76,7 @@ export default function LessonCard({
                   onClick={() => setIsMenuOpen(prev => !prev)}
                   title="Tùy chọn"
                 >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
+                  <MoreVertical className="h-4 w-4" />
                 </button>
                 {isMenuOpen && (
                   <div className="absolute right-0 mt-1 w-44 bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-md z-20 py-1 animate-fade-in">
@@ -86,7 +85,7 @@ export default function LessonCard({
                         className="flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm text-claude-text hover:bg-claude-surface-2 transition-colors"
                         onClick={() => { onEdit(lesson.id); setIsMenuOpen(false); }}
                       >
-                        <svg className="h-4 w-4 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        <Pencil className="h-4 w-4 text-claude-text-3" strokeWidth={2} />
                         Chỉnh sửa
                       </button>
                     )}
@@ -94,12 +93,10 @@ export default function LessonCard({
                       className="flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm text-claude-text hover:bg-claude-surface-2 transition-colors"
                       onClick={() => { setConfirmType("privacy"); setIsMenuOpen(false); }}
                     >
-                      <svg className="h-4 w-4 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        {lesson.isPrivate
-                          ? <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 018 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                          : <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        }
-                      </svg>
+                      {lesson.isPrivate
+                        ? <Unlock className="h-4 w-4 text-claude-text-3" strokeWidth={2} />
+                        : <Lock className="h-4 w-4 text-claude-text-3" strokeWidth={2} />
+                      }
                       {lesson.isPrivate ? "Chuyển công khai" : "Chuyển riêng tư"}
                     </button>
                     <div className="h-px bg-claude-border mx-2 my-1" />
@@ -107,7 +104,7 @@ export default function LessonCard({
                       className="flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm text-claude-error hover:bg-claude-error-light transition-colors"
                       onClick={() => { setConfirmType("delete"); setIsMenuOpen(false); }}
                     >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <Trash2 className="h-4 w-4" strokeWidth={2} />
                       Xoá bài học
                     </button>
                   </div>

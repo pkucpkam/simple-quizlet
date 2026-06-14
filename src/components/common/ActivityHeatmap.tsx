@@ -10,13 +10,13 @@ interface HeatmapProps {
   userId: string;
 }
 
-// Claude amber-toned heatmap levels
+// Emerald green-toned heatmap levels
 const getColor = (level: number): string => {
   switch (level) {
-    case 1: return 'bg-amber-100';
-    case 2: return 'bg-amber-300';
-    case 3: return 'bg-amber-500';
-    case 4: return 'bg-amber-700';
+    case 1: return 'bg-emerald-100';
+    case 2: return 'bg-emerald-300';
+    case 3: return 'bg-emerald-500';
+    case 4: return 'bg-emerald-700';
     default: return 'bg-claude-border';
   }
 };
@@ -87,7 +87,7 @@ const ActivityHeatmap: React.FC<HeatmapProps> = ({ userId }) => {
           🔥 Hoạt động học tập
         </h2>
         <div className="text-xs font-medium text-claude-text-2 bg-claude-surface-2 border border-claude-border px-2.5 py-1 rounded-full">
-          <span className="text-claude-accent font-bold">{totalActivitiesThisYear}</span> hoạt động trong năm nay
+          <span className="text-emerald-600 font-bold">{totalActivitiesThisYear}</span> hoạt động trong năm nay
         </div>
       </div>
 
@@ -126,14 +126,15 @@ const ActivityHeatmap: React.FC<HeatmapProps> = ({ userId }) => {
                   if (day.date > today) return <div key={dIndex} className="w-[14px] h-[14px] rounded-sm bg-transparent" />;
                   const dateStr = `${day.date.getFullYear()}-${String(day.date.getMonth() + 1).padStart(2, '0')}-${String(day.date.getDate()).padStart(2, '0')}`;
                   const count = data[dateStr] || 0;
+                  const isFirstRows = dIndex < 2;
                   return (
                     <div
                       key={dIndex}
-                      className={`relative w-[14px] h-[14px] rounded-sm ${getColor(day.level)} hover:ring-2 hover:ring-offset-1 hover:ring-claude-accent transition-all cursor-pointer group`}
+                      className={`relative w-[14px] h-[14px] rounded-sm ${getColor(day.level)} hover:ring-2 hover:ring-offset-1 hover:ring-emerald-500 transition-all cursor-pointer group`}
                     >
-                      <div className="absolute opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-claude-text text-white text-[10px] rounded px-2 py-1 whitespace-nowrap bottom-full left-1/2 -translate-x-1/2 -translate-y-1.5 z-10 shadow-claude-md">
+                      <div className={`absolute opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-claude-text text-white text-[10px] rounded px-2 py-1 whitespace-nowrap left-1/2 -translate-x-1/2 z-30 shadow-claude-md ${isFirstRows ? "top-full translate-y-1.5" : "bottom-full -translate-y-1.5"}`}>
                         {count === 0 ? "Chưa có" : `${count}`} hoạt động · {dateStr}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-claude-text" />
+                        <div className={`absolute left-1/2 -translate-x-1/2 border-4 border-transparent ${isFirstRows ? "bottom-full border-b-claude-text" : "top-full border-t-claude-text"}`} />
                       </div>
                     </div>
                   );

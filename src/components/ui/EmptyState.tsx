@@ -1,4 +1,5 @@
 import React from 'react';
+import { FolderOpen } from 'lucide-react';
 import Button from './Button';
 
 interface EmptyStateProps {
@@ -12,10 +13,9 @@ interface EmptyStateProps {
   className?: string;
 }
 
+
 const DefaultIcon = () => (
-  <svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
+  <FolderOpen className="h-10 w-10 text-claude-text-3" strokeWidth={1.2} />
 );
 
 const EmptyState: React.FC<EmptyStateProps> = ({

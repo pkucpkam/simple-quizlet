@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { registerUser } from '../service/registerService';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function Register() {
   const [username, setUsername] = useState<string>('');
@@ -50,9 +51,7 @@ export default function Register() {
           {success ? (
             <div className="text-center py-4">
               <div className="w-12 h-12 rounded-full bg-claude-success-light border border-green-200 flex items-center justify-center mx-auto mb-3">
-                <svg className="h-6 w-6 text-claude-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="h-6 w-6 text-claude-success" />
               </div>
               <p className="text-sm font-medium text-claude-text mb-1">Đăng ký thành công!</p>
               <p className="text-xs text-claude-text-2">{success}</p>
@@ -88,9 +87,7 @@ export default function Register() {
 
               {error && (
                 <div className="flex items-start gap-2 p-3 bg-claude-error-light border border-red-200 rounded-claude text-sm text-claude-error">
-                  <svg className="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
                   {error}
                 </div>
               )}
@@ -103,12 +100,7 @@ export default function Register() {
                            focus:outline-none focus:ring-2 focus:ring-claude-accent focus:ring-offset-1
                            flex items-center justify-center gap-2"
               >
-                {loading && (
-                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                  </svg>
-                )}
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? 'Đang tạo tài khoản...' : 'Đăng ký'}
               </button>
             </form>
