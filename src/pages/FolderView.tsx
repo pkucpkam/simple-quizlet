@@ -168,7 +168,9 @@ const FolderView: React.FC = () => {
                     </div>
 
                     <h3 className="text-sm font-semibold text-claude-text group-hover:text-claude-accent transition-colors mb-1 line-clamp-2">
-                      {lesson.title}
+                      <Link to={`/lesson/${lesson.id}`} className="hover:underline">
+                        {lesson.title}
+                      </Link>
                     </h3>
                     <p className="text-xs text-claude-text-2 line-clamp-2 mb-4">
                       {lesson.description || "Bấm để bắt đầu học bài này."}
@@ -213,7 +215,9 @@ const FolderView: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1.5">
                         <h3 className="text-sm font-semibold text-claude-text group-hover:text-claude-accent transition-colors line-clamp-1">
-                          {lesson.title}
+                          <Link to={`/lesson/${lesson.id}`} className="hover:underline">
+                            {lesson.title}
+                          </Link>
                         </h3>
                         <span className="text-xs font-medium px-2 py-0.5 bg-claude-accent-light text-claude-accent rounded-full shrink-0">
                           {lesson.wordCount} từ

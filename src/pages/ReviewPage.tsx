@@ -144,18 +144,17 @@ const ReviewPage = () => {
 
   return (
     <div className="w-full mx-auto p-6 h-full">
-      <div className="max-w-2xl mx-auto mb-6 flex justify-start">
+      <div className={`${quizType === "matching" ? "max-w-6xl" : "max-w-2xl"} mx-auto mb-8 flex items-center relative min-h-[40px]`}>
         <button
           onClick={() => navigate(fromPath)}
-          className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
+          className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors z-10"
         >
           <ArrowLeft className="h-4 w-4" /> Thoát
         </button>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+          Ôn tập từ vựng
+        </h1>
       </div>
-
-      <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-        Ôn tập từ vựng
-      </h1>
 
       {quizType === "normal" && (
         <Quiz

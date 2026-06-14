@@ -32,7 +32,7 @@ const AuthenticatedLayout = () => (
 );
 
 function App() {
-  const [showNotification, setShowNotification] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
 
   return (
     <div className="min-h-screen bg-claude-bg font-sans">
