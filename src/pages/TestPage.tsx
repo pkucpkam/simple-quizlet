@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { lessonService } from "../service/lessonService";
 import toast from "react-hot-toast";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
 import LoadingScreen from "../components/common/LoadingScreen";
 import Button from "../components/ui/Button";
+import { ArrowLeft } from "lucide-react";
 
 interface VocabItem {
     term: string;
@@ -19,9 +20,19 @@ interface TestResult {
     isCorrect: boolean;
 }
 
+const getBackLabel = (path: string) => {
+  if (path === "/") return "🏠 Về trang chủ";
+  if (path.startsWith("/folder/")) return "📁 Về thư mục";
+  if (path.startsWith("/lesson/")) return "📖 Về bài học";
+  if (path.startsWith("/study-history")) return "🕒 Về lịch sử";
+  return "⬅️ Quay lại";
+};
+
 export default function TestPage() {
     const { lessonId } = useParams<{ lessonId: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    const fromPath = location.state?.from || (lessonId ? `/lesson/${lessonId}` : "/");
 
     const [vocabList, setVocabList] = useState<VocabItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -124,18 +135,8 @@ export default function TestPage() {
             if (!userId) return;
 
             const timeSpent = Math.round((Date.now() - startTime) / 1000);
-            const correctCount = results.filter((r) => r.isCorrect).length;
 
-            historyService.saveStudySession(userId, {
-                setId: lessonId || "",
-                setName: lessonTitle || "Bài học không tên",
-                lessonId: lessonId || "",
-                lessonTitle: lessonTitle || "Bài học không tên",
-                timeSpent,
-                knowCount: correctCount,
-                totalCount: results.length,
-                studyMode: "test",
-            });
+            historyService.incrementStudyStats(userId, "test", timeSpent);
             setHasSaved(true);
         }
     }, [showResults, hasSaved, lessonId, lessonTitle, startTime, results]);
@@ -174,6 +175,15 @@ export default function TestPage() {
 
         return (
             <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in">
+                <div className="mb-6 flex justify-start">
+                    <button
+                        onClick={() => navigate(fromPath)}
+                        className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Thoát
+                    </button>
+                </div>
+
                 <div className="bg-claude-surface rounded-claude-lg shadow-claude border border-claude-border p-6 md:p-8">
                     <h1 className="text-3xl font-bold text-claude-text mb-6 text-center">
                         Kết quả kiểm tra: {lessonTitle}
@@ -246,11 +256,11 @@ export default function TestPage() {
                             🔄 Làm lại
                         </Button>
                         <Button
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate(fromPath)}
                             variant="secondary"
                             className="px-8"
                         >
-                            🏠 Về trang chủ
+                            {getBackLabel(fromPath)}
                         </Button>
                     </div>
                 </div>
@@ -260,6 +270,15 @@ export default function TestPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in">
+            <div className="mb-6 flex justify-start">
+                <button
+                    onClick={() => navigate(fromPath)}
+                    className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
+                >
+                    <ArrowLeft className="h-4 w-4" /> Thoát
+                </button>
+            </div>
+
             <div className="bg-claude-surface rounded-claude-lg shadow-claude border border-claude-border p-6 md:p-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-4">

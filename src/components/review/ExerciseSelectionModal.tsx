@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 
@@ -20,6 +20,7 @@ const exerciseTypes = [
 export default function ExerciseSelectionModal({ open, onClose, lessonId }: ExerciseSelectionModalProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(["normal", "reverse", "practice", "matching", "listen"]);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleType = (id: string) => {
     setSelectedTypes((prev) =>
@@ -30,7 +31,7 @@ export default function ExerciseSelectionModal({ open, onClose, lessonId }: Exer
   const handleStartReview = () => {
     if (selectedTypes.length === 0) return;
     const typesParam = selectedTypes.join(",");
-    navigate(`/review/${lessonId}?types=${typesParam}`);
+    navigate(`/review/${lessonId}?types=${typesParam}`, { state: { from: location.pathname } });
     onClose();
   };
 

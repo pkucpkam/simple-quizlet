@@ -8,6 +8,7 @@ import { srsService } from "../service/srsService";
 import toast from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Button from "../components/ui/Button";
+import { ArrowLeft } from "lucide-react";
 
 interface FlashcardData {
   id: string;
@@ -20,11 +21,21 @@ interface FlashcardData {
   status: "know" | "still_learning" | null;
 }
 
+const getBackLabel = (path: string) => {
+  if (path === "/") return "🏠 Về trang chủ";
+  if (path.startsWith("/folder/")) return "📁 Về thư mục";
+  if (path.startsWith("/lesson/")) return "📖 Về bài học";
+  if (path.startsWith("/study-history")) return "🕒 Về lịch sử";
+  return "⬅️ Quay lại";
+};
+
 const CompletionScreen: React.FC<{
   flashcards: FlashcardData[];
   onReviewAgain: () => void;
   onTest: () => void;
-}> = ({ flashcards, onReviewAgain, onTest }) => {
+  onFinish: () => void;
+  fromPath: string;
+}> = ({ flashcards, onReviewAgain, onTest, onFinish, fromPath }) => {
   const knowCount = flashcards.filter((card) => card.status === "know").length;
   const stillLearningCount = flashcards.filter((card) => card.status === "still_learning").length;
 
@@ -42,20 +53,29 @@ const CompletionScreen: React.FC<{
         <p className="text-xs text-claude-text-2">Hệ thống sẽ tự động nhắc bạn ôn tập vào đúng thời điểm để đạt hiệu quả ghi nhớ cao nhất.</p>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-4">
+          <Button
+            variant="secondary"
+            className="flex-1 py-3"
+            onClick={onReviewAgain}
+          >
+            🔄 Ôn tập lại (Review)
+          </Button>
+          <Button
+            variant="primary"
+            className="flex-1 py-3"
+            onClick={onTest}
+          >
+            📝 Kiểm tra (Test)
+          </Button>
+        </div>
         <Button
           variant="secondary"
-          className="flex-1 py-3"
-          onClick={onReviewAgain}
+          className="w-full py-3"
+          onClick={onFinish}
         >
-          🔄 Ôn tập lại (Review)
-        </Button>
-        <Button
-          variant="primary"
-          className="flex-1 py-3"
-          onClick={onTest}
-        >
-          📝 Kiểm tra (Test)
+          {getBackLabel(fromPath)}
         </Button>
       </div>
     </div>
@@ -78,6 +98,8 @@ const Study: React.FC = () => {
   const [lessonTitle, setLessonTitle] = useState(location.state?.lessonTitle || "");
   const [startTime] = useState(Date.now());
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const fromPath = location.state?.from || (lessonId ? `/lesson/${lessonId}` : "/");
 
   useEffect(() => {
     const fetchVocab = async () => {
@@ -140,19 +162,9 @@ const Study: React.FC = () => {
       }
 
       const timeSpent = Math.round((Date.now() - startTime) / 1000); // seconds
-      const knowCount = flashcards.filter((card) => card.status === "know").length;
 
       // Save to study history
-      historyService.saveStudySession(userId, {
-        setId: vocabId || "",
-        setName: lessonTitle || "Bài học không tên",
-        lessonId: lessonId || "",
-        lessonTitle: lessonTitle || "Bài học không tên",
-        timeSpent,
-        knowCount,
-        totalCount: flashcards.length,
-        studyMode: "flashcard",
-      });
+      historyService.incrementStudyStats(userId, "flashcard", timeSpent);
 
       // Initialize SRS cards
       if (lessonId && !srsInitialized) {
@@ -238,7 +250,7 @@ const Study: React.FC = () => {
 
   const handleTest = () => {
     if (lessonId) {
-      navigate(`/test/${lessonId}`);
+      navigate(`/test/${lessonId}`, { state: { from: fromPath } });
     }
   };
 
@@ -277,6 +289,15 @@ const Study: React.FC = () => {
 
   return (
     <div className="max-w-screen-xl mx-auto p-4 animate-fade-in">
+      <div className="mb-6 flex justify-start">
+        <button
+          onClick={() => navigate(fromPath)}
+          className="text-claude-text-3 hover:text-claude-accent flex items-center gap-2 font-medium transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" /> Thoát
+        </button>
+      </div>
+
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-claude-text">Học Từ Mới</h1>
         {lessonTitle && <p className="text-claude-text-2 text-sm mt-1">{lessonTitle}</p>}
@@ -287,6 +308,8 @@ const Study: React.FC = () => {
           flashcards={flashcards}
           onReviewAgain={handleReviewAgain}
           onTest={handleTest}
+          onFinish={() => navigate(fromPath)}
+          fromPath={fromPath}
         />
       ) : (
         <>

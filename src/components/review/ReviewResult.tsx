@@ -5,9 +5,25 @@ interface ReviewResultProps {
   correctAnswers: number;
   totalQuestions: number;
   onRestart: () => void;
+  fromPath: string;
+  onBack: () => void;
 }
 
-const ReviewResult: React.FC<ReviewResultProps> = ({ correctAnswers, totalQuestions, onRestart }) => {
+const getBackLabel = (path: string) => {
+  if (path === "/") return "🏠 Về trang chủ";
+  if (path.startsWith("/folder/")) return "📁 Về thư mục";
+  if (path.startsWith("/lesson/")) return "📖 Về bài học";
+  if (path.startsWith("/study-history")) return "🕒 Về lịch sử";
+  return "⬅️ Quay lại";
+};
+
+const ReviewResult: React.FC<ReviewResultProps> = ({
+  correctAnswers,
+  totalQuestions,
+  onRestart,
+  fromPath,
+  onBack,
+}) => {
   const accuracy = ((correctAnswers / totalQuestions) * 100).toFixed(0);
   const getEncouragementMessage = () => {
     const percentage = parseInt(accuracy);
@@ -33,7 +49,7 @@ const ReviewResult: React.FC<ReviewResultProps> = ({ correctAnswers, totalQuesti
           </p>
           <p className="text-base text-claude-text-3 italic pt-2">{getEncouragementMessage()}</p>
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
           <Button
             onClick={onRestart}
             variant="primary"
@@ -41,6 +57,14 @@ const ReviewResult: React.FC<ReviewResultProps> = ({ correctAnswers, totalQuesti
             className="px-8"
           >
             Ôn tập lại
+          </Button>
+          <Button
+            onClick={onBack}
+            variant="secondary"
+            size="lg"
+            className="px-8"
+          >
+            {getBackLabel(fromPath)}
           </Button>
         </div>
       </div>

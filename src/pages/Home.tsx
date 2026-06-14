@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { lessonService, type PaginatedLessonsResult } from "../service/lessonService";
 import { folderService } from "../service/folderService";
 import toast from "react-hot-toast";
@@ -14,6 +14,8 @@ import EmptyState from "../components/ui/EmptyState";
 import { SkeletonTable } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
 import { Search, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import Dropdown from "../components/ui/Dropdown";
+import FolderIcon from "../components/ui/FolderIcon";
 
 interface Lesson {
   id: string;
@@ -32,6 +34,7 @@ type SortOrder = "asc" | "desc";
 
 export default function Home() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const currentUserId = user?.uid || null;
@@ -200,7 +203,12 @@ export default function Home() {
                 className="flex flex-col items-center bg-claude-surface border border-claude-border rounded-claude-md p-4
                            hover:border-claude-accent hover:shadow-claude transition-all group"
               >
-                <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{folder.icon}</span>
+                <div
+                  className="w-10 h-10 rounded-claude-md flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  style={{ backgroundColor: (folder.color || '#3B82F6') + '22' }}
+                >
+                  <FolderIcon name={folder.icon} className="h-5 w-5" style={{ color: folder.color || '#3B82F6' }} />
+                </div>
                 <span className="text-xs font-medium text-claude-text text-center truncate w-full">{folder.name}</span>
               </Link>
             ))}
@@ -227,14 +235,22 @@ export default function Home() {
               />
             </div>
             {/* Items per page */}
-            <select
+            <Dropdown
               value={itemsPerPage}
-              onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); setPageCursors(new Map([[1, null]])); }}
-              className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text
-                         focus:outline-none focus:ring-2 focus:ring-claude-accent cursor-pointer"
-            >
-              {[5,10,20,50].map(n => <option key={n} value={n}>{n} / trang</option>)}
-            </select>
+              onChange={(val) => {
+                setItemsPerPage(val);
+                setCurrentPage(1);
+                setPageCursors(new Map([[1, null]]));
+              }}
+              options={[
+                { value: 5, label: "5 / trang" },
+                { value: 10, label: "10 / trang" },
+                { value: 20, label: "20 / trang" },
+                { value: 50, label: "50 / trang" },
+              ]}
+              align="right"
+              className="w-28"
+            />
           </div>
         </div>
 
@@ -305,20 +321,20 @@ export default function Home() {
                             <td className="px-4 py-3.5">
                               <div className="flex justify-end items-center gap-1">
                                 <button
-                                  onClick={() => navigate(`/study/${lesson.id}`)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-accent-light text-claude-accent hover:bg-claude-accent hover:text-white transition-all"
+                                  onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Học
                                 </button>
                                 <button
                                   onClick={() => setSelectedLessonForReview(lesson.id)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-success-light text-claude-success hover:bg-claude-success hover:text-white transition-all"
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-success-light text-claude-success hover:bg-claude-success hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Ôn tập
                                 </button>
                                 <button
-                                  onClick={() => navigate(`/test/${lesson.id}`)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all"
+                                  onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all shadow-claude-sm"
                                 >
                                   Kiểm tra
                                 </button>

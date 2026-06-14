@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { folderService } from "../service/folderService";
 import type { Folder } from "../types/folder";
 import type { Lesson } from "../service/lessonService";
@@ -9,12 +9,14 @@ import Badge from "../components/ui/Badge";
 import EmptyState from "../components/ui/EmptyState";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import { ArrowLeft, LayoutGrid, List, Plus, BookOpen } from "lucide-react";
+import FolderIcon from "../components/ui/FolderIcon";
 
 const BackIcon = () => <ArrowLeft className="h-4 w-4" strokeWidth={2} />;
 
 const FolderView: React.FC = () => {
   const { folderId } = useParams<{ folderId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [folder, setFolder] = useState<Folder | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,8 +75,11 @@ const FolderView: React.FC = () => {
           </button>
 
           <div className="flex items-center gap-5">
-            <div className="flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-claude-lg text-4xl flex-shrink-0 border border-white/10">
-              {folder.icon}
+            <div
+              className="flex items-center justify-center w-16 h-16 backdrop-blur-sm rounded-claude-lg flex-shrink-0 border border-white/10"
+              style={{ backgroundColor: (folder.color || '#3B82F6') + '33' }}
+            >
+              <FolderIcon name={folder.icon} className="h-8 w-8" style={{ color: folder.color || 'white' }} />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -104,8 +109,8 @@ const FolderView: React.FC = () => {
                     localStorage.setItem("folder_view_mode", "grid");
                   }}
                   className={`p-1.5 rounded-claude border transition-all ${viewMode === "grid"
-                      ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
-                      : "border-transparent text-claude-text-3 hover:text-claude-text"
+                    ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                    : "border-transparent text-claude-text-3 hover:text-claude-text"
                     }`}
                   title="Xem dạng lưới"
                 >
@@ -117,8 +122,8 @@ const FolderView: React.FC = () => {
                     localStorage.setItem("folder_view_mode", "list");
                   }}
                   className={`p-1.5 rounded-claude border transition-all ${viewMode === "list"
-                      ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
-                      : "border-transparent text-claude-text-3 hover:text-claude-text"
+                    ? "bg-claude-surface text-claude-accent shadow-claude-sm border-claude-border"
+                    : "border-transparent text-claude-text-3 hover:text-claude-text"
                     }`}
                   title="Xem dạng danh sách"
                 >
@@ -177,8 +182,8 @@ const FolderView: React.FC = () => {
                         Xem chi tiết
                       </Link>
                       <button
-                        onClick={() => navigate(`/study/${lesson.id}`)}
-                        className="py-2 text-xs font-medium text-center text-white bg-claude-accent rounded-claude hover:bg-claude-accent-2 transition-colors"
+                        onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="py-2 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
                       >
                         Học ngay
                       </button>
@@ -189,7 +194,7 @@ const FolderView: React.FC = () => {
                         Ôn tập
                       </button>
                       <button
-                        onClick={() => navigate(`/test/${lesson.id}`)}
+                        onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
                         className="py-2 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
                       >
                         Kiểm tra
@@ -230,8 +235,8 @@ const FolderView: React.FC = () => {
                         Xem chi tiết
                       </Link>
                       <button
-                        onClick={() => navigate(`/study/${lesson.id}`)}
-                        className="px-3 py-1.5 text-xs font-medium text-center text-white bg-claude-accent rounded-claude hover:bg-claude-accent-2 transition-colors"
+                        onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
                       >
                         Học ngay
                       </button>
@@ -242,7 +247,7 @@ const FolderView: React.FC = () => {
                         Ôn tập
                       </button>
                       <button
-                        onClick={() => navigate(`/test/${lesson.id}`)}
+                        onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
                         className="px-3 py-1.5 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
                       >
                         Kiểm tra
