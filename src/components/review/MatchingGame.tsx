@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import Button from "../ui/Button";
-import { ChevronRight } from "lucide-react";
 
 interface Vocab {
   term: string;
@@ -166,7 +165,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="text-center text-claude-error font-medium p-8">
@@ -174,7 +173,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
       </div>
     );
   }
-  
+
   if (cards.length === 0) {
     return (
       <div className="text-center text-claude-text-3 font-medium p-8">
@@ -198,7 +197,6 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
             }}
           >
             <span>Bỏ qua</span>
-            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
@@ -237,7 +235,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
                     relative aspect-square p-4 rounded-claude border-2 font-semibold text-center
                     transition-all duration-200 transform active:scale-95
                     ${card.isMatched
-                    ? 'bg-claude-success-light border-claude-success/30 text-claude-success cursor-default scale-95 opacity-70'
+                    ? 'opacity-0 pointer-events-none cursor-default'
                     : card.isError
                       ? 'bg-claude-error-light border-claude-error/30 text-claude-error animate-pulse'
                       : card.isSelected
@@ -277,7 +275,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
                 <div className="w-2.5 h-2.5 bg-claude-text-3 rounded-full"></div>
                 <span>Thẻ có chấm màu xám: Nghĩa tiếng Việt</span>
               </div>
-              <p className="mt-2 text-claude-text-3 leading-relaxed">Nhấn vào 2 thẻ để ghép chúng lại. Ghép đúng sẽ biến mất/màu xanh lá, ghép sai sẽ chớp đỏ và trả lại trạng thái cũ.</p>
+              <p className="mt-2 text-claude-text-3 leading-relaxed">Nhấn vào 2 thẻ để ghép chúng lại. Ghép đúng sẽ biến mất, ghép sai sẽ chớp đỏ và trả lại trạng thái cũ.</p>
             </div>
           </div>
         </>
