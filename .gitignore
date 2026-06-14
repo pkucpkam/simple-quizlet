@@ -25,3 +25,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+simple-quizlet-firebase-adminsdk-fbsvc-2a8ac1dea2.json
+firestore-backup.json
+a.cjs
+restore.cjs
+seed-fake-users.cjs
+delete-fake-users.cjs

@@ -7,6 +7,7 @@ import { historyService } from "../service/historyService";
 import { srsService } from "../service/srsService";
 import toast from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
+import Button from "../components/ui/Button";
 
 interface FlashcardData {
   id: string;
@@ -28,30 +29,34 @@ const CompletionScreen: React.FC<{
   const stillLearningCount = flashcards.filter((card) => card.status === "still_learning").length;
 
   return (
-    <div className="max-w-md mx-auto p-4 text-center">
+    <div className="max-w-md mx-auto p-6 text-center bg-claude-surface rounded-claude-lg border border-claude-border shadow-claude animate-fade-in mt-10">
       <div className="text-6xl mb-4">🎉</div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Chúc mừng! Bạn đã học xong!</h2>
-      <p className="text-lg text-gray-600 mb-2">Số từ đã thuộc: {knowCount}</p>
-      <p className="text-lg text-gray-600 mb-6">Số từ cần ôn tập: {stillLearningCount}</p>
+      <h2 className="text-2xl font-bold text-claude-text mb-4">Chúc mừng! Bạn đã học xong!</h2>
+      <div className="space-y-1 mb-6">
+        <p className="text-base text-claude-text-2">Số từ đã thuộc: <span className="font-bold text-claude-accent">{knowCount}</span></p>
+        <p className="text-base text-claude-text-2">Số từ cần ôn tập: <span className="font-bold text-claude-text-2">{stillLearningCount}</span></p>
+      </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-blue-800 mb-2">✨ <strong>Đã tạo SRS cards!</strong></p>
-        <p className="text-xs text-blue-600">Hệ thống sẽ tự động nhắc bạn ôn tập vào đúng thời điểm</p>
+      <div className="bg-claude-accent-lighter border border-claude-accent-light rounded-claude p-4 mb-6 text-left">
+        <p className="text-sm text-claude-accent mb-1">✨ <strong>Đã tạo SRS cards!</strong></p>
+        <p className="text-xs text-claude-text-2">Hệ thống sẽ tự động nhắc bạn ôn tập vào đúng thời điểm để đạt hiệu quả ghi nhớ cao nhất.</p>
       </div>
 
       <div className="flex gap-4">
-        <button
-          className="flex-1 py-3 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-md"
+        <Button
+          variant="secondary"
+          className="flex-1 py-3"
           onClick={onReviewAgain}
         >
           🔄 Ôn tập lại (Review)
-        </button>
-        <button
-          className="flex-1 py-3 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors shadow-md"
+        </Button>
+        <Button
+          variant="primary"
+          className="flex-1 py-3"
           onClick={onTest}
         >
           📝 Kiểm tra (Test)
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -87,7 +92,6 @@ const Study: React.FC = () => {
         } else if (vocabId) {
           vocabList = await lessonService.getVocabulary(vocabId);
         } else {
-          // Fallback demo data
           vocabList = [
             { word: "Apple", definition: "Táo" },
             { word: "Book", definition: "Sách" },
@@ -124,7 +128,6 @@ const Study: React.FC = () => {
     }
   }, [flashcards]);
 
-  // Save study session and initialize SRS when completed
   useEffect(() => {
     if (isCompleted && flashcards.length > 0 && !hasSaved) {
       const userId = auth.currentUser?.uid;
@@ -188,7 +191,6 @@ const Study: React.FC = () => {
       if (nextIndex < newFlashcards.length) {
         setCurrentIndex(nextIndex);
       } else {
-        // Wrap around to start and find first unmemorized card
         let wrapIndex = 0;
         while (wrapIndex < newFlashcards.length && newFlashcards[wrapIndex].status === "know") {
           wrapIndex++;
@@ -247,13 +249,38 @@ const Study: React.FC = () => {
 
   const progressPercent = ((knowCount) / flashcards.length) * 100;
 
-  if (loading) return <div className="text-center">Đang tải thẻ...</div>;
-  if (error) return <div className="text-center text-red-600">{error}</div>;
-  if (flashcards.length === 0) return <div className="text-center">Không có thẻ để hiển thị.</div>;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-claude-border border-t-claude-accent mb-4"></div>
+        <p className="text-claude-text-2 font-medium">Đang tải thẻ học...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <div className="text-claude-error text-xl font-semibold mb-2">Lỗi tải dữ liệu</div>
+        <p className="text-claude-text-2">{error}</p>
+      </div>
+    );
+  }
+  
+  if (flashcards.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-claude-text-2">Không có thẻ nào để hiển thị.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-screen-xl mx-auto p-4">
-      <h1 className="text-3xl font-bold text-center mb-6">Học Từ Mới</h1>
+    <div className="max-w-screen-xl mx-auto p-4 animate-fade-in">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-claude-text">Học Từ Mới</h1>
+        {lessonTitle && <p className="text-claude-text-2 text-sm mt-1">{lessonTitle}</p>}
+      </div>
 
       {isCompleted ? (
         <CompletionScreen
@@ -271,15 +298,15 @@ const Study: React.FC = () => {
           />
           <div className="mt-6 text-center">
             <div className="w-full max-w-md mx-auto">
-              <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div className="bg-claude-border rounded-full h-2 overflow-hidden">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  className="bg-claude-accent h-2 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
             </div>
-            <p className="mt-2">
-              Đã thuộc: {knowCount} | Chưa thuộc: {stillLearningCount}
+            <p className="mt-3 text-sm text-claude-text-2">
+              Đã thuộc: <span className="font-bold text-claude-accent">{knowCount}</span> | Chưa thuộc: <span className="font-semibold text-claude-text-3">{stillLearningCount}</span>
             </p>
           </div>
         </>

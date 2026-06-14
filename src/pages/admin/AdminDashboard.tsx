@@ -8,67 +8,66 @@ import type { Folder } from '../../types/folder';
 import type { Lesson } from '../../types/lesson';
 import Pagination from '../../components/common/Pagination';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
+import Badge from '../../components/ui/Badge';
+import { SkeletonTable } from '../../components/ui/Skeleton';
+import EmptyState from '../../components/ui/EmptyState';
+
+type TabType = 'users' | 'lessons' | 'folders';
+
+const tabLabels: Record<TabType, string> = {
+  users: 'Người dùng',
+  lessons: 'Bài học',
+  folders: 'Thư mục',
+};
+
+interface MetricCardProps { label: string; value: string | number; sub?: string; accent?: string; }
+
+const MetricCard: React.FC<MetricCardProps> = ({ label, value, sub, accent = 'text-claude-text' }) => (
+  <div className="bg-claude-surface border border-claude-border rounded-claude-md p-5 shadow-claude-sm">
+    <p className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider mb-2">{label}</p>
+    <p className={`text-3xl font-bold ${accent}`}>{value}</p>
+    {sub && <p className="text-xs text-claude-text-3 mt-1">{sub}</p>}
+  </div>
+);
 
 const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'users' | 'lessons' | 'folders'>('users');
+  const [activeTab, setActiveTab] = useState<TabType>('users');
   const [users, setUsers] = useState<UserInfo[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  
-  // Folder Create State
+
   const [showFolderForm, setShowFolderForm] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderIcon, setNewFolderIcon] = useState('📁');
 
-  // Pagination states
   const [pageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageCursors, setPageCursors] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(
-    new Map([[1, null]])
-  );
+  const [pageCursors, setPageCursors] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(new Map([[1, null]]));
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const cursor = pageCursors.get(currentPage) || null;
-      
       if (activeTab === 'users') {
         const result = await getPaginatedUsers(pageSize, cursor);
         setUsers(result.users);
-        setTotalItems(result.total); // Users count is cheap/required here
-        if (result.hasMore && result.lastVisible) {
-          setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
-        }
+        setTotalItems(result.total);
+        if (result.hasMore && result.lastVisible) setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
       } else if (activeTab === 'lessons') {
-        const result = await lessonService.getAllLessonsPaginated(
-          pageSize, 
-          cursor, 
-          totalItems > 0 // Skip count if we already have it
-        );
+        const result = await lessonService.getAllLessonsPaginated(pageSize, cursor, totalItems > 0);
         setLessons(result.lessons);
         if (totalItems === 0) setTotalItems(result.total);
-        if (result.hasMore && result.lastVisible) {
-            setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
-        }
+        if (result.hasMore && result.lastVisible) setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
       } else if (activeTab === 'folders') {
-        const result = await folderService.getAllFoldersPaginated(
-          pageSize, 
-          cursor, 
-          totalItems > 0 // Skip count if we already have it
-        );
+        const result = await folderService.getAllFoldersPaginated(pageSize, cursor, totalItems > 0);
         setFolders(result.folders);
         if (totalItems === 0) setTotalItems(result.total);
-        if (result.hasMore && result.lastVisible) {
-            setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
-        }
+        if (result.hasMore && result.lastVisible) setPageCursors(prev => new Map(prev).set(currentPage + 1, result.lastVisible));
       }
-    } catch {
-      toast.error('Không thể tải dữ liệu');
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error('Không thể tải dữ liệu'); }
+    finally { setLoading(false); }
   }, [activeTab, currentPage, pageSize, pageCursors]);
 
   useEffect(() => {
@@ -76,10 +75,11 @@ const AdminDashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, currentPage]);
 
-  const handleTabChange = (tab: 'users' | 'lessons' | 'folders') => {
+  const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
     setCurrentPage(1);
     setPageCursors(new Map([[1, null]]));
+    setTotalItems(0);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -87,301 +87,302 @@ const AdminDashboard: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDeleteUser = () => {
-    toast.error('Tính năng xóa người dùng đang được bảo trì');
-  };
-
   const handleDeleteLesson = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
-      try {
-        await lessonService.deleteLessonById(id);
-        setLessons(lessons.filter(l => l.id !== id));
-        toast.success('Đã xóa bài học');
-      } catch {
-        toast.error('Lỗi khi xóa bài học');
-      }
-    }
+    if (!window.confirm('Xóa bài học này?')) return;
+    try {
+      await lessonService.deleteLessonById(id);
+      setLessons(lessons.filter(l => l.id !== id));
+      toast.success('Đã xóa bài học');
+    } catch { toast.error('Lỗi khi xóa bài học'); }
   };
 
   const handleDeleteFolder = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa thư mục này?')) {
-      try {
-        await folderService.deleteFolder(id);
-        setFolders(folders.filter(f => f.id !== id));
-        toast.success('Đã xóa thư mục');
-      } catch {
-        toast.error('Lỗi khi xóa thư mục');
-      }
-    }
+    if (!window.confirm('Xóa thư mục này?')) return;
+    try {
+      await folderService.deleteFolder(id);
+      setFolders(folders.filter(f => f.id !== id));
+      toast.success('Đã xóa thư mục');
+    } catch { toast.error('Lỗi khi xóa thư mục'); }
   };
 
   const handleCreateSystemFolder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newFolderName) return;
-
     const storedUser = sessionStorage.getItem('user');
     const username = storedUser ? JSON.parse(storedUser).username : 'Admin';
-
     try {
-      await folderService.createFolder(username, {
-        name: newFolderName,
-        icon: newFolderIcon,
-        isOfficial: true
-      });
+      await folderService.createFolder(username, { name: newFolderName, icon: newFolderIcon, isOfficial: true });
       toast.success('Đã tạo thư mục hệ thống');
       setNewFolderName('');
       setShowFolderForm(false);
-      // Reset to first page
       setCurrentPage(1);
       setPageCursors(new Map([[1, null]]));
       fetchData();
-    } catch {
-      toast.error('Lỗi khi tạo thư mục');
-    }
+    } catch { toast.error('Lỗi khi tạo thư mục'); }
   };
 
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
+  const thClass = "px-4 py-3 text-left text-xs font-semibold text-claude-text-2 uppercase tracking-wider";
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      {/* Header Section */}
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-600 p-2 rounded-lg shadow-lg shadow-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-black text-gray-900 tracking-tight">Admin Console</h1>
-            </div>
-            <div className="flex gap-3">
-              <Link to="/admin/create-lesson" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl shadow-md text-white bg-blue-600 hover:bg-blue-700 transition transform hover:scale-105">
-                + Bài học Hệ thống
-              </Link>
-            </div>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto animate-fade-in space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-claude-text">Admin Console</h1>
+          <p className="text-sm text-claude-text-2 mt-0.5">Quản lý nội dung và người dùng</p>
         </div>
+        <Link
+          to="/admin/create-lesson"
+          className="flex items-center gap-2 px-4 py-2 bg-claude-accent text-white text-sm font-medium rounded-claude hover:bg-claude-accent-2 transition-colors shadow-claude-sm"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Bài học hệ thống
+        </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        {/* Statistics Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3 mb-8">
-          <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 transition hover:shadow-md">
-            <div className="p-6 text-center">
-              <dt className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng người dùng</dt>
-              <dd className="text-4xl font-black text-gray-900">{activeTab === 'users' ? totalItems : '...'}</dd>
-            </div>
-          </div>
-          <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 transition hover:shadow-md">
-            <div className="p-6 text-center">
-              <dt className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổng bài học</dt>
-              <dd className="text-4xl font-black text-blue-600">{activeTab === 'lessons' ? totalItems : '...'}</dd>
-            </div>
-          </div>
-          <div className="bg-white overflow-hidden shadow-sm rounded-2xl border border-gray-100 transition hover:shadow-md">
-            <div className="p-6 text-center border-b md:border-b-0 md:border-r">
-              <dt className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Thư mục hệ thống</dt>
-              <dd className="text-4xl font-black text-purple-600">{activeTab === 'folders' ? totalItems : '...'}</dd>
-            </div>
-          </div>
-        </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard label="Tổng người dùng" value={activeTab === 'users' ? totalItems : '—'} accent="text-claude-text" />
+        <MetricCard label="Tổng bài học" value={activeTab === 'lessons' ? totalItems : '—'} accent="text-claude-accent" />
+        <MetricCard label="Thư mục hệ thống" value={activeTab === 'folders' ? totalItems : '—'} accent="text-purple-600" />
+      </div>
 
+      {/* Main Content Card */}
+      <div className="bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-sm overflow-hidden">
         {/* Tab Navigation */}
-        <div className="mb-6 flex space-x-8 border-b border-gray-200">
-          {(['users', 'lessons', 'folders'] as const).map((tab) => (
+        <div className="border-b border-claude-border px-4 flex gap-1 pt-2">
+          {(Object.keys(tabLabels) as TabType[]).map(tab => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'border-b-4 border-blue-600 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTab === tab
+                  ? 'border-claude-accent text-claude-accent'
+                  : 'border-transparent text-claude-text-2 hover:text-claude-text'
+              }`}
             >
-              {tab === 'users' ? 'Quản lý người dùng' : tab === 'lessons' ? 'Quản lý bài học' : 'Thư mục hệ thống'}
+              {tabLabels[tab]}
             </button>
           ))}
         </div>
 
-        {/* Content Area */}
-        <div className="bg-white shadow-sm rounded-2xl border border-gray-100 overflow-hidden">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center p-24">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-6"></div>
-              <p className="text-gray-400 font-bold uppercase tracking-wider text-sm">Cập nhật dữ liệu từ máy chủ...</p>
-            </div>
-          ) : (
-            <div className="p-8">
-              {activeTab === 'users' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-100">
-                    <thead>
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Người dùng</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Vai trò</th>
-                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {users.map((user) => (
-                        <tr key={user.uid} className="group hover:bg-gray-50 transition">
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-12 w-12">
-                                <img className="h-12 w-12 rounded-2xl border-2 border-white shadow-sm object-cover" src={user.photoURL || '/logo/brain.png'} alt="" />
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-black text-gray-900">{user.username}</div>
-                                <div className="text-xs font-bold text-gray-300">UID: {user.uid?.slice(0, 12)}</div>
-                              </div>
+        {/* Content */}
+        <div className="p-4">
+          {/* ── Users Tab ── */}
+          {activeTab === 'users' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-claude-border">
+                  <tr>
+                    <th className={thClass}>Người dùng</th>
+                    <th className={thClass}>Email</th>
+                    <th className={thClass}>Vai trò</th>
+                    <th className={`${thClass} text-right`}>Hành động</th>
+                  </tr>
+                </thead>
+                {loading ? (
+                  <SkeletonTable rows={pageSize} cols={4} />
+                ) : users.length === 0 ? (
+                  <tbody><tr><td colSpan={4}><EmptyState title="Không có người dùng" /></td></tr></tbody>
+                ) : (
+                  <tbody className="divide-y divide-claude-border">
+                    {users.map((user) => (
+                      <tr key={user.uid} className="claude-table-row group">
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-3">
+                            <img
+                              className="h-8 w-8 rounded-full border border-claude-border object-cover"
+                              src={user.photoURL || '/logo/brain.png'}
+                              alt=""
+                            />
+                            <div>
+                              <div className="text-sm font-medium text-claude-text">{user.username}</div>
+                              <div className="text-xs text-claude-text-3">UID: {user.uid?.slice(0, 10)}…</div>
                             </div>
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap text-sm font-medium text-gray-500">{user.email || 'N/A'}</td>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <span className={`px-2.5 py-1 inline-flex text-xs font-black rounded-lg ${user.role === 'ADMIN' ? 'bg-indigo-50 text-indigo-600 uppercase tracking-tighter' : 'bg-gray-50 text-gray-400'}`}>
-                              {user.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-bold opacity-0 group-hover:opacity-100 transition">
-                            <button onClick={handleDeleteUser} className="text-red-500 hover:text-red-700 transition">Hạn chế quyền</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {activeTab === 'lessons' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-100">
-                    <thead>
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tên bài học</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Loại</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nguồn</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Số từ</th>
-                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {lessons.map((lesson) => (
-                        <tr key={lesson.id} className="group hover:bg-gray-50 transition">
-                          <td className="px-6 py-5 whitespace-nowrap text-sm font-black text-gray-900">{lesson.title}</td>
-                          <td className="px-6 py-5 whitespace-nowrap text-sm">
-                            {lesson.isOfficial ? (
-                              <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md uppercase">Hệ thống</span>
-                            ) : (
-                              <span className="bg-gray-100 text-gray-400 text-[10px] font-black px-2 py-1 rounded-md uppercase">Người dùng</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-5 whitespace-nowrap text-sm font-bold text-gray-400">{lesson.creator}</td>
-                          <td className="px-6 py-5 whitespace-nowrap text-sm font-black text-blue-600 font-mono">{lesson.wordCount}</td>
-                          <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-bold opacity-0 group-hover:opacity-100 transition">
-                            <Link to={`/edit/${lesson.id}`} className="text-indigo-600 hover:text-indigo-900 border-r pr-3 mr-3">Sửa</Link>
-                            <button onClick={() => handleDeleteLesson(lesson.id)} className="text-red-500 hover:text-red-700">Xóa</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {activeTab === 'folders' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-black text-gray-900">Tính năng Thư mục</h3>
-                    <button
-                      onClick={() => setShowFolderForm(!showFolderForm)}
-                      className="bg-purple-50 text-purple-600 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition hover:bg-purple-100"
-                    >
-                      {showFolderForm ? 'Hủy bỏ' : '+ Tạo mới thư mục hệ thống'}
-                    </button>
-                  </div>
-
-                  {showFolderForm && (
-                    <form onSubmit={handleCreateSystemFolder} className="mb-10 bg-gray-50 p-6 rounded-2xl border-2 border-dashed border-gray-200">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-xs font-black text-gray-400 uppercase mb-2">Tên thư mục</label>
-                          <input
-                            type="text"
-                            className="w-full border-gray-200 rounded-xl p-3 focus:ring-purple-500 font-bold"
-                            placeholder="VD: TOEIC Preparation"
-                            value={newFolderName}
-                            onChange={(e) => setNewFolderName(e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-black text-gray-400 uppercase mb-2">Icon đại diện</label>
-                          <select
-                            className="w-full border-gray-200 rounded-xl p-3 focus:ring-purple-500 font-bold"
-                            value={newFolderIcon}
-                            onChange={(e) => setNewFolderIcon(e.target.value)}
-                          >
-                            <option value="📁">📁 Mặc định</option>
-                            <option value="🎓">🎓 Học tập</option>
-                            <option value="⭐">⭐ Quan trọng</option>
-                            <option value="🚀">🚀 Nâng cao</option>
-                            <option value="📚">📚 Tổng hợp</option>
-                          </select>
-                        </div>
-                        <div className="flex items-end">
-                          <button type="submit" className="w-full bg-purple-600 text-white p-3 rounded-xl font-black shadow-lg shadow-purple-100 transition hover:bg-purple-700">
-                            LƯU THƯ MỤC
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {folders.map((folder) => (
-                      <div key={folder.id} className="p-6 bg-white border border-gray-100 rounded-2xl group transition hover:border-purple-200 hover:shadow-xl hover:shadow-purple-50">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="text-3xl bg-gray-50 w-14 h-14 flex items-center justify-center rounded-2xl transition group-hover:scale-110">
-                            {folder.icon}
                           </div>
-                          <button onClick={() => handleDeleteFolder(folder.id)} className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-claude-text-2">{user.email || 'N/A'}</td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant={user.role === 'ADMIN' ? 'admin' : 'neutral'}>
+                            {user.role}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => toast.error('Tính năng đang bảo trì')}
+                            className="text-xs text-claude-error hover:underline"
+                          >
+                            Hạn chế
                           </button>
-                        </div>
-                        <h4 className="text-lg font-black text-gray-900 group-hover:text-purple-600 transition truncate">{folder.name}</h4>
-                        <div className="flex items-center gap-3 mt-2 text-xs font-bold text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            {folder.creator}
-                          </span>
-                          <span className="text-gray-200">|</span>
-                          <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-lg">{folder.lessonCount} bài học</span>
-                          {folder.isOfficial && (
-                            <span className="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[8px] uppercase font-black">Official</span>
-                          )}
-                        </div>
-                      </div>
+                        </td>
+                      </tr>
                     ))}
+                  </tbody>
+                )}
+              </table>
+            </div>
+          )}
+
+          {/* ── Lessons Tab ── */}
+          {activeTab === 'lessons' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-claude-border">
+                  <tr>
+                    <th className={thClass}>Tên bài học</th>
+                    <th className={thClass}>Loại</th>
+                    <th className={thClass}>Nguồn</th>
+                    <th className={thClass}>Số từ</th>
+                    <th className={`${thClass} text-right`}>Hành động</th>
+                  </tr>
+                </thead>
+                {loading ? (
+                  <SkeletonTable rows={pageSize} cols={5} />
+                ) : lessons.length === 0 ? (
+                  <tbody><tr><td colSpan={5}><EmptyState title="Không có bài học" /></td></tr></tbody>
+                ) : (
+                  <tbody className="divide-y divide-claude-border">
+                    {lessons.map((lesson) => (
+                      <tr key={lesson.id} className="claude-table-row group">
+                        <td className="px-4 py-3.5 text-sm font-medium text-claude-text">{lesson.title}</td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant={lesson.isOfficial ? 'official' : 'neutral'}>
+                            {lesson.isOfficial ? 'Hệ thống' : 'Người dùng'}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-claude-text-2">{lesson.creator}</td>
+                        <td className="px-4 py-3.5 text-sm font-medium text-claude-accent">{lesson.wordCount}</td>
+                        <td className="px-4 py-3.5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Link
+                            to={`/edit/${lesson.id}`}
+                            className="text-xs text-claude-info hover:underline mr-3"
+                          >
+                            Sửa
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteLesson(lesson.id)}
+                            className="text-xs text-claude-error hover:underline"
+                          >
+                            Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                )}
+              </table>
+            </div>
+          )}
+
+          {/* ── Folders Tab ── */}
+          {activeTab === 'folders' && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-semibold text-claude-text">Thư mục hệ thống</h3>
+                <button
+                  onClick={() => setShowFolderForm(!showFolderForm)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-600 border border-purple-200 rounded-claude bg-purple-50 hover:bg-purple-100 transition-colors"
+                >
+                  {showFolderForm ? 'Hủy bỏ' : '+ Tạo mới'}
+                </button>
+              </div>
+
+              {showFolderForm && (
+                <form
+                  onSubmit={handleCreateSystemFolder}
+                  className="mb-6 p-4 bg-claude-surface-2 border border-claude-border rounded-claude-md"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider">Tên thư mục</label>
+                      <input
+                        type="text"
+                        className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text placeholder:text-claude-text-3 focus:outline-none focus:ring-2 focus:ring-claude-accent"
+                        placeholder="VD: TOEIC Preparation"
+                        value={newFolderName}
+                        onChange={(e) => setNewFolderName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-claude-text-2 uppercase tracking-wider">Icon</label>
+                      <select
+                        className="px-3 py-2 text-sm bg-claude-surface border border-claude-border rounded-claude text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent"
+                        value={newFolderIcon}
+                        onChange={(e) => setNewFolderIcon(e.target.value)}
+                      >
+                        <option value="📁">📁 Mặc định</option>
+                        <option value="🎓">🎓 Học tập</option>
+                        <option value="⭐">⭐ Quan trọng</option>
+                        <option value="🚀">🚀 Nâng cao</option>
+                        <option value="📚">📚 Tổng hợp</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        type="submit"
+                        className="w-full py-2 bg-claude-accent text-white text-sm font-medium rounded-claude hover:bg-claude-accent-2 transition-colors"
+                      >
+                        Lưu thư mục
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </form>
               )}
 
-              {/* Pagination Controls */}
-              <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-between">
-                <p className="text-sm text-gray-400 font-bold uppercase tracking-wider">
-                  Trang {currentPage} / {totalPages} (Tổng {totalItems})
-                </p>
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                    activeColor="bg-blue-600"
-                />
-              </div>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-28 skeleton rounded-claude-md" />
+                  ))}
+                </div>
+              ) : folders.length === 0 ? (
+                <EmptyState title="Chưa có thư mục nào" description="Tạo thư mục đầu tiên bằng nút bên trên." />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {folders.map((folder) => (
+                    <div
+                      key={folder.id}
+                      className="group bg-claude-surface border border-claude-border rounded-claude-md p-4 hover:border-purple-300 hover:shadow-claude transition-all"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="text-2xl bg-claude-surface-2 w-12 h-12 flex items-center justify-center rounded-claude-md group-hover:scale-105 transition-transform">
+                          {folder.icon}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteFolder(folder.id)}
+                          className="text-claude-text-3 hover:text-claude-error opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-claude hover:bg-claude-error-light"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                      <h4 className="text-sm font-semibold text-claude-text truncate group-hover:text-purple-600 transition-colors">{folder.name}</h4>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-xs text-claude-text-3">{folder.creator}</span>
+                        <span className="text-claude-border">·</span>
+                        <span className="text-xs text-purple-500 font-medium">{folder.lessonCount} bài học</span>
+                        {folder.isOfficial && <Badge variant="official" size="sm">Official</Badge>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && (
+            <div className="mt-5 pt-4 border-t border-claude-border flex items-center justify-between">
+              <p className="text-xs text-claude-text-3">
+                Trang {currentPage} / {totalPages} · {totalItems} mục
+              </p>
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
           )}
         </div>

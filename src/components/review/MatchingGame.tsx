@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Button from "../ui/Button";
 
 interface Vocab {
   term: string;
@@ -27,7 +28,6 @@ interface MatchingGameProps {
   onAnswer: (answer: string, isCorrect: boolean) => void;
   showResult: boolean;
 }
-
 
 const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
   const [cards, setCards] = useState<MatchCard[]>([]);
@@ -157,47 +157,70 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
     }
   }, [stats.matchedPairs, isCompleted, startTime]);
 
-  if (loading) return <div className="text-center mt-10">Đang tải trò chơi ghép thẻ...</div>;
-  if (error) return <div className="text-center text-red-600 mt-10">{error}</div>;
-  if (cards.length === 0) return <div className="text-center mt-10">Không có từ vựng để ghép thẻ.</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh] py-10">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-claude-border border-t-claude-accent mb-4"></div>
+        <p className="text-claude-text-2 font-medium ml-3">Đang tải trò chơi...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="text-center text-claude-error font-medium p-8">
+        {error}
+      </div>
+    );
+  }
+  
+  if (cards.length === 0) {
+    return (
+      <div className="text-center text-claude-text-3 font-medium p-8">
+        Không có từ vựng để ghép thẻ.
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-4 mb-4">
+    <div className="max-w-6xl mx-auto bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude p-4 md:p-6 mb-4 animate-fade-in">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-          <p className="text-gray-600 font-medium">Ghép từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
-          <button
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+          <p className="text-claude-text-2 font-medium">Ghép từ tiếng Anh với nghĩa tiếng Việt tương ứng</p>
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={() => {
               setIsCompleted(true);
               onAnswer("matching", true);
             }}
-            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-1.5 px-4 rounded-lg transition text-sm"
           >
             <span>Bỏ qua</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
             </svg>
-          </button>
+          </Button>
         </div>
+
         <>
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6 border border-gray-300">
+          <div className="bg-claude-surface-2 rounded-claude-md p-4 mb-6 border border-claude-border">
             <div className="flex justify-between items-center">
-              <div className="flex space-x-6">
+              <div className="flex space-x-6 text-sm text-claude-text-2 font-semibold">
                 <div>
-                  <span className="text-gray-600">Đã ghép: </span>
-                  <span className="font-bold text-green-600">{stats.matchedPairs}/{stats.totalPairs}</span>
+                  <span>Đã ghép: </span>
+                  <span className="font-bold text-claude-success">{stats.matchedPairs}/{stats.totalPairs}</span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Lần thử: </span>
-                  <span className="font-bold text-blue-600">{stats.attempts}</span>
+                  <span>Lần thử: </span>
+                  <span className="font-bold text-claude-accent">{stats.attempts}</span>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Tiến độ</div>
-                <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div className="text-xs text-claude-text-3 font-semibold mb-1 uppercase">Tiến độ</div>
+                <div className="w-32 bg-claude-border rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    className="bg-claude-success h-2 rounded-full transition-all duration-300"
                     style={{ width: `${(stats.matchedPairs / stats.totalPairs) * 100}%` }}
                   ></div>
                 </div>
@@ -212,19 +235,18 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
                 onClick={() => handleCardClick(card)}
                 disabled={card.isMatched || card.isSelected}
                 className={`
-                    aspect-square p-4 rounded-lg border-2 font-medium text-center
-                    transition-all duration-300 transform hover:scale-105
+                    relative aspect-square p-4 rounded-claude border-2 font-semibold text-center
+                    transition-all duration-200 transform active:scale-95
                     ${card.isMatched
-                    ? 'bg-green-100 border-green-300 text-green-800 cursor-default scale-95 opacity-75'
+                    ? 'bg-claude-success-light border-claude-success/30 text-claude-success cursor-default scale-95 opacity-70'
                     : card.isError
-                      ? 'bg-red-100 border-red-300 text-red-800 animate-pulse'
+                      ? 'bg-claude-error-light border-claude-error/30 text-claude-error animate-pulse'
                       : card.isSelected
-                        ? 'bg-blue-100 border-blue-400 text-blue-800 scale-105'
+                        ? 'bg-claude-accent-light border-claude-accent text-claude-accent scale-105 shadow-claude-sm'
                         : card.type === 'term'
-                          ? 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300'
-                          : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:border-purple-300'
+                          ? 'bg-claude-surface border-claude-border text-claude-text hover:bg-claude-accent-lighter hover:border-claude-accent'
+                          : 'bg-claude-surface-2 border-claude-border text-claude-text-2 hover:bg-claude-accent-lighter hover:border-claude-accent'
                   }
-                    ${card.isMatched ? '' : 'hover:shadow-md active:scale-95'}
                   `}
               >
                 <div className="flex items-center justify-center h-full">
@@ -238,29 +260,27 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
                 </div>
 
                 <div className={`
-                    absolute top-1 right-1 w-3 h-3 rounded-full
-                    ${card.type === 'term' ? 'bg-blue-400' : 'bg-purple-400'}
+                    absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full
+                    ${card.type === 'term' ? 'bg-claude-accent' : 'bg-claude-text-3'}
                   `}></div>
               </button>
             ))}
           </div>
 
-          <div className="mt-4 bg-white rounded-lg shadow-md p-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Hướng dẫn:</h3>
-            <div className="text-sm text-gray-600 space-y-1">
+          <div className="mt-6 bg-claude-surface-2 rounded-claude-md border border-claude-border p-4">
+            <h3 className="font-semibold text-claude-text mb-2 text-sm">Hướng dẫn:</h3>
+            <div className="text-xs text-claude-text-2 space-y-1 font-medium">
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                <span>Thẻ màu xanh: Từ tiếng Anh</span>
+                <div className="w-2.5 h-2.5 bg-claude-accent rounded-full"></div>
+                <span>Thẻ có chấm màu cam: Từ tiếng Anh</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                <span>Thẻ màu tím: Nghĩa tiếng Việt</span>
+                <div className="w-2.5 h-2.5 bg-claude-text-3 rounded-full"></div>
+                <span>Thẻ có chấm màu xám: Nghĩa tiếng Việt</span>
               </div>
-              <p className="mt-2">Nhấn vào 2 thẻ để ghép chúng lại. Ghép đúng sẽ hiện màu xanh, ghép sai sẽ hiện màu đỏ và reset.</p>
+              <p className="mt-2 text-claude-text-3 leading-relaxed">Nhấn vào 2 thẻ để ghép chúng lại. Ghép đúng sẽ biến mất/màu xanh lá, ghép sai sẽ chớp đỏ và trả lại trạng thái cũ.</p>
             </div>
           </div>
-
-
         </>
       </div>
     </div>

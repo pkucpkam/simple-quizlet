@@ -10,10 +10,17 @@ import { folderService } from "../../service/folderService";
 import type { Folder, CreateFolderData } from "../../types/folder";
 import toast from "react-hot-toast";
 import Pagination from "../../components/common/Pagination";
-
+import EmptyState from "../../components/ui/EmptyState";
+import { SkeletonCard } from "../../components/ui/Skeleton";
 import type { Lesson } from "../../types/lesson";
 
 type ViewMode = "all" | "folders" | "lessons";
+
+const viewModeOptions: { value: ViewMode; label: string }[] = [
+  { value: "all", label: "Tất cả" },
+  { value: "folders", label: "Thư mục" },
+  { value: "lessons", label: "Bài học lẻ" },
+];
 
 export default function MyLessons() {
   const navigate = useNavigate();
@@ -23,7 +30,6 @@ export default function MyLessons() {
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("all");
 
-  // Modals
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isSelectFolderOpen, setIsSelectFolderOpen] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
@@ -39,13 +45,10 @@ export default function MyLessons() {
         lessonService.getMyLessons(username),
         folderService.getMyFolders(username),
       ]);
-
-      // Calculate lesson counts locally to avoid N+1 server queries and ensure accuracy
       const enrichedFolders = fetchedFolders.map(folder => ({
         ...folder,
-        lessonCount: fetchedLessons.filter(l => l.folderId === folder.id).length
+        lessonCount: fetchedLessons.filter(l => l.folderId === folder.id).length,
       }));
-
       setLessons(fetchedLessons);
       setFolders(enrichedFolders);
     } catch {
@@ -56,285 +59,235 @@ export default function MyLessons() {
   }, [username]);
 
   useEffect(() => {
-    if (username) {
-      fetchData();
-    } else {
-      setError("Vui lòng đăng nhập để xem bài học của bạn.");
-      setLoading(false);
-    }
+    if (username) fetchData();
+    else { setError("Vui lòng đăng nhập để xem bài học của bạn."); setLoading(false); }
   }, [username, fetchData]);
 
   const handleCreateFolder = async (data: CreateFolderData) => {
-    try {
-      await folderService.createFolder(username, data);
-      toast.success("Đã tạo thư mục mới!");
-      fetchData(); // Reload data
-    } catch {
-      toast.error("Không thể tạo thư mục.");
-    }
+    try { await folderService.createFolder(username, data); toast.success("Đã tạo thư mục mới!"); fetchData(); }
+    catch { toast.error("Không thể tạo thư mục."); }
   };
 
   const handleDeleteFolder = async (folderId: string) => {
     try {
-      // Check if folder has lessons
-      const lessonsInFolder = lessons.filter((l) => l.folderId === folderId);
-      if (lessonsInFolder.length > 0) {
-        toast.error(`Không thể xóa thư mục có ${lessonsInFolder.length} bài học. Vui lòng di chuyển bài học ra trước.`);
-        return;
-      }
-
+      const lessonsInFolder = lessons.filter(l => l.folderId === folderId);
+      if (lessonsInFolder.length > 0) { toast.error(`Không thể xóa thư mục có ${lessonsInFolder.length} bài học.`); return; }
       await folderService.deleteFolder(folderId);
-      setFolders(folders.filter((f) => f.id !== folderId));
+      setFolders(folders.filter(f => f.id !== folderId));
       toast.success("Đã xóa thư mục!");
-    } catch {
-      toast.error("Không thể xóa thư mục.");
-    }
+    } catch { toast.error("Không thể xóa thư mục."); }
   };
 
   const handleDeleteLesson = async (id: string) => {
-    try {
-      await lessonService.deleteLessonById(id);
-      setLessons(lessons.filter((l) => l.id !== id));
-      toast.success("Đã xóa bài học!");
-    } catch {
-      toast.error("Không thể xóa bài học.");
-    }
+    try { await lessonService.deleteLessonById(id); setLessons(lessons.filter(l => l.id !== id)); toast.success("Đã xóa bài học!"); }
+    catch { toast.error("Không thể xóa bài học."); }
   };
 
   const handleTogglePrivacy = async (id: string, isPrivate: boolean) => {
-    try {
-      await lessonService.togglePrivacyLesson(id, isPrivate);
-      setLessons(lessons.map((l) => (l.id === id ? { ...l, isPrivate } : l)));
-    } catch {
-      toast.error("Không thể cập nhật trạng thái bài học.");
-      throw new Error("Update failed");
-    }
+    try { await lessonService.togglePrivacyLesson(id, isPrivate); setLessons(lessons.map(l => l.id === id ? { ...l, isPrivate } : l)); }
+    catch { toast.error("Không thể cập nhật trạng thái bài học."); throw new Error("Update failed"); }
   };
 
   const handleMoveToFolder = async (folderId: string | null) => {
     if (!selectedLessonId) return;
-
     try {
       await lessonService.moveLessonToFolder(selectedLessonId, folderId);
-      setLessons(
-        lessons.map((l) => (l.id === selectedLessonId ? { ...l, folderId } : l))
-      );
+      setLessons(lessons.map(l => l.id === selectedLessonId ? { ...l, folderId } : l));
       toast.success(folderId ? "Đã thêm vào thư mục!" : "Đã xóa khỏi thư mục!");
       setSelectedLessonId(null);
-    } catch {
-      toast.error("Không thể di chuyển bài học.");
-    }
+    } catch { toast.error("Không thể di chuyển bài học."); }
   };
 
-  const openMoveToFolder = (lessonId: string) => {
-    setSelectedLessonId(lessonId);
-    setIsSelectFolderOpen(true);
-  };
+  const openMoveToFolder = (lessonId: string) => { setSelectedLessonId(lessonId); setIsSelectFolderOpen(true); };
 
-  // Filter lessons based on view mode
-  const filteredLessons = lessons.filter((lesson) => {
-    if (viewMode === "folders") return false; // Don't show lessons in folders view
-    if (viewMode === "lessons") return !lesson.folderId; // Only show lessons without folder
-    return true; // Show all in "all" mode
+  const filteredLessons = lessons.filter(lesson => {
+    if (viewMode === "folders") return false;
+    if (viewMode === "lessons") return !lesson.folderId;
+    return true;
   });
 
-  const lessonsWithoutFolder = lessons.filter((l) => !l.folderId);
+  const lessonsWithoutFolder = lessons.filter(l => !l.folderId);
+  const sortedLessons = [...filteredLessons].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // Sorting lessons by date (newest first)
-  const sortedLessons = [...filteredLessons].sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-
-  // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
   const lessonsPerPage = 6;
   const totalPages = Math.ceil(sortedLessons.length / lessonsPerPage);
-  const indexOfLastLesson = currentPage * lessonsPerPage;
-  const indexOfFirstLesson = indexOfLastLesson - lessonsPerPage;
-  const currentLessons = sortedLessons.slice(indexOfFirstLesson, indexOfLastLesson);
+  const currentLessons = sortedLessons.slice((currentPage - 1) * lessonsPerPage, currentPage * lessonsPerPage);
 
-  // Reset to page 1 when view mode or lessons change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [viewMode, lessons.length]);
+  useEffect(() => { setCurrentPage(1); }, [viewMode, lessons.length]);
+
+  const tabCounts: Record<ViewMode, number> = {
+    all: lessons.length,
+    folders: folders.length,
+    lessons: lessonsWithoutFolder.length,
+  };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto animate-fade-in space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-blue-700">Bài học của tôi</h1>
-          <p className="text-gray-600 mt-1">
-            {folders.length} thư mục • {lessons.length} bài học
+          <h1 className="text-xl font-semibold text-claude-text">Bài học của tôi</h1>
+          <p className="text-sm text-claude-text-2 mt-0.5">
+            {folders.length} thư mục · {lessons.length} bài học
           </p>
         </div>
-        <button
-          onClick={() => setIsCreateFolderOpen(true)}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-sm"
-        >
-          <span>📁</span> Tạo thư mục mới
-        </button>
-      </div>
-
-      {/* View Mode Tabs */}
-      <div className="flex gap-2 mb-8 border-b border-gray-200">
-        <button
-          onClick={() => setViewMode("all")}
-          className={`px-6 py-3 font-semibold transition ${viewMode === "all"
-            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-            }`}
-        >
-          Tất cả bài học
-        </button>
-        <button
-          onClick={() => setViewMode("folders")}
-          className={`px-6 py-3 font-semibold transition ${viewMode === "folders"
-            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-            }`}
-        >
-          Thư mục ({folders.length})
-        </button>
-        <button
-          onClick={() => setViewMode("lessons")}
-          className={`px-6 py-3 font-semibold transition ${viewMode === "lessons"
-            ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-            : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
-            }`}
-        >
-          Bài học lẻ ({lessonsWithoutFolder.length})
-        </button>
-      </div>
-
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-500 font-medium">Đang tải dữ liệu...</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsCreateFolderOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            Tạo thư mục
+          </button>
+          <button
+            onClick={() => navigate("/create-lesson")}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-claude-accent rounded-claude hover:bg-claude-accent-2 transition-colors shadow-claude-sm"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Tạo bài học
+          </button>
         </div>
-      )}
+      </div>
+
+      {/* Error */}
       {error && (
-        <div className="text-center py-12 bg-red-50 rounded-xl border border-red-100">
-          <p className="text-red-500 font-medium">{error}</p>
-          <button onClick={fetchData} className="mt-4 text-blue-600 hover:underline">Thử lại</button>
+        <div className="p-3 bg-claude-error-light border border-red-200 rounded-claude text-sm text-claude-error flex items-center justify-between">
+          {error}
+          <button onClick={fetchData} className="text-claude-info hover:underline text-xs ml-4">Thử lại</button>
         </div>
       )}
 
-      {!loading && !error && (
-        <div className="space-y-12">
-          {/* Folders Section */}
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 p-1 bg-claude-surface-2 border border-claude-border rounded-claude-md w-fit">
+        {viewModeOptions.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setViewMode(opt.value)}
+            className={`px-3 py-1.5 rounded-claude text-sm font-medium transition-all ${
+              viewMode === opt.value
+                ? 'bg-claude-surface border border-claude-border text-claude-text shadow-claude-sm'
+                : 'text-claude-text-2 hover:text-claude-text'
+            }`}
+          >
+            {opt.label}
+            <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+              viewMode === opt.value ? 'bg-claude-accent-light text-claude-accent' : 'bg-claude-border text-claude-text-3'
+            }`}>
+              {tabCounts[opt.value]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      {loading ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        </div>
+      ) : !error && (
+        <div className="space-y-8">
+          {/* Folders */}
           {(viewMode === "all" || viewMode === "folders") && folders.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <span className="text-blue-600">📁</span> Thư mục của bạn
-                </h2>
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-semibold text-claude-text-2 uppercase tracking-wider">Thư mục</h2>
                 {viewMode === "all" && (
-                  <button onClick={() => setViewMode("folders")} className="text-blue-600 hover:underline font-medium">Xem tất cả</button>
+                  <button onClick={() => setViewMode("folders")} className="text-xs text-claude-accent hover:text-claude-accent-2 transition-colors">
+                    Xem tất cả →
+                  </button>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {folders.map((folder) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {folders.map(folder => (
                   <FolderCard
                     key={folder.id}
                     folder={folder}
-                    onClick={(id) => navigate(`/folder/${id}`)}
-                    onDelete={(id) => setFolderToDelete(id)}
+                    onClick={id => navigate(`/folder/${id}`)}
+                    onDelete={id => setFolderToDelete(id)}
                   />
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Lessons Section */}
-          {(viewMode === "all" || viewMode === "lessons") && currentLessons.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                  <span className="text-blue-600">📚</span> {viewMode === "lessons" ? "Bài học riêng lẻ" : "Tất cả bài học"}
-                </h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentLessons.map((lesson) => (
-                  <LessonCard
-                    key={lesson.id}
-                    lesson={lesson}
-                    onDelete={handleDeleteLesson}
-                    onTogglePrivacy={handleTogglePrivacy}
-                    onEdit={(id) => navigate(`/edit/${id}`)}
-                    onFolderAction={openMoveToFolder}
-                    folderActionLabel="Thêm vào thư mục"
+          {/* Lessons */}
+          {(viewMode === "all" || viewMode === "lessons") && (
+            <section>
+              {viewMode !== "all" && (
+                <div className="mb-4">
+                  <h2 className="text-sm font-semibold text-claude-text-2 uppercase tracking-wider">Bài học riêng lẻ</h2>
+                </div>
+              )}
+              {currentLessons.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {currentLessons.map(lesson => (
+                      <LessonCard
+                        key={lesson.id}
+                        lesson={lesson}
+                        onDelete={handleDeleteLesson}
+                        onTogglePrivacy={handleTogglePrivacy}
+                        onEdit={id => navigate(`/edit/${id}`)}
+                        onFolderAction={openMoveToFolder}
+                        folderActionLabel="Thêm vào thư mục"
+                      />
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-6">
+                      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                    </div>
+                  )}
+                </>
+              ) : viewMode === "lessons" ? (
+                <div className="bg-claude-surface border border-claude-border rounded-claude-md">
+                  <EmptyState
+                    title="Không có bài học riêng lẻ"
+                    description="Tất cả bài học đã được thêm vào thư mục, hoặc bạn chưa tạo bài học nào."
+                    action={{ label: "Tạo bài học mới", onClick: () => navigate("/create-lesson") }}
                   />
-                ))}
-              </div>
-
-              {/* Pagination Controls */}
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                activeColor="bg-blue-600"
-              />
-            </div>
+                </div>
+              ) : null}
+            </section>
           )}
 
-          {/* Empty State */}
+          {/* Overall empty state */}
           {folders.length === 0 && lessons.length === 0 && (
-            <div className="text-center py-12 bg-gray-50 rounded-xl">
-              <p className="text-gray-500 mb-4">Bạn chưa có thư mục hoặc bài học nào</p>
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={() => setIsCreateFolderOpen(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Tạo thư mục
-                </button>
-                <button
-                  onClick={() => navigate("/create")}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Tạo bài học
-                </button>
-              </div>
+            <div className="bg-claude-surface border border-claude-border rounded-claude-md">
+              <EmptyState
+                title="Chưa có thư mục hoặc bài học nào"
+                description="Bắt đầu tạo nội dung học tập của bạn ngay hôm nay!"
+                icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
+                action={{ label: "Tạo bài học đầu tiên", onClick: () => navigate("/create-lesson") }}
+              />
             </div>
           )}
         </div>
       )}
 
       {/* Modals */}
-      <CreateFolderModal
-        isOpen={isCreateFolderOpen}
-        onClose={() => setIsCreateFolderOpen(false)}
-        onSubmit={handleCreateFolder}
-      />
-
+      <CreateFolderModal isOpen={isCreateFolderOpen} onClose={() => setIsCreateFolderOpen(false)} onSubmit={handleCreateFolder} />
       <SelectFolderModal
         isOpen={isSelectFolderOpen}
-        onClose={() => {
-          setIsSelectFolderOpen(false);
-          setSelectedLessonId(null);
-        }}
+        onClose={() => { setIsSelectFolderOpen(false); setSelectedLessonId(null); }}
         onSelect={handleMoveToFolder}
-        currentFolderId={
-          selectedLessonId
-            ? lessons.find((l) => l.id === selectedLessonId)?.folderId
-            : null
-        }
+        currentFolderId={selectedLessonId ? lessons.find(l => l.id === selectedLessonId)?.folderId : null}
         username={username}
       />
-
       <ConfirmModal
         open={!!folderToDelete}
-        title="Xác nhận xóa thư mục"
-        message="Bạn có chắc chắn muốn xóa thư mục này không? Thư mục phải trống mới có thể xóa."
-        onConfirm={() => {
-          if (folderToDelete) {
-            handleDeleteFolder(folderToDelete);
-            setFolderToDelete(null);
-          }
-        }}
+        title="Xóa thư mục"
+        message="Bạn có chắc chắn muốn xóa thư mục này? Thư mục phải trống mới có thể xóa."
+        onConfirm={() => { if (folderToDelete) { handleDeleteFolder(folderToDelete); setFolderToDelete(null); } }}
         onCancel={() => setFolderToDelete(null)}
+        confirmLabel="Xóa"
       />
     </div>
   );

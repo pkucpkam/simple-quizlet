@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSpeechSynthesis } from "../../hooks/useSpeechSynthesis";
+import Button from "../ui/Button";
 
 interface ListenPracticeCard {
   term: string;
@@ -105,14 +106,14 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
   const termChars = vocab.term.split('');
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg px-6 py-8 relative overflow-hidden">
+    <div className="max-w-2xl mx-auto bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude px-6 py-8 relative overflow-hidden animate-fade-in">
       <div className="text-center mb-10">
-        <p className="text-gray-500 font-medium mb-3 uppercase tracking-wide text-sm">Nghe và Gõ lại</p>
-        <div className="flex flex-col items-center justify-center gap-4 bg-blue-50 border border-blue-100 rounded-2xl p-8 shadow-sm">
+        <p className="text-claude-text-3 font-bold mb-3 uppercase tracking-wide text-xs">Nghe và Gõ lại</p>
+        <div className="flex flex-col items-center justify-center gap-4 bg-claude-accent-lighter border border-claude-accent-light rounded-claude-md p-8 shadow-claude-sm">
           <button
             onClick={handleSpeak}
             onMouseDown={(e) => e.preventDefault()}
-            className="p-4 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors group shadow-sm hover:shadow-md active:scale-95"
+            className="p-4 rounded-full bg-claude-accent-light hover:bg-amber-200 transition-colors group shadow-claude-sm active:scale-95"
             title="Phát âm"
             aria-label="Phát âm thuật ngữ"
             type="button"
@@ -123,7 +124,7 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-10 h-10 text-blue-600 group-hover:text-blue-700"
+              className="w-10 h-10 text-claude-accent group-hover:text-claude-accent-2"
             >
               <path
                 strokeLinecap="round"
@@ -132,8 +133,8 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
               />
             </svg>
           </button>
-          <p className="text-sm text-gray-500 font-medium mt-2">
-            Nhấn hoặc <kbd className="px-2 py-1 bg-gray-100 border border-gray-300 rounded-md text-xs mx-1">Ctrl</kbd> để nghe lại
+          <p className="text-sm text-claude-text-2 font-medium mt-2">
+            Nhấn hoặc <kbd className="px-2 py-1 bg-claude-surface-2 border border-claude-border rounded-claude text-xs mx-1 text-claude-text">Ctrl</kbd> để nghe lại
           </p>
         </div>
       </div>
@@ -148,24 +149,24 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
             const userChar = userAnswer[index] || "";
             const displayChar = userChar || (isRevealed ? char : "");
 
-            let borderColor = "border-gray-300";
-            let textColor = "text-gray-800";
-            let bgColor = "bg-white";
+            let borderColor = "border-claude-border";
+            let textColor = "text-claude-text";
+            let bgColor = "bg-claude-surface";
 
             if (showResult) {
               if (isCorrect) {
-                borderColor = "border-green-500 bg-green-50";
-                textColor = "text-green-700";
+                borderColor = "border-claude-success bg-claude-success-light";
+                textColor = "text-claude-success";
               } else {
-                borderColor = "border-red-500 bg-red-50";
-                textColor = "text-red-700";
+                borderColor = "border-claude-error bg-claude-error-light";
+                textColor = "text-claude-error";
               }
             } else if (index === userAnswer.length) {
-              borderColor = "border-blue-500 ring-2 ring-blue-200";
+              borderColor = "border-claude-accent ring-2 ring-claude-accent-light";
             } else if (isRevealed && !userChar) {
-              borderColor = "border-yellow-400";
-              textColor = "text-yellow-600";
-              bgColor = "bg-yellow-50";
+              borderColor = "border-amber-400";
+              textColor = "text-amber-700";
+              bgColor = "bg-claude-accent-lighter";
             }
 
             return (
@@ -173,7 +174,7 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
                 key={index}
                 className={`
                   w-10 h-12 md:w-12 md:h-14 
-                  border-b-4 md:border-b-[4px] border-t-0 border-x-0 rounded-t-md text-3xl font-bold flex items-center justify-center transition-all duration-200
+                  border-b-4 md:border-b-[4px] border-t-0 border-x-0 rounded-t-claude text-3xl font-bold flex items-center justify-center transition-all duration-150
                   ${borderColor} ${textColor} ${bgColor}
                   select-none
                 `}
@@ -206,27 +207,29 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
 
       <div className="flex flex-col items-center gap-4">
         {showResult && isCorrect !== null ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center flex flex-col items-center">
-            <p className={`text-xl font-bold mb-3 ${isCorrect ? "text-green-600" : "text-red-600"}`}>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 text-center flex flex-col items-center space-y-4 w-full">
+            <p className={`text-xl font-bold ${isCorrect ? "text-claude-success" : "text-claude-error"}`}>
               {isCorrect ? "🎉 Chính xác!" : "😔 Tiếc quá!"}
             </p>
             {!isCorrect && (
-              <div className="flex flex-col items-center bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100 w-full max-w-sm">
-                <p className="text-sm text-gray-500 mb-1">Đáp án đúng:</p>
-                <p className="font-bold text-gray-900 text-xl">{vocab.term}</p>
-                <p className="text-gray-600 mt-2 text-sm italic border-t border-gray-200 pt-2 w-full text-center">
+              <div className="flex flex-col items-center bg-claude-surface-2 rounded-claude-md p-4 border border-claude-border w-full max-w-sm shadow-claude-sm">
+                <p className="text-xs text-claude-text-3 font-semibold mb-1 uppercase tracking-wider">Đáp án đúng:</p>
+                <p className="font-bold text-claude-text text-xl">{vocab.term}</p>
+                <p className="text-claude-text-2 mt-2 text-sm italic border-t border-claude-border pt-2 w-full text-center">
                   "{vocab.definition}"
                 </p>
               </div>
             )}
 
             {!isCorrect && (
-              <button
+              <Button
                 onClick={onNext}
-                className="px-8 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5"
+                variant="primary"
+                size="lg"
+                className="px-8"
               >
                 Tiếp theo
-              </button>
+              </Button>
             )}
           </div>
         ) : (
@@ -235,22 +238,23 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
               type="button"
               onClick={handleHint}
               disabled={hints.size >= vocab.term.length - 1}
-              className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 font-medium px-4 py-2 rounded-lg hover:bg-yellow-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 text-amber-700 hover:text-amber-800 font-semibold px-4 py-2 rounded-claude hover:bg-claude-accent-lighter transition disabled:opacity-50 disabled:cursor-not-allowed text-sm select-none"
               title={hints.size >= vocab.term.length - 1 ? "Không thể gợi ý hết toàn bộ từ" : "Hiển thị gợi ý một chữ cái"}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               <span>Gợi ý ({Math.max(0, vocab.term.length - 1 - hints.size)})</span>
             </button>
 
-            <button
+            <Button
               onClick={() => handleSubmit()}
               disabled={!userAnswer}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md hover:shadow-lg transition transform active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
+              variant="primary"
+              className="px-8"
             >
               Kiểm tra
-            </button>
+            </Button>
           </div>
         )}
       </div>

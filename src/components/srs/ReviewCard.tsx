@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SRSCard, ReviewRating } from "../../types/srs";
+import Button from "../ui/Button";
 
 interface Props {
     card: SRSCard;
@@ -33,13 +34,13 @@ export default function ReviewCard({
     const getRatingColor = (rating: ReviewRating) => {
         switch (rating) {
             case "again":
-                return "bg-red-500 hover:bg-red-600";
+                return "bg-claude-error hover:bg-red-700";
             case "hard":
-                return "bg-orange-500 hover:bg-orange-600";
+                return "bg-claude-accent hover:bg-claude-accent-2";
             case "good":
-                return "bg-green-500 hover:bg-green-600";
+                return "bg-claude-success hover:bg-green-700";
             case "easy":
-                return "bg-blue-500 hover:bg-blue-600";
+                return "bg-claude-info hover:bg-blue-700";
         }
     };
 
@@ -57,7 +58,6 @@ export default function ReviewCard({
     };
 
     const getRatingInterval = (rating: ReviewRating) => {
-        // Simplified interval display
         switch (rating) {
             case "again":
                 return "< 1 ngày";
@@ -71,18 +71,18 @@ export default function ReviewCard({
     };
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto animate-fade-in">
             {/* Progress */}
             <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-sm text-claude-text-2 mb-2 font-medium">
                     <span>
                         Thẻ {currentIndex + 1} / {totalCards}
                     </span>
                     <span>Độ khó: {card.easeFactor.toFixed(1)}</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-claude-border rounded-full h-2 overflow-hidden">
                     <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-claude-accent h-2 rounded-full transition-all duration-300"
                         style={{ width: `${((currentIndex + 1) / totalCards) * 100}%` }}
                     />
                 </div>
@@ -90,78 +90,77 @@ export default function ReviewCard({
 
             {/* Card */}
             <div
-                className={`relative bg-white rounded-2xl shadow-2xl p-8 min-h-[400px] flex flex-col justify-center items-center transition-all duration-500 ${isFlipped ? "transform" : ""
-                    }`}
+                className={`relative bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude-md p-8 min-h-[360px] flex flex-col justify-center items-center transition-all duration-500 ${isFlipped ? "transform" : ""}`}
             >
                 {/* Front - Question */}
                 {!showAnswer && (
                     <div className="text-center">
                         <div className="mb-4">
-                            <span className="text-sm text-gray-500 uppercase tracking-wide">
+                            <span className="text-xs text-claude-text-3 font-bold uppercase tracking-wider">
                                 Từ vựng
                             </span>
                         </div>
-                        <h2 className="text-5xl font-bold text-gray-800 mb-8">{card.word}</h2>
+                        <h2 className="text-5xl font-bold text-claude-text mb-8">{card.word}</h2>
 
                         {/* Statistics */}
-                        <div className="flex gap-6 justify-center text-sm text-gray-600 mb-8">
+                        <div className="flex gap-8 justify-center text-sm text-claude-text-2 mb-8">
                             <div>
-                                <span className="block text-2xl font-bold text-blue-600">
+                                <span className="block text-2xl font-bold text-claude-accent">
                                     {card.totalReviews}
                                 </span>
-                                <span>Lần ôn</span>
+                                <span className="text-xs text-claude-text-3">Lần ôn</span>
                             </div>
                             <div>
-                                <span className="block text-2xl font-bold text-green-600">
+                                <span className="block text-2xl font-bold text-claude-success">
                                     {card.streak}
                                 </span>
-                                <span>Streak</span>
+                                <span className="text-xs text-claude-text-3">Streak</span>
                             </div>
                             <div>
-                                <span className="block text-2xl font-bold text-purple-600">
+                                <span className="block text-2xl font-bold text-claude-info">
                                     {card.totalReviews > 0
                                         ? Math.round((card.correctCount / card.totalReviews) * 100)
                                         : 0}
                                     %
                                 </span>
-                                <span>Chính xác</span>
+                                <span className="text-xs text-claude-text-3">Chính xác</span>
                             </div>
                         </div>
 
-                        <button
+                        <Button
                             onClick={handleShowAnswer}
-                            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-lg font-semibold"
+                            variant="primary"
+                            size="lg"
+                            className="px-8 py-3 text-base"
                         >
                             Hiện đáp án
-                        </button>
+                        </Button>
                     </div>
                 )}
 
                 {/* Back - Answer */}
                 {showAnswer && (
-                    <div className="text-center w-full">
+                    <div className="text-center w-full animate-fade-in">
                         <div className="mb-4">
-                            <span className="text-sm text-gray-500 uppercase tracking-wide">
+                            <span className="text-xs text-claude-text-3 font-bold uppercase tracking-wider">
                                 Nghĩa
                             </span>
                         </div>
-                        <h2 className="text-4xl font-bold text-gray-800 mb-2">{card.word}</h2>
-                        <p className="text-3xl text-gray-600 mb-8">{card.definition}</p>
+                        <h2 className="text-4xl font-bold text-claude-text mb-2">{card.word}</h2>
+                        <p className="text-3xl text-claude-text-2 mb-8 font-medium">{card.definition}</p>
 
                         {/* Rating Buttons */}
-                        <div className="space-y-3">
-                            <p className="text-sm text-gray-600 mb-4">Bạn nhớ từ này như thế nào?</p>
+                        <div className="space-y-3 max-w-md mx-auto">
+                            <p className="text-sm text-claude-text-3 font-medium mb-4">Bạn nhớ từ này như thế nào?</p>
                             <div className="grid grid-cols-2 gap-3">
                                 {(["again", "hard", "good", "easy"] as ReviewRating[]).map((rating) => (
                                     <button
                                         key={rating}
                                         onClick={() => handleReview(rating)}
-                                        className={`${getRatingColor(
-                                            rating
-                                        )} text-white px-6 py-4 rounded-lg transition transform hover:scale-105 shadow-lg`}
+                                        className={`${getRatingColor(rating)} text-white px-4 py-3 rounded-claude-md transition transform active:scale-95 shadow-claude-sm`}
                                     >
-                                        <div className="font-bold text-lg">{getRatingLabel(rating)}</div>
-                                        <div className="text-sm opacity-90">{getRatingInterval(rating)}</div>
+                                        <div className="font-bold text-base">{getRatingLabel(rating)}</div>
+                                        <div className="text-xs opacity-90 mt-0.5">{getRatingInterval(rating)}</div>
                                     </button>
                                 ))}
                             </div>
@@ -171,10 +170,10 @@ export default function ReviewCard({
             </div>
 
             {/* Info */}
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <div className="mt-6 text-center text-sm text-claude-text-3 font-medium">
                 <p>
                     Lần ôn tiếp theo:{" "}
-                    <span className="font-semibold">
+                    <span className="font-semibold text-claude-text-2">
                         {card.nextReview.toLocaleDateString("vi-VN")}
                     </span>
                 </p>

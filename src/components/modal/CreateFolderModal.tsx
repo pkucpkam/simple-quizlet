@@ -1,5 +1,8 @@
 import { useState } from "react";
 import type { CreateFolderData } from "../../types/folder";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
 
 interface Props {
     isOpen: boolean;
@@ -29,8 +32,6 @@ export default function CreateFolderModal({ isOpen, onClose, onSubmit, initialDa
     const [icon, setIcon] = useState(initialData?.icon || "📁");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    if (!isOpen) return null;
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -56,135 +57,128 @@ export default function CreateFolderModal({ isOpen, onClose, onSubmit, initialDa
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                        {isEdit ? "Chỉnh sửa thư mục" : "Tạo thư mục mới"}
-                    </h2>
+        <Modal
+            open={isOpen}
+            onClose={onClose}
+            title={isEdit ? "Chỉnh sửa thư mục" : "Tạo thư mục mới"}
+            size="md"
+        >
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Tên thư mục */}
+                <Input
+                    label="Tên thư mục *"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="VD: Tiếng Anh giao tiếp"
+                    maxLength={50}
+                    required
+                />
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Tên thư mục */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Tên thư mục <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="VD: Tiếng Anh giao tiếp"
-                                maxLength={50}
-                                required
-                            />
-                        </div>
-
-                        {/* Mô tả */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Mô tả
-                            </label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                placeholder="Mô tả ngắn về thư mục này..."
-                                rows={3}
-                                maxLength={200}
-                            />
-                        </div>
-
-                        {/* Chọn icon */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Chọn biểu tượng
-                            </label>
-                            <div className="grid grid-cols-6 gap-2">
-                                {PRESET_ICONS.map((presetIcon) => (
-                                    <button
-                                        key={presetIcon}
-                                        type="button"
-                                        onClick={() => setIcon(presetIcon)}
-                                        className={`text-2xl p-3 rounded-lg border-2 transition-all ${icon === presetIcon
-                                                ? "border-blue-500 bg-blue-50 scale-110"
-                                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                                            }`}
-                                    >
-                                        {presetIcon}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Chọn màu */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Chọn màu sắc
-                            </label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {PRESET_COLORS.map((presetColor) => (
-                                    <button
-                                        key={presetColor.value}
-                                        type="button"
-                                        onClick={() => setColor(presetColor.value)}
-                                        className={`p-3 rounded-lg border-2 transition-all ${color === presetColor.value
-                                                ? "border-gray-800 scale-105"
-                                                : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                        style={{ backgroundColor: presetColor.value }}
-                                        title={presetColor.name}
-                                    >
-                                        {color === presetColor.value && (
-                                            <span className="text-white text-lg">✓</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Preview */}
-                        <div className="bg-gray-50 p-4 rounded-lg border-2 border-dashed border-gray-300">
-                            <p className="text-xs text-gray-500 mb-2">Xem trước:</p>
-                            <div
-                                className="bg-white p-4 rounded-lg border-l-4 shadow-sm"
-                                style={{ borderLeftColor: color }}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className="text-3xl">{icon}</span>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-800">
-                                            {name || "Tên thư mục"}
-                                        </h3>
-                                        <p className="text-sm text-gray-600">
-                                            {description || "Mô tả thư mục"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="flex gap-3 pt-4">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                                disabled={isSubmitting}
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? "Đang xử lý..." : isEdit ? "Cập nhật" : "Tạo thư mục"}
-                            </button>
-                        </div>
-                    </form>
+                {/* Mô tả */}
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-claude-text">
+                        Mô tả
+                    </label>
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full bg-claude-surface border border-claude-border rounded-claude text-sm text-claude-text placeholder:text-claude-text-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors duration-150 resize-none"
+                        placeholder="Mô tả ngắn về thư mục này..."
+                        rows={3}
+                        maxLength={200}
+                    />
                 </div>
-            </div>
-        </div>
+
+                {/* Chọn icon */}
+                <div>
+                    <label className="block text-sm font-medium text-claude-text mb-2">
+                        Chọn biểu tượng
+                    </label>
+                    <div className="grid grid-cols-6 gap-2">
+                        {PRESET_ICONS.map((presetIcon) => (
+                            <button
+                                key={presetIcon}
+                                type="button"
+                                onClick={() => setIcon(presetIcon)}
+                                className={`text-2xl p-3 rounded-claude border-2 transition-all ${icon === presetIcon
+                                        ? "border-claude-accent bg-claude-accent-lighter scale-110"
+                                        : "border-claude-border hover:border-claude-border-strong hover:bg-claude-surface-2"
+                                    }`}
+                            >
+                                {presetIcon}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Chọn màu */}
+                <div>
+                    <label className="block text-sm font-medium text-claude-text mb-2">
+                        Chọn màu sắc
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                        {PRESET_COLORS.map((presetColor) => (
+                            <button
+                                key={presetColor.value}
+                                type="button"
+                                onClick={() => setColor(presetColor.value)}
+                                className={`p-3 rounded-claude border-2 transition-all ${color === presetColor.value
+                                        ? "border-claude-text-2 scale-105"
+                                        : "border-claude-border hover:border-claude-border-strong"
+                                    }`}
+                                style={{ backgroundColor: presetColor.value }}
+                                title={presetColor.name}
+                            >
+                                {color === presetColor.value && (
+                                    <span className="text-white text-lg">✓</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Preview */}
+                <div className="bg-claude-surface-2 p-4 rounded-claude border-2 border-dashed border-claude-border">
+                    <p className="text-xs text-claude-text-2 mb-2">Xem trước:</p>
+                    <div
+                        className="bg-claude-surface p-4 rounded-claude border-l-4 shadow-claude-sm"
+                        style={{ borderLeftColor: color }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-3xl">{icon}</span>
+                            <div>
+                                <h3 className="font-semibold text-claude-text">
+                                    {name || "Tên thư mục"}
+                                </h3>
+                                <p className="text-sm text-claude-text-2">
+                                    {description || "Mô tả thư mục"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-2">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={onClose}
+                        className="flex-1"
+                        disabled={isSubmitting}
+                    >
+                        Hủy
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        className="flex-1"
+                        loading={isSubmitting}
+                    >
+                        {isEdit ? "Cập nhật" : "Tạo thư mục"}
+                    </Button>
+                </div>
+            </form>
+        </Modal>
     );
 }

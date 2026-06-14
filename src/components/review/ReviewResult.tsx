@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "../ui/Button";
 
 interface ReviewResultProps {
   correctAnswers: number;
@@ -17,28 +18,30 @@ const ReviewResult: React.FC<ReviewResultProps> = ({ correctAnswers, totalQuesti
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl shadow-lg p-8 text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+    <div className="max-w-2xl mx-auto p-6 animate-fade-in">
+      <div className="bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude p-8 text-center">
+        <h1 className="text-3xl font-bold text-claude-text mb-4">
           Hoàn thành ôn tập!
         </h1>
-        <div className="mb-6">
-          <p className="text-2xl text-gray-700 mb-2">
+        <div className="mb-8 space-y-2">
+          <p className="text-xl text-claude-text-2">
             Bạn đã trả lời đúng{" "}
-            <span className="font-bold text-blue-600">{correctAnswers}</span> / {totalQuestions} câu hỏi
+            <span className="font-bold text-claude-accent">{correctAnswers}</span> / {totalQuestions} câu hỏi
           </p>
-          <p className="text-2xl text-gray-700 mb-4">
-            Tỷ lệ chính xác: <span className="font-bold text-blue-600">{accuracy}%</span>
+          <p className="text-xl text-claude-text-2">
+            Tỷ lệ chính xác: <span className="font-bold text-claude-accent">{accuracy}%</span>
           </p>
-          <p className="text-xl text-gray-600 italic">{getEncouragementMessage()}</p>
+          <p className="text-base text-claude-text-3 italic pt-2">{getEncouragementMessage()}</p>
         </div>
         <div className="flex justify-center">
-          <button
+          <Button
             onClick={onRestart}
-            className="block rounded-md bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700"
+            variant="primary"
+            size="lg"
+            className="px-8"
           >
             Ôn tập lại
-          </button>
+          </Button>
         </div>
       </div>
     </div>

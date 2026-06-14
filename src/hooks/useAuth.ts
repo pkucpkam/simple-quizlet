@@ -8,6 +8,7 @@ export interface AuthUser {
   username: string;
   email: string | null;
   role: string;
+  photoURL?: string | null;
   isLoggedIn: boolean;
 }
 
@@ -33,6 +34,7 @@ export const useAuth = () => {
             username: userInfo.username,
             email: firebaseUser.email,
             role: userInfo.role || 'USER',
+            photoURL: userInfo.photoURL || null,
             isLoggedIn: true,
           };
           setUser(userData);

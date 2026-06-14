@@ -2,46 +2,76 @@ import React, { useState, useEffect } from 'react';
 import type { StudySession, StudyStats } from '../types/history';
 import { historyService } from '../service/historyService';
 import StudyHistoryCard from '../components/StudyHistoryCard';
+import { SkeletonCard } from '../components/ui/Skeleton';
+import EmptyState from '../components/ui/EmptyState';
 
+type FilterMode = 'all' | 'flashcard' | 'review' | 'test';
+
+const filterOptions: { value: FilterMode; label: string }[] = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'flashcard', label: 'Thẻ ghi nhớ' },
+  { value: 'review', label: 'Ôn tập' },
+  { value: 'test', label: 'Kiểm tra' },
+];
+
+interface MetricCardProps {
+  emoji: string;
+  label: string;
+  time: string;
+  sessions: number;
+  accent: string;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({ emoji, label, time, sessions, accent }) => (
+  <div className={`bg-claude-surface border border-claude-border rounded-claude-md p-5 shadow-claude-sm hover:shadow-claude transition-shadow`}>
+    <div className="flex items-start justify-between mb-3">
+      <span className="text-2xl">{emoji}</span>
+      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${accent}`}>
+        {sessions} phiên
+      </span>
+    </div>
+    <p className="text-xs font-medium text-claude-text-2 mb-1">{label}</p>
+    <p className="text-2xl font-bold text-claude-text">{time}</p>
+  </div>
+);
 
 const StudyHistory: React.FC = () => {
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [sessions, setSessions] = useState<StudySession[]>([]);
   const [stats, setStats] = useState<StudyStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'flashcard' | 'review' | 'test'>('all');
+  const [filter, setFilter] = useState<FilterMode>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
+
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m`;
+    return `${seconds}s`;
+  };
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user");
     if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        setUser(parsed);
-      } catch {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
+      try { setUser(JSON.parse(storedUser)); } catch { setUser(null); }
+    } else { setUser(null); }
   }, []);
 
   useEffect(() => {
     const fetchHistory = async () => {
-      if (!user) {
-        return;
-      }
-
+      if (!user) return;
       setLoading(true);
       const history = await historyService.getUserStudyHistory(user.uid);
       setSessions(history);
       setStats(historyService.getStudyStats(history));
       setLoading(false);
     };
-
     fetchHistory();
   }, [user]);
+
+  useEffect(() => { setCurrentPage(1); }, [filter]);
 
   const filteredSessions = sessions.filter(session => {
     if (filter === 'all') return true;
@@ -51,188 +81,130 @@ const StudyHistory: React.FC = () => {
     return false;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-  const currentSessions = filteredSessions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter]);
-
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
-  };
+  const currentSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (!user) {
     return (
-      <div className="max-w-2xl mx-auto p-6 text-center">
-        <h1 className="text-3xl font-bold text-blue-700 mb-4">Lịch sử học tập</h1>
-        <p className="text-red-500 text-lg">
-          Bạn cần <a href="/login" className="underline text-blue-600">đăng nhập</a> để xem lịch sử học tập.
+      <div className="p-6 max-w-lg mx-auto text-center py-24">
+        <p className="text-sm text-claude-text-2">
+          Bạn cần <a href="/login" className="text-claude-accent hover:underline">đăng nhập</a> để xem lịch sử học tập.
         </p>
       </div>
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Lịch sử học tập</h1>
+    <div className="p-6 max-w-6xl mx-auto animate-fade-in space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-semibold text-claude-text">Lịch sử học tập</h1>
+        <p className="text-sm text-claude-text-2 mt-0.5">Theo dõi tiến độ và thống kê học tập của bạn</p>
+      </div>
 
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Flashcards */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">🃏</span>
-                <h3 className="text-lg font-semibold text-blue-800">Thẻ ghi nhớ (Flashcards)</h3>
-              </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-sm text-blue-600 mb-1">Thời gian học</p>
-                  <p className="text-3xl font-bold text-blue-700">{formatTime(stats.flashcardStats?.timeSpent || 0)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-blue-600 mb-1">Số lần học</p>
-                  <p className="text-2xl font-bold text-blue-700">{stats.flashcardStats?.sessions || 0}</p>
-                </div>
-              </div>
-            </div>
+      {/* Stats Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+        </div>
+      ) : stats ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MetricCard
+            emoji="🃏"
+            label="Thẻ ghi nhớ"
+            time={formatTime(stats.flashcardStats?.timeSpent || 0)}
+            sessions={stats.flashcardStats?.sessions || 0}
+            accent="bg-claude-info-light text-claude-info"
+          />
+          <MetricCard
+            emoji="🧠"
+            label="Ôn tập (Review/SRS)"
+            time={formatTime(stats.reviewStats?.timeSpent || 0)}
+            sessions={stats.reviewStats?.sessions || 0}
+            accent="bg-purple-50 text-purple-600"
+          />
+          <MetricCard
+            emoji="📝"
+            label="Kiểm tra (Test)"
+            time={formatTime(stats.testStats?.timeSpent || 0)}
+            sessions={stats.testStats?.sessions || 0}
+            accent="bg-claude-success-light text-claude-success"
+          />
+        </div>
+      ) : null}
 
-            {/* Review */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-sm border border-purple-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">🧠</span>
-                <h3 className="text-lg font-semibold text-purple-800">Ôn tập (Review/SRS)</h3>
-              </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-sm text-purple-600 mb-1">Thời gian học</p>
-                  <p className="text-3xl font-bold text-purple-700">{formatTime(stats.reviewStats?.timeSpent || 0)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-purple-600 mb-1">Số lần ôn</p>
-                  <p className="text-2xl font-bold text-purple-700">{stats.reviewStats?.sessions || 0}</p>
-                </div>
-              </div>
-            </div>
+      {/* Filter tabs */}
+      <div className="flex items-center gap-1 p-1 bg-claude-surface-2 border border-claude-border rounded-claude-md w-fit">
+        {filterOptions.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => setFilter(opt.value)}
+            className={`px-3 py-1.5 rounded-claude text-sm font-medium transition-all ${
+              filter === opt.value
+                ? 'bg-claude-surface border border-claude-border text-claude-text shadow-claude-sm'
+                : 'text-claude-text-2 hover:text-claude-text'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
 
-            {/* Test */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-2xl">📝</span>
-                <h3 className="text-lg font-semibold text-green-800">Kiểm tra (Test)</h3>
-              </div>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-sm text-green-600 mb-1">Thời gian làm</p>
-                  <p className="text-3xl font-bold text-green-700">{formatTime(stats.testStats?.timeSpent || 0)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-green-600 mb-1">Số thẻ kiểm tra</p>
-                  <p className="text-2xl font-bold text-green-700">{stats.testStats?.sessions || 0}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Filter Buttons */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex space-x-2">
-            {[
-              { value: 'all', label: 'Tất cả' },
-              { value: 'flashcard', label: 'Thẻ ghi nhớ' },
-              { value: 'review', label: 'Ôn tập' },
-              { value: 'test', label: 'Kiểm tra' }
-            ].map((filterOption) => (
-              <button
-                key={filterOption.value}
-                onClick={() => setFilter(filterOption.value as 'all' | 'flashcard' | 'review' | 'test')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === filterOption.value
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 bg-gray-100 hover:bg-gray-200'
-                  }`}
-              >
-                {filterOption.label}
-              </button>
+      {/* Session Cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : currentSessions.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {currentSessions.map((session) => (
+              <StudyHistoryCard key={session.id} session={session} />
             ))}
           </div>
-        </div>
 
-        {/* Study Sessions */}
-        {currentSessions.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {currentSessions.map((session) => (
-                <StudyHistoryCard key={session.id} session={session} />
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 pt-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="h-8 px-3 text-xs font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ←
+              </button>
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-claude text-xs font-medium transition-colors ${
+                    currentPage === i + 1
+                      ? 'bg-claude-accent text-white border border-claude-accent'
+                      : 'bg-claude-surface text-claude-text-2 border border-claude-border hover:bg-claude-surface-2'
+                  }`}
+                >
+                  {i + 1}
+                </button>
               ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="h-8 px-3 text-xs font-medium text-claude-text-2 border border-claude-border rounded-claude bg-claude-surface hover:bg-claude-surface-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                →
+              </button>
             </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center space-x-2 pb-8">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 border rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                >
-                  Trước
-                </button>
-
-                <div className="flex space-x-1">
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-10 h-10 rounded-md text-sm font-medium transition-colors ${currentPage === i + 1
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-700 border hover:bg-gray-50'
-                        }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 border rounded-md bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                >
-                  Sau
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có lịch sử học tập</h3>
-            <p className="text-gray-500">Bắt đầu học để xem lịch sử tại đây!</p>
-          </div>
-        )}
-      </div>
+          )}
+        </>
+      ) : (
+        <div className="bg-claude-surface border border-claude-border rounded-claude-md">
+          <EmptyState
+            title="Chưa có lịch sử học tập"
+            description="Bắt đầu học một bài học để thấy lịch sử tại đây!"
+            icon={<svg className="h-10 w-10 text-claude-text-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+          />
+        </div>
+      )}
     </div>
   );
 };

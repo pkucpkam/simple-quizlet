@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import type { VocabItem } from "../../service/lessonService";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
 
 interface AddVocabModalProps {
   open: boolean;
@@ -34,8 +37,6 @@ export default function AddVocabModal({ open, onClose, onAdd, WORD_TYPES }: AddV
       setValidationError("");
     }
   }, [open]);
-
-  if (!open) return null;
 
   const handleAdd = (keepOpen: boolean) => {
     setValidationError("");
@@ -77,156 +78,110 @@ export default function AddVocabModal({ open, onClose, onAdd, WORD_TYPES }: AddV
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col overflow-hidden transform transition-all duration-300 scale-100"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                ➕ Thêm từ vựng mới
-              </h2>
-              <p className="text-blue-100 text-xs mt-1">
-                Nhập chi tiết từ vựng để thêm vào bài học của bạn
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white/70 hover:text-white transition-colors text-2xl"
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="➕ Thêm từ vựng mới"
+      size="md"
+    >
+      <div className="space-y-4">
+        {validationError && (
+          <div className="bg-claude-error-light border border-claude-error/20 text-claude-error rounded-claude px-4 py-2.5 text-sm font-medium">
+            ⚠️ {validationError}
+          </div>
+        )}
+
+        {/* Word & Definition */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            ref={firstInputRef}
+            label="Từ vựng *"
+            placeholder="e.g. abandon"
+            value={word}
+            onChange={(e) => setWord(e.target.value)}
+            className="font-semibold"
+          />
+
+          <Input
+            label="Nghĩa tiếng Việt *"
+            placeholder="e.g. từ bỏ, bỏ rơi"
+            value={definition}
+            onChange={(e) => setDefinition(e.target.value)}
+          />
+        </div>
+
+        {/* IPA & Word Type */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Phiên âm (IPA)"
+            placeholder="e.g. /əˈbændən/"
+            value={ipa}
+            onChange={(e) => setIpa(e.target.value)}
+            className="font-mono text-claude-accent"
+          />
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-claude-text">
+              Loại từ
+            </label>
+            <select
+              className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-accent focus:border-transparent transition-colors duration-150"
+              value={wordType}
+              onChange={(e) => setWordType(e.target.value)}
             >
-              ✕
-            </button>
+              <option value="">-- Chọn loại từ --</option>
+              {WORD_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {validationError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-2.5 text-sm font-medium">
-              ⚠️ {validationError}
-            </div>
-          )}
+        {/* Example EN */}
+        <Input
+          label="Ví dụ tiếng Anh"
+          placeholder="e.g. He abandoned his car on the highway."
+          value={exampleEn}
+          onChange={(e) => setExampleEn(e.target.value)}
+        />
 
-          {/* Word & Definition */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-                Từ vựng <span className="text-red-500">*</span>
-              </label>
-              <input
-                ref={firstInputRef}
-                type="text"
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors font-semibold text-gray-800 text-sm"
-                placeholder="e.g. abandon"
-                value={word}
-                onChange={(e) => setWord(e.target.value)}
-              />
-            </div>
+        {/* Example VI */}
+        <Input
+          label="Ví dụ tiếng Việt"
+          placeholder="e.g. Anh ấy đã bỏ lại xe của mình trên đường cao tốc."
+          value={exampleVi}
+          onChange={(e) => setExampleVi(e.target.value)}
+        />
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-                Nghĩa tiếng Việt <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors text-gray-800 text-sm"
-                placeholder="e.g. từ bỏ, bỏ rơi"
-                value={definition}
-                onChange={(e) => setDefinition(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* IPA & Word Type */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-                Phiên âm (IPA)
-              </label>
-              <input
-                type="text"
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors font-mono text-blue-600 text-sm"
-                placeholder="e.g. /əˈbændən/"
-                value={ipa}
-                onChange={(e) => setIpa(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-                Loại từ
-              </label>
-              <select
-                className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors text-gray-700 bg-white text-sm"
-                value={wordType}
-                onChange={(e) => setWordType(e.target.value)}
-              >
-                <option value="">-- Chọn loại từ --</option>
-                {WORD_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Example EN */}
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-              Ví dụ tiếng Anh
-            </label>
-            <input
-              type="text"
-              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors text-gray-700 text-sm"
-              placeholder="e.g. He abandoned his car on the highway."
-              value={exampleEn}
-              onChange={(e) => setExampleEn(e.target.value)}
-            />
-          </div>
-
-          {/* Example VI */}
-          <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wider">
-              Ví dụ tiếng Việt
-            </label>
-            <input
-              type="text"
-              className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 transition-colors text-gray-700 text-sm"
-              placeholder="e.g. Anh ấy đã bỏ lại xe của mình trên đường cao tốc."
-              value={exampleVi}
-              onChange={(e) => setExampleVi(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between flex-shrink-0">
-          <button
+        {/* Footer buttons */}
+        <div className="border-t border-claude-border pt-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between mt-6">
+          <Button
+            variant="secondary"
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-bold hover:bg-gray-100 transition-colors text-sm"
+            className="w-full sm:w-auto"
           >
             Huỷ
-          </button>
+          </Button>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button
+            <Button
+              variant="outline"
               onClick={() => handleAdd(true)}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border-2 border-blue-200 text-blue-600 font-bold hover:bg-blue-50 transition-colors text-sm"
+              className="w-full sm:w-auto border-claude-accent text-claude-accent hover:bg-claude-accent-lighter"
             >
               🔄 Thêm &amp; Tiếp tục
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => handleAdd(false)}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100 transition-colors text-sm"
+              className="w-full sm:w-auto"
             >
-              ✅ Thêm
-            </button>
+              Thêm
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
