@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { lessonService, type VocabItem, type Lesson } from "../service/lessonService";
 import { toast } from "react-hot-toast";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 
 const LessonView: React.FC = () => {
     const { lessonId } = useParams<{ lessonId: string }>();
@@ -10,6 +11,7 @@ const LessonView: React.FC = () => {
     const [words, setWords] = useState<VocabItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<{ email: string; username?: string } | null>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
     useEffect(() => {
         const storedUser = sessionStorage.getItem("user");
@@ -130,7 +132,7 @@ const LessonView: React.FC = () => {
                         Flashcards
                     </button>
                     <button
-                        onClick={() => navigate(`/review/${lesson.id}`)}
+                        onClick={() => setIsReviewModalOpen(true)}
                         className="flex-1 min-w-[180px] bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg shadow-emerald-100"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -233,6 +235,12 @@ const LessonView: React.FC = () => {
                     </p>
                 </div>
             </div>
+
+            <ExerciseSelectionModal
+                open={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                lessonId={lesson.id}
+            />
         </div>
     );
 };

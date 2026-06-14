@@ -12,10 +12,11 @@ const exerciseTypes = [
   { id: "reverse", name: "Trắc nghiệm ngược", description: "Chọn từ vựng cho nghĩa đúng", icon: "🔄" },
   { id: "practice", name: "Gõ lại", description: "Gõ từ vựng theo nghĩa", icon: "⌨️" },
   { id: "matching", name: "Ghép thẻ", description: "Ghép từ và nghĩa tương ứng", icon: "🧩" },
+  { id: "listen", name: "Nghe và gõ", description: "Nghe từ vựng và gõ lại", icon: "🎧" },
 ];
 
 export default function ExerciseSelectionModal({ open, onClose, lessonId }: ExerciseSelectionModalProps) {
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(["normal", "reverse", "practice", "matching"]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["normal", "reverse", "practice", "matching", "listen"]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function ExerciseSelectionModal({ open, onClose, lessonId }: Exer
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div 
+      <div
         className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300"
         onClick={(e) => e.stopPropagation()}
       >
@@ -54,7 +55,7 @@ export default function ExerciseSelectionModal({ open, onClose, lessonId }: Exer
         <div className="bg-gradient-to-r from-green-600 to-green-500 p-6 text-white relative">
           <h2 className="text-2xl font-bold">🎯 Chọn chế độ ôn tập</h2>
           <p className="text-green-50 opacity-90 text-sm mt-1">Cá nhân hóa trải nghiệm học tập của bạn</p>
-          <button 
+          <button
             onClick={onClose}
             className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors"
           >
@@ -70,11 +71,10 @@ export default function ExerciseSelectionModal({ open, onClose, lessonId }: Exer
                 <div
                   key={type.id}
                   onClick={() => toggleType(type.id)}
-                  className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group hover:shadow-md ${
-                    selectedTypes.includes(type.id)
-                      ? "border-green-500 bg-green-50"
-                      : "border-gray-100 bg-white hover:border-green-200"
-                  }`}
+                  className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group hover:shadow-md ${selectedTypes.includes(type.id)
+                    ? "border-green-500 bg-green-50"
+                    : "border-gray-100 bg-white hover:border-green-200"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-2xl bg-white p-2 rounded-xl shadow-sm border border-gray-50">
@@ -86,26 +86,24 @@ export default function ExerciseSelectionModal({ open, onClose, lessonId }: Exer
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">{type.description}</p>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      selectedTypes.includes(type.id) 
-                        ? "bg-green-500 border-green-500 text-white" 
-                        : "border-gray-200"
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${selectedTypes.includes(type.id)
+                      ? "bg-green-500 border-green-500 text-white"
+                      : "border-gray-200"
+                      }`}>
                       {selectedTypes.includes(type.id) && <span className="text-xs">✓</span>}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            
+
             <button
               onClick={handleStartReview}
               disabled={selectedTypes.length === 0}
-              className={`w-full mt-6 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-95 ${
-                selectedTypes.length > 0
-                  ? "bg-green-600 text-white hover:bg-green-700 shadow-green-200"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
-              }`}
+              className={`w-full mt-6 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-95 ${selectedTypes.length > 0
+                ? "bg-green-600 text-white hover:bg-green-700 shadow-green-200"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
             >
               Bắt đầu Học ngay 🚀
             </button>

@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Quiz from "../components/review/Quiz";
 import QuizReverse from "../components/review/QuizReverse";
 import Practice from "../components/review/Practice";
+import ListenPractice from "../components/review/ListenPractice";
 import MatchingGame from "../components/review/MatchingGame";
 import { lessonService } from "../service/lessonService";
 import ReviewResult from "../components/review/ReviewResult";
@@ -12,7 +13,7 @@ import LoadingScreen from "../components/common/LoadingScreen";
 
 import { useSearchParams } from "react-router-dom";
 
-const allQuizTypes = ["normal", "reverse", "practice", "matching"] as const;
+const allQuizTypes = ["normal", "reverse", "practice", "matching", "listen"] as const;
 type QuizType = (typeof allQuizTypes)[number];
 
 const ReviewPage = () => {
@@ -32,7 +33,7 @@ const ReviewPage = () => {
 
 
   const [searchParams] = useSearchParams();
-  const [quizTypes, setQuizTypes] = useState<QuizType[]>(["normal", "reverse", "practice", "matching"]);
+  const [quizTypes, setQuizTypes] = useState<QuizType[]>(["normal", "reverse", "practice", "matching", "listen"]);
   const [quizType, setQuizType] = useState<QuizType>("normal");
 
   const WORDS_PER_SESSION = 5;
@@ -175,6 +176,15 @@ const ReviewPage = () => {
 
       {quizType === "practice" && (
         <Practice
+          vocab={currentWord}
+          onAnswer={handleAnswer}
+          showResult={showResult}
+          onNext={handleNext}
+        />
+      )}
+
+      {quizType === "listen" && (
+        <ListenPractice
           vocab={currentWord}
           onAnswer={handleAnswer}
           showResult={showResult}

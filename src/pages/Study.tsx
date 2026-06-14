@@ -6,6 +6,7 @@ import { lessonService, type VocabItem } from "../service/lessonService";
 import { historyService } from "../service/historyService";
 import { srsService } from "../service/srsService";
 import toast from "react-hot-toast";
+import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 
 interface FlashcardData {
   id: string;
@@ -71,6 +72,7 @@ const Study: React.FC = () => {
   const vocabId = location.state?.vocabId || lessonId;
   const [lessonTitle, setLessonTitle] = useState(location.state?.lessonTitle || "");
   const [startTime] = useState(Date.now());
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchVocab = async () => {
@@ -222,7 +224,7 @@ const Study: React.FC = () => {
 
   const handleReviewAgain = () => {
     if (lessonId) {
-      navigate(`/review/${lessonId}`);
+      setIsReviewModalOpen(true);
     } else {
       setFlashcards((prev) =>
         prev.map((card) => ({ ...card, status: null }))
@@ -282,6 +284,12 @@ const Study: React.FC = () => {
           </div>
         </>
       )}
+
+      <ExerciseSelectionModal
+        open={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        lessonId={lessonId || ""}
+      />
     </div>
   );
 };

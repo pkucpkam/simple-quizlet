@@ -1,5 +1,6 @@
-import { useNavigate } from "react-router-dom"; 
+import { useState } from "react";
 import type { Lesson } from "../../types/lesson";
+import ExerciseSelectionModal from "./ExerciseSelectionModal";
 
 interface Props {
   lesson: Lesson;
@@ -9,27 +10,30 @@ interface Props {
 }
 
 export default function ReviewLessonCard({ lesson}: Props) {
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCardClick = async () => {
-    
-      navigate(`/review/${lesson.id}`, { state: { vocabId: lesson.vocabId } });
-    
+    setIsModalOpen(true);
   };
 
   return (
-    <div
-      className="w-full max-w-3xl bg-white shadow-md rounded-xl px-6 py-5 mx-auto flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:bg-blue-50"
-      onClick={handleCardClick} 
-    >
-      <div className="flex-1">
-        <h2 className="text-xl font-semibold text-blue-600">{lesson.title}</h2>
-        <p className="text-gray-600 mt-1">{lesson.description}</p>
-        <p className="text-sm text-gray-400 mt-1">Từ vựng: {lesson.wordCount} từ</p>
-        <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
+    <>
+      <div
+        className="w-full max-w-3xl bg-white shadow-md rounded-xl px-6 py-5 mx-auto flex flex-col sm:flex-row sm:items-center gap-4 cursor-pointer hover:shadow-lg transition-shadow duration-200 hover:bg-blue-50"
+        onClick={handleCardClick} 
+      >
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-blue-600">{lesson.title}</h2>
+          <p className="text-gray-600 mt-1">{lesson.description}</p>
+          <p className="text-sm text-gray-400 mt-1">Từ vựng: {lesson.wordCount} từ</p>
+          <p className="text-sm text-gray-400 mt-1">Người tạo: {lesson.creator}</p>
+        </div>
       </div>
-
-      
-    </div>
+      <ExerciseSelectionModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        lessonId={lesson.id}
+      />
+    </>
   );
 }
