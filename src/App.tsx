@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Header from './components/common/Header';
@@ -8,9 +9,7 @@ import Study from './pages/Study';
 import MyLessons from './pages/users/MyLessons';
 import EditLesson from './pages/users/EditLesson';
 import StudyHistory from './pages/StudyHistory';
-import ReviewLessonPage from './pages/ReviewLessonPage';
 import ReviewPage from './pages/ReviewPage';
-import TestLessonPage from './pages/TestLessonPage';
 import TestPage from './pages/TestPage';
 import VerifyEmail from './pages/VerifyEmail';
 import Profile from './pages/Profile';
@@ -26,11 +25,15 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreateLesson from './pages/admin/AdminCreateLesson';
 import LessonView from './pages/LessonView';
 import FolderView from './pages/FolderView';
+import NotificationModal from './components/modal/NotificationModal';
 
 function App() {
+  const [showNotification, setShowNotification] = useState(true);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-100 to-blue-200">
       <Toaster position="top-right" reverseOrder={false} />
+      <NotificationModal isOpen={showNotification} onClose={() => setShowNotification(false)} />
       <Header />
       <Routes>
         {/* Public Routes */}
@@ -58,9 +61,7 @@ function App() {
           <Route path="/edit/:lessonId" element={<EditLesson />} />
           <Route path="/study/:lessonId" element={<Study />} />
           <Route path="/study-history" element={<StudyHistory />} />
-          <Route path="/review-page" element={<ReviewLessonPage />} />
           <Route path="/review/:lessonId" element={<ReviewPage />} />
-          <Route path="/test-page" element={<TestLessonPage />} />
           <Route path="/test/:lessonId" element={<TestPage />} />
           <Route path="/lesson/:lessonId" element={<LessonView />} />
         </Route>

@@ -14,6 +14,7 @@ const FolderView: React.FC = () => {
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLessonForReview, setSelectedLessonForReview] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
 
     useEffect(() => {
@@ -124,49 +125,72 @@ const FolderView: React.FC = () => {
 
             {/* Lessons Section */}
             <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-20">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex justify-end mb-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 flex gap-1">
+                        <button 
+                            onClick={() => setViewMode("grid")}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-indigo-100 text-indigo-600" : "text-gray-400 hover:bg-gray-50"}`}
+                            title="Chế độ lưới"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </button>
+                        <button 
+                            onClick={() => setViewMode("list")}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-indigo-100 text-indigo-600" : "text-gray-400 hover:bg-gray-50"}`}
+                            title="Chế độ danh sách"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-4"}>
                     {lessons.map((lesson) => (
                         <div
                             key={lesson.id}
-                            className="group bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200 border border-transparent hover:border-indigo-500 transition-all duration-500 hover:-translate-y-2 flex flex-col h-full"
+                            className={`group relative bg-white shadow-xl shadow-gray-200 border border-transparent hover:border-indigo-500 transition-all duration-500 hover:-translate-y-1 flex ${viewMode === "grid" ? "flex-col p-8 rounded-[2.5rem] h-full" : "flex-col md:flex-row p-6 pt-10 md:pt-6 rounded-3xl md:items-center gap-6"}`}
                         >
                             <div className="flex-1">
-                                <div className="flex justify-between items-start mb-4">
+                                <div className={`flex ${viewMode === "grid" ? "justify-between" : "justify-start"} items-start mb-4`}>
                                     <span className="text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">
                                         {lesson.wordCount} Từ vựng
                                     </span>
-                                    <div className="text-xs font-bold text-gray-300 italic">
+                                    <div className={`text-xs font-bold text-gray-300 italic ${viewMode === "list" ? "absolute top-4 right-6 md:top-6" : ""}`}>
                                         {new Date(lesson.createdAt).toLocaleDateString()}
                                     </div>
                                 </div>
                                 <h3 className="text-2xl font-black text-gray-900 group-hover:text-indigo-600 transition truncate mb-2">{lesson.title}</h3>
-                                <p className="text-gray-400 font-medium text-sm line-clamp-2 mb-6 leading-relaxed">
+                                <p className={`text-gray-400 font-medium text-sm line-clamp-2 leading-relaxed ${viewMode === "grid" ? "mb-6" : "mb-2 md:mb-0"}`}>
                                     {lesson.description || "Bấm để bắt đầu lộ trình học tập hiệu quả với bộ thẻ ghi nhớ này."}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-2 mt-4">
+                            <div className={`grid gap-2 shrink-0 ${viewMode === "grid" ? "grid-cols-3 mt-4" : "grid-cols-2 sm:grid-cols-4 md:w-auto mt-4 md:mt-0"}`}>
                                 <Link
                                     to={`/lesson/${lesson.id}`}
-                                    className="col-span-3 bg-gray-50 hover:bg-indigo-50 text-indigo-600 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-xs transition-colors border-2 border-transparent hover:border-indigo-100"
+                                    className={`${viewMode === "grid" ? "col-span-3" : "col-span-2 sm:col-span-1 flex items-center justify-center px-4 min-h-[48px]"} bg-gray-50 hover:bg-indigo-50 text-indigo-600 font-black py-4 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-colors border-2 border-transparent hover:border-indigo-100`}
                                 >
-                                    Xem chi tiết →
+                                    Chi tiết
                                 </Link>
                                 <button
                                     onClick={() => navigate(`/study/${lesson.id}`)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-blue-100 active:scale-95"
+                                    className={`bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 px-2 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-blue-100 active:scale-95 ${viewMode === "list" ? "flex items-center justify-center min-h-[48px]" : ""}`}
                                 >
-                                    Học ngay
+                                    Học
                                 </button>
                                 <button
                                     onClick={() => setSelectedLessonForReview(lesson.id)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-emerald-100 active:scale-95"
+                                    className={`bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3.5 px-2 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-emerald-100 active:scale-95 ${viewMode === "list" ? "flex items-center justify-center min-h-[48px]" : ""}`}
                                 >
                                     Ôn tập
                                 </button>
                                 <button
                                     onClick={() => navigate(`/test/${lesson.id}`)}
-                                    className="bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-purple-100 active:scale-95"
+                                    className={`bg-purple-600 hover:bg-purple-700 text-white font-black py-3.5 px-2 rounded-2xl text-center uppercase tracking-widest text-[9px] sm:text-[10px] transition-all shadow-lg shadow-purple-100 active:scale-95 ${viewMode === "list" ? "flex items-center justify-center min-h-[48px]" : ""}`}
                                 >
                                     Kiểm tra
                                 </button>

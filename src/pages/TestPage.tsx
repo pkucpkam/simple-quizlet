@@ -50,7 +50,7 @@ export default function TestPage() {
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu bài học:", error);
                 toast.error("Không thể tải bài học. Vui lòng thử lại.");
-                navigate("/test-page");
+                navigate("/");
             } finally {
                 setLoading(false);
             }
@@ -245,12 +245,6 @@ export default function TestPage() {
                             className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-md"
                         >
                             🔄 Làm lại
-                        </button>
-                        <button
-                            onClick={() => navigate("/test-page")}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
-                        >
-                            📚 Chọn bài khác
                         </button>
                         <button
                             onClick={() => navigate("/")}
