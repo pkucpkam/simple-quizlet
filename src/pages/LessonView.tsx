@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Badge from "../components/ui/Badge";
 import { SkeletonTable } from "../components/ui/Skeleton";
-import { ArrowLeft, Layers, BookOpen, FileText, Pencil } from "lucide-react";
+import { ArrowLeft, Layers, BookOpen, FileText, Pencil, Gamepad2 } from "lucide-react";
 
 const BackIcon = () => <ArrowLeft className="h-4 w-4" strokeWidth={2} />;
 
@@ -64,7 +64,7 @@ const LessonView: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Skeleton Content */}
         <div className="max-w-4xl mx-auto px-6 mt-8">
           <div className="h-14 w-full skeleton rounded-claude-lg mb-6" />
@@ -157,6 +157,7 @@ const LessonView: React.FC = () => {
           <ActionButton onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })} label="Flashcards" icon={<Layers className="h-4 w-4" />} variant="info" />
           <ActionButton onClick={() => setIsReviewModalOpen(true)} label="Ôn tập" icon={<BookOpen className="h-4 w-4" />} variant="success" />
           <ActionButton onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })} label="Kiểm tra" icon={<FileText className="h-4 w-4" />} variant="warning" />
+          <ActionButton onClick={() => navigate(`/asteroid-match/${lesson.id}`, { state: { from: location.pathname } })} label="Game" icon={<Gamepad2 className="h-4 w-4" />} variant="default" />
           {isOwner && (
             <ActionButton onClick={() => navigate(`/edit/${lesson.id}`)} label="Chỉnh sửa" icon={<Pencil className="h-4 w-4" />} variant="gray" />
           )}
