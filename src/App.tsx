@@ -21,6 +21,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCreateLesson from './pages/admin/AdminCreateLesson';
 import LessonView from './pages/LessonView';
 import FolderView from './pages/FolderView';
+import AsteroidMatch from './pages/AsteroidMatch';
 import NotificationModal from './components/modal/NotificationModal';
 import AppLayout from './components/layout/AppLayout';
 
@@ -89,6 +90,7 @@ function App() {
             <Route path="/review/:lessonId" element={<ReviewPage />} />
             <Route path="/test/:lessonId" element={<TestPage />} />
             <Route path="/lesson/:lessonId" element={<LessonView />} />
+            <Route path="/asteroid-match/:lessonId" element={<AsteroidMatch />} />
           </Route>
         </Route>
       </Routes>
