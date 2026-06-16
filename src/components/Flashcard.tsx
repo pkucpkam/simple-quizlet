@@ -41,6 +41,31 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
     setIsFlipped(false);
   }, [card.id]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignore if user is typing in an input field
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'ArrowDown') {
+        event.preventDefault();
+        setIsFlipped((prev) => !prev);
+      } else if (event.code === 'ArrowRight') {
+        event.preventDefault();
+        onMarkKnow(card.id);
+      } else if (event.code === 'ArrowLeft') {
+        event.preventDefault();
+        onMarkStillLearning(card.id);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [card.id, onMarkKnow, onMarkStillLearning]);
+
   const handleFlip = (event: React.MouseEvent) => {
     event.stopPropagation();
     setIsFlipped((prev) => !prev);
@@ -111,20 +136,26 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
           }}
           variant="danger"
           size="lg"
-          className="flex-1 py-3"
+          className="flex-1 py-3 flex flex-col items-center gap-1"
         >
-          Chưa thuộc
+          <span>Chưa thuộc</span>
+          <span className="text-[10px] sm:text-xs opacity-70 font-normal"></span>
         </Button>
         <Button
           onClick={(e) => {
             e.stopPropagation();
             onMarkKnow(card.id);
           }}
-          className="flex-1 py-3 bg-claude-success hover:bg-green-700 text-white shadow-claude-sm border border-transparent"
+          className="flex-1 py-3 bg-claude-success hover:bg-green-700 text-white shadow-claude-sm border border-transparent flex flex-col items-center gap-1"
           size="lg"
         >
-          Đã thuộc
+          <span>Đã thuộc</span>
+          <span className="text-[10px] sm:text-xs opacity-70 font-normal"></span>
         </Button>
+      </div>
+      
+      <div className="mt-4 text-claude-text-3 text-xs sm:text-sm flex items-center justify-center gap-2">
+        <span>Nhấn <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-claude-border rounded-md text-[10px] sm:text-xs font-sans text-claude-text font-medium shadow-sm">Space</kbd> hoặc <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-claude-border rounded-md text-[10px] sm:text-xs font-sans text-claude-text font-medium shadow-sm">↑</kbd> để lật thẻ</span>
       </div>
     </div>
   );
