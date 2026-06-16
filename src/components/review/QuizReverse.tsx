@@ -42,6 +42,38 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
     onAnswer(answer, answer === vocab.term);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (showResult) {
+        if (e.key === 'Enter' && selectedAnswer !== vocab.term && onNext) {
+          e.preventDefault();
+          onNext();
+        }
+        return;
+      }
+
+      const keyMap: Record<string, number> = {
+        '1': 0,
+        '2': 1,
+        '3': 2,
+        '4': 3,
+      };
+
+      const index = keyMap[e.key];
+      if (index !== undefined && index < options.length) {
+        e.preventDefault();
+        handleSelect(options[index]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [options, showResult, vocab.term, onAnswer, selectedAnswer, onNext]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="max-w-2xl mx-auto bg-claude-surface border border-claude-border rounded-claude-lg shadow-claude p-8 animate-fade-in">
       <div className="text-center mb-8">
@@ -77,7 +109,8 @@ const QuizReverse: React.FC<QuizReverseProps> = ({
             >
               <div className="flex items-center justify-between">
                 <span className="text-base font-medium">{option}</span>
-                <span className="text-claude-text-3 font-bold text-lg">
+                <span className="text-claude-text-3 font-bold text-lg flex items-center gap-3">
+                  <span className="text-[10px] font-normal bg-claude-border/50 px-1.5 py-0.5 rounded text-claude-text-2">Phím {idx + 1}</span>
                   {String.fromCharCode(65 + idx)}
                 </span>
               </div>
