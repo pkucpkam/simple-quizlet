@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import Button from './ui/Button';
 import { Volume2 } from 'lucide-react';
@@ -24,7 +24,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
   const [isFlipped, setIsFlipped] = useState(false);
   const { speak } = useSpeechSynthesis();
 
-  const handleSpeak = (text: string, isFront: boolean) => {
+  const handleSpeak = useCallback((text: string, isFront: boolean) => {
     const lang = isFront ? 'en' : 'vi';
     const voices = window.speechSynthesis.getVoices();
     const selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(lang));
@@ -35,7 +35,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
       rate: 0.9,
       pitch: 1
     });
-  };
+  }, [speak]);
 
   useEffect(() => {
     setIsFlipped(false);
@@ -57,6 +57,8 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
       } else if (event.code === 'ArrowLeft') {
         event.preventDefault();
         onMarkStillLearning(card.id);
+      } else if (event.key === 'Control') {
+        handleSpeak(isFlipped ? card.definition : card.term, !isFlipped);
       }
     };
 
@@ -64,7 +66,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [card.id, onMarkKnow, onMarkStillLearning]);
+  }, [card.id, onMarkKnow, onMarkStillLearning, isFlipped, card.term, card.definition, handleSpeak]);
 
   const handleFlip = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -153,9 +155,10 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
           <span className="text-[10px] sm:text-xs opacity-70 font-normal"></span>
         </Button>
       </div>
-      
-      <div className="mt-4 text-claude-text-3 text-xs sm:text-sm flex items-center justify-center gap-2">
+
+      <div className="mt-8 text-claude-text-3 text-xs sm:text-sm flex flex-col items-center justify-center gap-2">
         <span>Nhấn <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-claude-border rounded-md text-[10px] sm:text-xs font-sans text-claude-text font-medium shadow-sm">Space</kbd> hoặc <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-claude-border rounded-md text-[10px] sm:text-xs font-sans text-claude-text font-medium shadow-sm">↑</kbd> để lật thẻ</span>
+        <span className="mt-2">Nhấn <kbd className="px-1.5 py-0.5 sm:px-2 sm:py-1 bg-claude-border rounded-md text-[10px] sm:text-xs font-sans text-claude-text font-medium shadow-sm">Ctrl</kbd> để nghe phát âm</span>
       </div>
     </div>
   );

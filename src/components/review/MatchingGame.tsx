@@ -201,31 +201,8 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
         </div>
 
         <>
-          <div className="bg-claude-surface-2 rounded-claude-md p-4 mb-6 border border-claude-border">
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-6 text-sm text-claude-text-2 font-semibold">
-                <div>
-                  <span>Đã ghép: </span>
-                  <span className="font-bold text-claude-success">{stats.matchedPairs}/{stats.totalPairs}</span>
-                </div>
-                <div>
-                  <span>Lần thử: </span>
-                  <span className="font-bold text-claude-accent">{stats.attempts}</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-claude-text-3 font-semibold mb-1 uppercase">Tiến độ</div>
-                <div className="w-32 bg-claude-border rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-claude-success h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(stats.matchedPairs / stats.totalPairs) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-6 gap-2 sm:gap-4 max-w-5xl mx-auto">
             {cards.map((card) => (
               <button
                 key={card.id}
@@ -264,20 +241,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({ vocabList, onAnswer }) => {
             ))}
           </div>
 
-          <div className="mt-6 bg-claude-surface-2 rounded-claude-md border border-claude-border p-4">
-            <h3 className="font-semibold text-claude-text mb-2 text-sm">Hướng dẫn:</h3>
-            <div className="text-xs text-claude-text-2 space-y-1 font-medium">
-              <div className="flex items-center space-x-2">
-                <div className="w-2.5 h-2.5 bg-claude-accent rounded-full"></div>
-                <span>Thẻ có chấm màu cam: Từ tiếng Anh</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2.5 h-2.5 bg-claude-text-3 rounded-full"></div>
-                <span>Thẻ có chấm màu xám: Nghĩa tiếng Việt</span>
-              </div>
-              <p className="mt-2 text-claude-text-3 leading-relaxed">Nhấn vào 2 thẻ để ghép chúng lại. Ghép đúng sẽ biến mất, ghép sai sẽ chớp đỏ và trả lại trạng thái cũ.</p>
-            </div>
-          </div>
+
         </>
       </div>
     </div>
