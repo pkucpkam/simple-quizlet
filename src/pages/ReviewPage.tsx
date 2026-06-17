@@ -38,7 +38,7 @@ const ReviewPage = () => {
   const [quizTypes, setQuizTypes] = useState<QuizType[]>(["normal", "reverse", "practice", "matching", "listen"]);
   const [quizType, setQuizType] = useState<QuizType>("normal");
 
-  const WORDS_PER_SESSION = 5;
+  const WORDS_PER_SESSION = 9;
 
   useEffect(() => {
     const fetchLesson = async () => {
