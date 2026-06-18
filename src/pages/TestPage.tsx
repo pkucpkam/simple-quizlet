@@ -4,6 +4,7 @@ import { lessonService } from "../service/lessonService";
 import toast from "react-hot-toast";
 import { historyService } from "../service/historyService";
 import { auth } from "../service/firebase_setup";
+import { lessonScoreService } from "../service/lessonScoreService";
 import LoadingScreen from "../components/common/LoadingScreen";
 import Button from "../components/ui/Button";
 import { ArrowLeft } from "lucide-react";
@@ -137,6 +138,11 @@ export default function TestPage() {
             const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
             historyService.incrementStudyStats(userId, "test", timeSpent);
+            
+            if (lessonId && lessonTitle) {
+                lessonScoreService.incrementScore(userId, lessonId, lessonTitle);
+            }
+            
             setHasSaved(true);
         }
     }, [showResults, hasSaved, lessonId, lessonTitle, startTime, results]);

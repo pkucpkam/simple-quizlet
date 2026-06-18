@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { StudyAggregateStats } from '../types/history';
 import { historyService } from '../service/historyService';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import { Layers, Brain, FileText, Clock, Loader2 } from 'lucide-react';
+import { Layers, Brain, FileText, Clock, Loader2, TrendingDown, TrendingUp, Play, BookOpen } from 'lucide-react';
+import { lessonScoreService, type LessonScore } from '../service/lessonScoreService';
+import { useNavigate } from 'react-router-dom';
+import Button from '../components/ui/Button';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -92,7 +95,10 @@ const StudyHistory: React.FC = () => {
   const [user, setUser] = useState<{ uid: string; email: string } | null>(null);
   const [stats, setStats] = useState<StudyAggregateStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [migrating, setMigrating] = useState(false);
+  const [scores, setScores] = useState<LessonScore[]>([]);
+  const [loadingScores, setLoadingScores] = useState(true);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -119,6 +125,20 @@ const StudyHistory: React.FC = () => {
       setLoading(false);
     };
     init();
+
+    const fetchScores = async () => {
+      if (!user) return;
+      try {
+        setLoadingScores(true);
+        const userScores = await lessonScoreService.getUserScores(user.uid);
+        setScores(userScores);
+      } catch (error) {
+        console.error("Error fetching lesson scores:", error);
+      } finally {
+        setLoadingScores(false);
+      }
+    };
+    fetchScores();
   }, [user]);
 
   if (!user) {
@@ -201,6 +221,80 @@ const StudyHistory: React.FC = () => {
           <p className="text-xs text-claude-text-3 mt-1">Bắt đầu học một bài học để thấy thống kê tại đây!</p>
         </div>
       )}
+
+      {/* Lesson Scores Section */}
+      <div className="mt-12 pt-8 border-t border-claude-border">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-claude-text">Cân Bằng Học Tập</h2>
+          <p className="text-sm text-claude-text-2 mt-0.5">
+            Các bài đã kiểm tra. Mỗi bài kiểm tra hoàn thành cộng 1 điểm, mỗi ngày trừ 1 điểm. Ưu tiên ôn tập bài điểm thấp.
+          </p>
+        </div>
+
+        {loadingScores ? (
+          <div className="h-40 skeleton rounded-claude-md" />
+        ) : scores.length === 0 ? (
+          <div className="bg-claude-surface border border-claude-border rounded-claude-md py-12 text-center">
+            <BookOpen className="h-8 w-8 text-claude-text-3 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-sm font-medium text-claude-text">Chưa có bài kiểm tra nào</p>
+            <p className="text-xs text-claude-text-3 mt-1">Hãy làm bài kiểm tra để hệ thống gợi ý cân bằng học tập.</p>
+          </div>
+        ) : (
+          <div className="bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-claude-surface-2 border-b border-claude-border">
+                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider">Bài Học</th>
+                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-center">Điểm Hiện Tại</th>
+                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-center">Cập Nhật Gần Nhất</th>
+                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-right">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-claude-border">
+                  {scores.map((score) => {
+                    const effectivePoints = score.effectivePoints ?? 0;
+                    const isLow = effectivePoints <= 0;
+                    
+                    return (
+                      <tr key={score.lessonId} className="hover:bg-claude-surface-2/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-claude-text text-sm truncate max-w-[200px] md:max-w-[350px]">
+                            {score.lessonTitle}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className={`inline-flex items-center justify-center font-bold px-2.5 py-0.5 rounded-full text-xs ${
+                            isLow 
+                              ? 'bg-claude-error-light text-claude-error border border-claude-error/20' 
+                              : 'bg-claude-success-light text-claude-success border border-claude-success/20'
+                          }`}>
+                            {effectivePoints}
+                            {isLow ? <TrendingDown className="w-3 h-3 ml-1" /> : <TrendingUp className="w-3 h-3 ml-1" />}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-center text-xs text-claude-text-3">
+                          {score.updatedAt.toLocaleDateString('vi-VN')}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Button 
+                            onClick={() => navigate(`/test/${score.lessonId}`)}
+                            variant={isLow ? "primary" : "secondary"}
+                            className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
+                          >
+                            <Play className="w-3 h-3" />
+                            Kiểm tra lại
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

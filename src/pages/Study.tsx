@@ -4,8 +4,6 @@ import { auth } from "../service/firebase_setup";
 import Flashcard from "../components/Flashcard";
 import { lessonService, type VocabItem } from "../service/lessonService";
 import { historyService } from "../service/historyService";
-import { srsService } from "../service/srsService";
-import toast from "react-hot-toast";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Button from "../components/ui/Button";
 import { ArrowLeft } from "lucide-react";
@@ -48,10 +46,7 @@ const CompletionScreen: React.FC<{
         <p className="text-base text-claude-text-2">Số từ cần ôn tập: <span className="font-bold text-claude-text-2">{stillLearningCount}</span></p>
       </div>
 
-      <div className="bg-claude-accent-lighter border border-claude-accent-light rounded-claude p-4 mb-6 text-left">
-        <p className="text-sm text-claude-accent mb-1">✨ <strong>Đã tạo SRS cards!</strong></p>
-        <p className="text-xs text-claude-text-2">Hệ thống sẽ tự động nhắc bạn ôn tập vào đúng thời điểm để đạt hiệu quả ghi nhớ cao nhất.</p>
-      </div>
+
 
       <div className="flex flex-col gap-3">
         <div className="flex gap-4">
@@ -90,7 +85,6 @@ const Study: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [hasSaved, setHasSaved] = useState(false); // Prevent duplicate saves
-  const [srsInitialized, setSrsInitialized] = useState(false);
   const location = useLocation();
   const { lessonId: urlLessonId } = useParams<{ lessonId: string }>();
   const lessonId = location.state?.lessonId || urlLessonId;
@@ -166,26 +160,11 @@ const Study: React.FC = () => {
       // Save to study history
       historyService.incrementStudyStats(userId, "flashcard", timeSpent);
 
-      // Initialize SRS cards
-      if (lessonId && !srsInitialized) {
-        const vocabulary = flashcards.map(card => ({
-          word: card.term,
-          definition: card.definition
-        }));
 
-        srsService.initializeCardsForLesson(lessonId, username, vocabulary)
-          .then(() => {
-            toast.success("✨ Đã tạo SRS cards cho bài học này!");
-            setSrsInitialized(true);
-          })
-          .catch((error) => {
-            console.error("[Study] Error initializing SRS:", error);
-          });
-      }
 
       setHasSaved(true);
     }
-  }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime, hasSaved, srsInitialized]);
+  }, [isCompleted, flashcards, vocabId, lessonId, lessonTitle, startTime, hasSaved]);
 
   const proceedToNextCard = (newFlashcards: FlashcardData[], currentIdx: number) => {
     setTimeout(() => {
@@ -269,7 +248,7 @@ const Study: React.FC = () => {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
@@ -278,7 +257,7 @@ const Study: React.FC = () => {
       </div>
     );
   }
-  
+
   if (flashcards.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">

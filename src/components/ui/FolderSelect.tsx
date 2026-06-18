@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Folder } from '../../types/folder';
-import { ChevronDown, Search, Check } from 'lucide-react';
+import { ChevronDown, Search, Check, Folder as FolderIcon } from 'lucide-react';
 
 interface FolderSelectProps {
   folders: Folder[];
@@ -74,7 +74,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
                   color: getFolderColor(selectedFolder)
                 }}
               >
-                {selectedFolder.icon || "📁"}
+                <FolderIcon className="w-3.5 h-3.5" />
               </span>
               <span className="font-semibold text-claude-text truncate">
                 {selectedFolder.name}
@@ -83,7 +83,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
           ) : (
             <>
               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-claude-sidebar text-claude-text-3 text-sm flex-shrink-0">
-                📁
+                <FolderIcon className="w-3.5 h-3.5" />
               </span>
               <span className="text-claude-text-3 font-medium truncate">
                 {placeholder}
@@ -136,7 +136,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-claude-sidebar text-claude-text-3 text-xs flex-shrink-0">
-                  📁
+                  <FolderIcon className="w-3.5 h-3.5" />
                 </span>
                 <span className="truncate">{placeholder}</span>
               </div>
@@ -174,7 +174,7 @@ const FolderSelect: React.FC<FolderSelectProps> = ({
                           color: folderColor
                         }}
                       >
-                        {folder.icon || "📁"}
+                        <FolderIcon className="w-3.5 h-3.5" />
                       </span>
                       <span className="truncate">{folder.name}</span>
                     </div>
