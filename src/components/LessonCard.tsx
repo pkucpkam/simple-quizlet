@@ -47,7 +47,7 @@ export default function LessonCard({
       <div className="group bg-claude-surface border border-claude-border rounded-claude-md p-5 hover:border-claude-accent hover:shadow-claude transition-all flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 cursor-pointer" onClick={() => navigate(`/study/${lesson.id}`, { state: { vocabId: lesson.vocabId, from: location.pathname } })}>
+          <div className="flex-1 cursor-pointer" onClick={() => navigate(`/lesson/${lesson.id}`, { state: { vocabId: lesson.vocabId, from: location.pathname } })}>
             <h2 className="text-sm font-semibold text-claude-text line-clamp-2 group-hover:text-claude-accent transition-colors leading-snug">
               {lesson.title}
             </h2>

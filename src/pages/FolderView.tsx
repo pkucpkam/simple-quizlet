@@ -176,18 +176,12 @@ const FolderView: React.FC = () => {
                       {lesson.description || "Bấm để bắt đầu học bài này."}
                     </p>
 
-                    <div className="grid grid-cols-3 gap-1.5">
-                      <Link
-                        to={`/lesson/${lesson.id}`}
-                        className="col-span-3 py-2 text-xs font-medium text-center text-claude-text-2 border border-claude-border rounded-claude hover:bg-claude-surface-2 transition-colors"
-                      >
-                        Xem chi tiết
-                      </Link>
+                    <div className="grid grid-cols-2 gap-1.5">
                       <button
                         onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
                         className="py-2 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
                       >
-                        Học ngay
+                        Flashcard
                       </button>
                       <button
                         onClick={() => setSelectedLessonForReview(lesson.id)}
@@ -200,6 +194,12 @@ const FolderView: React.FC = () => {
                         className="py-2 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
                       >
                         Kiểm tra
+                      </button>
+                      <button
+                        onClick={() => navigate(`/asteroid-match/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="py-2 text-xs font-medium text-center text-purple-600 bg-purple-50 rounded-claude hover:bg-purple-600 hover:text-white transition-colors"
+                      >
+                        Game
                       </button>
                     </div>
                   </div>
@@ -232,17 +232,11 @@ const FolderView: React.FC = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        to={`/lesson/${lesson.id}`}
-                        className="px-3 py-1.5 text-xs font-medium text-center text-claude-text-2 border border-claude-border rounded-claude hover:bg-claude-surface-2 transition-colors"
-                      >
-                        Xem chi tiết
-                      </Link>
                       <button
                         onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
                         className="px-3 py-1.5 text-xs font-medium text-center text-blue-600 bg-blue-50 rounded-claude hover:bg-blue-600 hover:text-white transition-colors"
                       >
-                        Học ngay
+                        Flashcard
                       </button>
                       <button
                         onClick={() => setSelectedLessonForReview(lesson.id)}
@@ -255,6 +249,12 @@ const FolderView: React.FC = () => {
                         className="px-3 py-1.5 text-xs font-medium text-center text-claude-warning bg-claude-warning-light rounded-claude hover:bg-claude-warning hover:text-white transition-colors"
                       >
                         Kiểm tra
+                      </button>
+                      <button
+                        onClick={() => navigate(`/asteroid-match/${lesson.id}`, { state: { from: location.pathname } })}
+                        className="px-3 py-1.5 text-xs font-medium text-center text-purple-600 bg-purple-50 rounded-claude hover:bg-purple-600 hover:text-white transition-colors"
+                      >
+                        Game
                       </button>
                     </div>
                   </div>

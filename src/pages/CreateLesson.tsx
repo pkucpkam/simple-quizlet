@@ -52,7 +52,7 @@ export default function CreateLesson() {
     const loadFolders = async (username: string) => {
       try {
         const fetchedFolders = await folderService.getMyFolders(username);
-        
+
         if (folderIdFromUrl) {
           try {
             const specificFolder = await folderService.getFolder(folderIdFromUrl);
@@ -231,12 +231,12 @@ export default function CreateLesson() {
         <div className="flex flex-wrap gap-x-6 gap-y-3">
           {/* Private */}
           <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input 
-              type="checkbox" 
-              checked={isPrivate} 
-              onChange={(e) => setIsPrivate(e.target.checked)} 
-              disabled={loading} 
-              className="w-4 h-4 rounded text-claude-accent focus:ring-claude-accent accent-claude-accent border-claude-border" 
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              disabled={loading}
+              className="w-4 h-4 rounded text-claude-accent focus:ring-claude-accent accent-claude-accent border-claude-border"
             />
             <span className="font-semibold text-claude-text text-sm">Riêng tư</span>
             <button type="button" onClick={() => setShowPrivateInfoModal(true)} className="text-claude-text-3 hover:text-claude-accent transition-colors"><InfoIcon /></button>
@@ -244,12 +244,12 @@ export default function CreateLesson() {
 
           {/* Auto IPA */}
           <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input 
-              type="checkbox" 
-              checked={autoFetchIpa} 
-              onChange={(e) => setAutoFetchIpa(e.target.checked)} 
-              disabled={loading} 
-              className="w-4 h-4 rounded text-claude-accent focus:ring-claude-accent accent-claude-accent border-claude-border" 
+            <input
+              type="checkbox"
+              checked={autoFetchIpa}
+              onChange={(e) => setAutoFetchIpa(e.target.checked)}
+              disabled={loading}
+              className="w-4 h-4 rounded text-claude-accent focus:ring-claude-accent accent-claude-accent border-claude-border"
             />
             <span className="font-semibold text-claude-text text-sm">Tự động thêm phiên âm (IPA)</span>
             <button type="button" onClick={() => setShowIpaInfoModal(true)} className="text-claude-text-3 hover:text-claude-accent transition-colors"><InfoIcon /></button>
@@ -283,11 +283,10 @@ export default function CreateLesson() {
               setViewMode("card");
               localStorage.setItem("lesson_editor_view_mode", "card");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
-              viewMode === "card"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${viewMode === "card"
                 ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
-            }`}
+              }`}
           >
             <LayoutGrid className="w-4 h-4" /> Dạng thẻ
           </button>
@@ -297,11 +296,10 @@ export default function CreateLesson() {
               setViewMode("table");
               localStorage.setItem("lesson_editor_view_mode", "table");
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${
-              viewMode === "table"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-claude border text-xs md:text-sm font-bold transition-all ${viewMode === "table"
                 ? "bg-claude-surface text-claude-accent shadow-claude-sm border border-claude-border"
                 : "border-transparent text-claude-text-2 hover:text-claude-text"
-            }`}
+              }`}
           >
             <Table className="w-4 h-4" /> Dạng bảng (Excel)
           </button>
