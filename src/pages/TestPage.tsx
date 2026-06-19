@@ -36,6 +36,7 @@ export default function TestPage() {
     const fromPath = location.state?.from || (lessonId ? `/lesson/${lessonId}` : "/");
 
     const [vocabList, setVocabList] = useState<VocabItem[]>([]);
+    const [originalVocabList, setOriginalVocabList] = useState<VocabItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userInput, setUserInput] = useState("");
@@ -59,6 +60,7 @@ export default function TestPage() {
 
                 const shuffled = [...vocabData].sort(() => Math.random() - 0.5);
                 setVocabList(shuffled);
+                setOriginalVocabList(vocabData);
             } catch (error) {
                 console.error("Lỗi khi lấy dữ liệu bài học:", error);
                 toast.error("Không thể tải bài học. Vui lòng thử lại.");
@@ -120,7 +122,22 @@ export default function TestPage() {
     };
 
     const handleRestart = () => {
-        const shuffled = [...vocabList].sort(() => Math.random() - 0.5);
+        const shuffled = [...originalVocabList].sort(() => Math.random() - 0.5);
+        setVocabList(shuffled);
+        setCurrentIndex(0);
+        setUserInput("");
+        setResults([]);
+        setShowResults(false);
+        setStartTime(Date.now());
+        setHasSaved(false);
+    };
+
+    const handleRestartIncorrect = () => {
+        const incorrectVocabs = results
+            .filter((r) => !r.isCorrect)
+            .map((r) => ({ term: r.term, definition: r.definition }));
+        
+        const shuffled = [...incorrectVocabs].sort(() => Math.random() - 0.5);
         setVocabList(shuffled);
         setCurrentIndex(0);
         setUserInput("");
@@ -259,8 +276,17 @@ export default function TestPage() {
                             variant="primary"
                             className="px-8"
                         >
-                            🔄 Làm lại
+                            🔄 Làm lại từ đầu
                         </Button>
+                        {incorrectResults.length > 0 && (
+                            <Button
+                                onClick={handleRestartIncorrect}
+                                variant="outline"
+                                className="px-8"
+                            >
+                                🎯 Làm lại câu sai
+                            </Button>
+                        )}
                         <Button
                             onClick={() => navigate(fromPath)}
                             variant="secondary"
