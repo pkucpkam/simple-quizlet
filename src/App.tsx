@@ -42,19 +42,19 @@ function App() {
         reverseOrder={false}
         toastOptions={{
           style: {
-            background: '#ffffff',
-            color: '#1a1917',
-            border: '1px solid #e8e7e2',
+            background: 'var(--claude-surface)',
+            color: 'var(--claude-text)',
+            border: '1px solid var(--claude-border)',
             borderRadius: '0.5rem',
             fontSize: '14px',
             fontFamily: 'Inter, sans-serif',
-            boxShadow: '0 4px 16px rgba(26,25,23,0.1)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
           },
           success: {
-            iconTheme: { primary: '#16a34a', secondary: '#fff' },
+            iconTheme: { primary: 'var(--claude-success)', secondary: 'var(--claude-surface)' },
           },
           error: {
-            iconTheme: { primary: '#dc2626', secondary: '#fff' },
+            iconTheme: { primary: 'var(--claude-error)', secondary: 'var(--claude-surface)' },
           },
         }}
       />

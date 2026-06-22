@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../service/authService';
+import { useTheme } from '../../hooks/useTheme';
 
 interface NavItem {
   to: string;
@@ -24,6 +25,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 const HomeIcon = () => <Home className="h-5 w-5" strokeWidth={1.8} />;
@@ -56,10 +59,17 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const isAdmin = user?.role === 'ADMIN';
   const username = user?.username || 'Người dùng';
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const [iconKey, setIconKey] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
   });
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+    setIconKey(prev => prev + 1);
+  };
 
   const toggleCollapse = () => {
     setIsCollapsed(prev => {
@@ -155,6 +165,37 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
             );
           })}
         </nav>
+
+        {/* Theme Toggle */}
+        <div className={`px-2 pb-1 ${collapsed ? 'flex justify-center' : ''}`}>
+          <button
+            onClick={handleToggleTheme}
+            title={theme === 'dark' ? 'Chuyển sang sáng' : 'Chuyển sang tối'}
+            className={`theme-toggle-btn claude-nav-item border border-claude-border hover:border-claude-border-strong ${
+              collapsed
+                ? 'justify-center p-0 h-10 w-10 mx-auto'
+                : 'w-full gap-3'
+            }`}
+          >
+            <span
+              key={iconKey}
+              className={`flex-shrink-0 theme-icon-enter ${
+                theme === 'dark' ? 'text-claude-accent' : 'text-claude-text-3'
+              }`}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5" strokeWidth={1.8} />
+              ) : (
+                <Moon className="h-5 w-5" strokeWidth={1.8} />
+              )}
+            </span>
+            {!collapsed && (
+              <span className="animate-fade-in">
+                {theme === 'dark' ? 'Chế độ sáng' : 'Chế độ tối'}
+              </span>
+            )}
+          </button>
+        </div>
 
         {/* User Section */}
         <div className={`border-t border-claude-border p-2 ${collapsed ? 'flex flex-col items-center' : ''}`}>
