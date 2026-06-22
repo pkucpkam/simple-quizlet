@@ -45,6 +45,7 @@ export default function TestPage() {
     const [lessonTitle, setLessonTitle] = useState("");
     const [startTime, setStartTime] = useState(Date.now());
     const [hasSaved, setHasSaved] = useState(false);
+    const [isRedoMode, setIsRedoMode] = useState(false);
 
     useEffect(() => {
         const fetchLesson = async () => {
@@ -130,6 +131,7 @@ export default function TestPage() {
         setShowResults(false);
         setStartTime(Date.now());
         setHasSaved(false);
+        setIsRedoMode(false);
     };
 
     const handleRestartIncorrect = () => {
@@ -145,6 +147,7 @@ export default function TestPage() {
         setShowResults(false);
         setStartTime(Date.now());
         setHasSaved(false);
+        setIsRedoMode(true);
     };
 
     useEffect(() => {
@@ -154,15 +157,17 @@ export default function TestPage() {
 
             const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
-            historyService.incrementStudyStats(userId, "test", timeSpent);
-            
-            if (lessonId && lessonTitle) {
-                lessonScoreService.incrementScore(userId, lessonId, lessonTitle);
+            if (!isRedoMode) {
+                historyService.incrementStudyStats(userId, "test", timeSpent);
+                
+                if (lessonId && lessonTitle) {
+                    lessonScoreService.incrementScore(userId, lessonId, lessonTitle);
+                }
             }
             
             setHasSaved(true);
         }
-    }, [showResults, hasSaved, lessonId, lessonTitle, startTime, results]);
+    }, [showResults, hasSaved, lessonId, lessonTitle, startTime, results, isRedoMode]);
 
     const renderWordWithUnderscores = () => {
         const word = currentVocab.term;

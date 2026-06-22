@@ -4,6 +4,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  getDocFromServer,
   deleteDoc,
   query,
   where,
@@ -340,7 +341,8 @@ export const lessonService = {
 
   async getVocabulary(vocabId: string): Promise<VocabItem[]> {
     try {
-      const vocabDoc = await getDoc(doc(db, "vocabularies", vocabId));
+      // Force fetch from server to avoid stale cache after update
+      const vocabDoc = await getDocFromServer(doc(db, "vocabularies", vocabId));
       if (!vocabDoc.exists()) {
         throw new Error("Không tìm thấy danh sách từ vựng.");
       }
@@ -421,7 +423,8 @@ export const lessonService = {
 
   async getLesson(lessonId: string) {
     try {
-      const lessonDoc = await getDoc(doc(db, "lessons", lessonId));
+      // Force fetch from server to avoid stale cache after update
+      const lessonDoc = await getDocFromServer(doc(db, "lessons", lessonId));
       if (!lessonDoc.exists()) {
         throw new Error("Không tìm thấy bài học.");
       }

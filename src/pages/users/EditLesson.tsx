@@ -12,7 +12,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Modal from "../../components/ui/Modal";
 import FolderSelect from "../../components/ui/FolderSelect";
-import { Info, ChevronLeft, ChevronDown, LayoutGrid, Table, Trash2, Plus, BookOpen, Zap, AlertCircle, Save } from "lucide-react";
+import { Info, ChevronLeft, ChevronDown, LayoutGrid, Table, Trash2, Plus, BookOpen, Zap, AlertCircle, Save, OctagonAlert } from "lucide-react";
 
 const WORD_TYPES = ["noun", "verb", "adjective", "adverb", "phrase", "idiom", "other"];
 
@@ -39,6 +39,9 @@ export default function EditLesson() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -140,14 +143,22 @@ export default function EditLesson() {
     toast.success(`Đã xử lý ${items.length} từ vựng`);
   };
 
-  const vocabItemsToText = () => {
-    return vocabItems
-      .filter((v) => v.word.trim() || v.definition.trim())
-      .map((v) => `${v.word} ; ${v.definition} ; ${v.ipa || ""} ; ${v.wordType || ""} ; ${v.exampleEn || ""} ; ${v.exampleVi || ""}`)
-      .join("\n");
-  };
 
   const validWords = vocabItems.filter((v) => v.word.trim() && v.definition.trim());
+
+  const handleDelete = async () => {
+    if (!lessonId) return;
+    try {
+      setDeleting(true);
+      await lessonService.deleteLessonById(lessonId);
+      toast.success("Đã xoá bài học thành công!");
+      navigate("/my-lessons");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể xoá bài học.");
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   const handleUpdate = async () => {
     try {
@@ -235,7 +246,7 @@ export default function EditLesson() {
               <p className="text-claude-text-2 text-sm mt-1">Cập nhật nội dung bài học của bạn</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap justify-end">
             <Button
               type="button"
               onClick={() => setShowAddModal(true)}
@@ -253,6 +264,16 @@ export default function EditLesson() {
               icon={<Zap className="h-4 w-4" />}
             >
               Nhập liệu nhanh
+            </Button>
+            <Button
+              type="button"
+              onClick={() => { setDeleteConfirmText(""); setShowDeleteModal(true); }}
+              variant="danger"
+              size="md"
+              icon={<Trash2 className="h-4 w-4" />}
+              disabled={saving}
+            >
+              Xoá bài học
             </Button>
           </div>
         </div>
@@ -685,7 +706,6 @@ export default function EditLesson() {
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImport={handleImport}
-        initialText={vocabItemsToText()}
       />
 
       <AddVocabModal
@@ -694,6 +714,59 @@ export default function EditLesson() {
         onAdd={(item: VocabItem) => setVocabItems((prev) => [...prev, item])}
         WORD_TYPES={WORD_TYPES}
       />
+
+      {/* Delete Lesson Confirmation Modal */}
+      <Modal
+        open={showDeleteModal}
+        onClose={() => !deleting && setShowDeleteModal(false)}
+        title="Xoá bài học"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-4 bg-claude-error-light border border-claude-error/30 rounded-claude">
+            <OctagonAlert className="h-5 w-5 text-claude-error flex-shrink-0 mt-0.5" strokeWidth={2} />
+            <div className="text-sm text-claude-error leading-relaxed">
+              <p className="font-bold mb-1">Hành động này không thể hoàn tác!</p>
+              <p>Toàn bộ từ vựng trong bài học <span className="font-bold">"{title}"</span> sẽ bị xoá vĩnh viễn.</p>
+              <p className="mt-1 text-claude-text-2">Lịch sử học tập và dữ liệu heatmap của bạn sẽ được <span className="font-semibold text-claude-text">giữ nguyên</span>.</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-claude-text mb-1.5">
+              Nhập <span className="font-bold text-claude-error">XOÁ</span> để xác nhận
+            </label>
+            <input
+              type="text"
+              className="w-full bg-claude-surface border border-claude-border rounded-claude px-3 py-2.5 text-sm text-claude-text focus:outline-none focus:ring-2 focus:ring-claude-error transition-colors"
+              placeholder="Nhập XOÁ để tiếp tục"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              disabled={deleting}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-1">
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+            >
+              Huỷ
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              disabled={deleteConfirmText !== "XOÁ" || deleting}
+              loading={deleting}
+              icon={<Trash2 className="h-4 w-4" />}
+            >
+              Xoá vĩnh viễn
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
