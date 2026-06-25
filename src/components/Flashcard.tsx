@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import Button from './ui/Button';
-import { Volume2 } from 'lucide-react';
+import { Volume2, Zap, Sparkles } from 'lucide-react';
 
 interface FlashcardData {
   id: string;
@@ -22,18 +22,13 @@ interface FlashcardProps {
 
 const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLearning }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const { speak } = useSpeechSynthesis();
+  const { speak, mode, setMode } = useSpeechSynthesis();
 
   const handleSpeak = useCallback((text: string, isFront: boolean) => {
     const lang = isFront ? 'en' : 'vi';
-    const voices = window.speechSynthesis.getVoices();
-    const selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith(lang));
-
     speak({
       text,
-      voice: selectedVoice,
-      rate: 0.9,
-      pitch: 1
+      lang
     });
   }, [speak]);
 
@@ -75,6 +70,39 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, onMarkKnow, onMarkStillLear
 
   return (
     <div className="flex flex-col items-center">
+      <div className="w-full max-w-[400px] sm:max-w-[500px] md:max-w-[600px] lg:max-w-[700px] mb-6 flex justify-between items-center px-1">
+        <div className="text-xs sm:text-sm font-semibold text-claude-text-3 flex items-center gap-2">
+          <Volume2 className="w-4 h-4 text-claude-text-3" />
+          Chế độ giọng đọc
+        </div>
+        <div className="flex items-center bg-claude-surface-2 p-1 rounded-claude-lg border border-claude-border shadow-inner">
+          <button
+            onClick={() => setMode('native')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-300 select-none border border-b-2 ${
+              mode === 'native' 
+                ? 'bg-claude-surface text-amber-600 shadow-sm border-claude-border border-b-amber-500' 
+                : 'text-claude-text-3 hover:text-claude-text hover:bg-black/5 border-transparent border-b-transparent'
+            }`}
+            title="Đọc ngay lập tức bằng giọng máy"
+          >
+            <Zap className={`w-3.5 h-3.5 ${mode === 'native' ? 'text-amber-500' : 'opacity-50'}`} />
+            TỐC ĐỘ
+          </button>
+          <button
+            onClick={() => setMode('google')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] sm:text-xs font-bold transition-all duration-300 select-none border border-b-2 ${
+              mode === 'google' 
+                ? 'bg-claude-surface text-blue-600 shadow-sm border-claude-border border-b-blue-500' 
+                : 'text-claude-text-3 hover:text-claude-text hover:bg-black/5 border-transparent border-b-transparent'
+            }`}
+            title="Đọc siêu mượt nhưng hơi chậm xíu"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${mode === 'google' ? 'text-blue-500' : 'opacity-50'}`} />
+            TỰ NHIÊN
+          </button>
+        </div>
+      </div>
+
       <div
         className="relative w-full max-w-[400px] h-[240px] sm:max-w-[500px] sm:h-[300px] md:max-w-[600px] md:h-[360px] lg:max-w-[700px] lg:h-[420px] [perspective:1000px] cursor-pointer"
         onClick={handleFlip}

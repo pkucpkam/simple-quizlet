@@ -43,13 +43,9 @@ const ListenPractice: React.FC<ListenPracticeProps> = ({ vocab, onAnswer, showRe
   }, [showResult, isCorrect, onNext]);
 
   const handleSpeak = useCallback(() => {
-    const voices = window.speechSynthesis.getVoices();
-    const selectedVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
     speak({
       text: vocab.term,
-      voice: selectedVoice,
-      rate: 0.9,
-      pitch: 1
+      lang: 'en'
     });
   }, [vocab.term, speak]);
 
