@@ -22,14 +22,19 @@ export default function ReviewPage() {
     const [incorrectCount, setIncorrectCount] = useState(0);
     const [startTime] = useState(Date.now());
 
-    const storedUser = sessionStorage.getItem("user");
-    const username = storedUser ? JSON.parse(storedUser).username : null;
-
     useEffect(() => {
         const loadDueCards = async () => {
+            const userId = auth.currentUser?.uid;
+
+            if (!userId) {
+                toast.error("Vui lòng đăng nhập để ôn tập");
+                navigate("/login");
+                return;
+            }
+
             try {
                 setLoading(true);
-                const dueCards = await srsService.getDueCardsForUser(username);
+                const dueCards = await srsService.getDueCardsForUser(userId);
 
                 if (dueCards.length === 0) {
                     toast.success("🎉 Bạn đã hoàn thành hết bài ôn hôm nay!");
@@ -40,7 +45,7 @@ export default function ReviewPage() {
                 setCards(dueCards);
 
                 // Start review session
-                const sessionId = await srsService.startReviewSession(username);
+                const sessionId = await srsService.startReviewSession(userId);
                 setSessionId(sessionId);
             } catch (error) {
                 console.error("Error loading due cards:", error);
@@ -50,13 +55,8 @@ export default function ReviewPage() {
             }
         };
 
-        if (username) {
-            loadDueCards();
-        } else {
-            toast.error("Vui lòng đăng nhập để ôn tập");
-            navigate("/login");
-        }
-    }, [username, navigate]);
+        loadDueCards();
+    }, [navigate]);
 
     const handleReview = async (rating: ReviewRating) => {
         try {

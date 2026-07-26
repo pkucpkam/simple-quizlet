@@ -27,6 +27,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Brain,
 } from 'lucide-react';
 
 const HomeIcon = () => <Home className="h-5 w-5" strokeWidth={1.8} />;
@@ -37,6 +38,7 @@ const TrophyIcon = () => <Trophy className="h-5 w-5" strokeWidth={1.8} />;
 const AdminIcon = () => <ShieldAlert className="h-5 w-5" strokeWidth={1.8} />;
 const ProfileIcon = () => <User className="h-5 w-5" strokeWidth={1.8} />;
 const LogoutIcon = () => <LogOut className="h-5 w-5" strokeWidth={1.8} />;
+const BrainIcon = () => <Brain className="h-5 w-5" strokeWidth={1.8} />;
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
   <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
@@ -88,6 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     { to: '/', label: 'Trang chủ', icon: <HomeIcon /> },
     { to: '/my-lessons', label: 'Bài học của tôi', icon: <BookIcon /> },
     { to: '/create-lesson', label: 'Tạo bài học', icon: <PlusIcon /> },
+    { to: '/srs-review', label: 'Ôn tập', icon: <BrainIcon /> },
     { to: '/study-history', label: 'Lịch sử học', icon: <HistoryIcon /> },
     { to: '/leaderboard', label: 'Bảng xếp hạng', icon: <TrophyIcon /> },
     ...(isAdmin ? [{ to: '/admin', label: 'Admin Console', icon: <AdminIcon />, adminOnly: true }] : []),

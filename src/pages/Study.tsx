@@ -4,6 +4,7 @@ import { auth } from "../service/firebase_setup";
 import Flashcard from "../components/Flashcard";
 import { lessonService, type VocabItem } from "../service/lessonService";
 import { historyService } from "../service/historyService";
+import { srsService } from "../service/srsService";
 import ExerciseSelectionModal from "../components/review/ExerciseSelectionModal";
 import Button from "../components/ui/Button";
 import { ArrowLeft } from "lucide-react";
@@ -160,7 +161,16 @@ const Study: React.FC = () => {
       // Save to study history
       historyService.incrementStudyStats(userId, "flashcard", timeSpent);
 
-
+      // Initialize SRS cards for this lesson (skip if cards already exist)
+      if (lessonId) {
+        const vocabulary = flashcards.map((card) => ({
+          word: card.term,
+          definition: card.definition,
+        }));
+        srsService.initializeCardsForLesson(lessonId, userId, vocabulary).catch(
+          (err) => console.error("[Study] SRS init error:", err)
+        );
+      }
 
       setHasSaved(true);
     }
