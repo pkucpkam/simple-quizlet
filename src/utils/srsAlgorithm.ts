@@ -26,13 +26,17 @@ export function calculateNextReview(
 
     const quality = qualityMap[rating];
 
-    // Update ease factor (only for quality >= 3)
-    if (quality >= 3) {
-        easeFactor = Math.max(
+    // Update ease factor for ALL quality values (SM-2 standard)
+    // EF_new = EF_old + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
+    // Clamped to [1.3, 2.8] — floor prevents EF from going too low,
+    // ceiling prevents unlimited growth on repeated "easy" ratings.
+    easeFactor = Math.min(
+        2.8,
+        Math.max(
             1.3,
             easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-        );
-    }
+        )
+    );
 
     // Calculate new interval
     if (quality < 3) {
