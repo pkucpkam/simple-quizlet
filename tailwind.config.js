@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -11,31 +12,31 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
-        // Claude Brand Palette
+        // Claude Brand Palette – reads from CSS variables so dark mode works automatically
         claude: {
-          bg:        '#f5f4ef',       // cream page background
-          surface:   '#ffffff',       // card/surface
-          'surface-2': '#f9f8f4',    // subtle secondary surface
-          border:    '#e8e7e2',       // default border
-          'border-strong': '#d1d0cc', // stronger border
-          text:      '#1a1917',       // primary text
-          'text-2':  '#6b6964',       // secondary text
-          'text-3':  '#9b9894',       // tertiary / placeholder
-          accent:    '#d97706',       // amber accent (Claude brand)
-          'accent-2': '#b45309',      // darker amber for hover
-          'accent-light': '#fef3c7', // amber tint for badges/bg
-          'accent-lighter': '#fffbeb', // very light amber
-          sidebar:   '#f0efe9',       // sidebar background
-          'sidebar-hover': '#e8e7e1', // sidebar item hover
-          'sidebar-active': '#e2e0d8', // sidebar item active
-          error:     '#dc2626',
-          'error-light': '#fef2f2',
-          success:   '#16a34a',
-          'success-light': '#f0fdf4',
-          warning:   '#d97706',
-          'warning-light': '#fffbeb',
-          info:      '#2563eb',
-          'info-light': '#eff6ff',
+          bg:              'var(--claude-bg)',
+          surface:         'var(--claude-surface)',
+          'surface-2':     'var(--claude-surface-2)',
+          border:          'var(--claude-border)',
+          'border-strong': 'var(--claude-border-strong)',
+          text:            'var(--claude-text)',
+          'text-2':        'var(--claude-text-2)',
+          'text-3':        'var(--claude-text-3)',
+          accent:          'var(--claude-accent)',
+          'accent-2':      'var(--claude-accent-2)',
+          'accent-light':  'var(--claude-accent-light)',
+          'accent-lighter':'var(--claude-accent-lighter, #fffbeb)',
+          sidebar:         'var(--claude-sidebar)',
+          'sidebar-hover': 'var(--claude-sidebar-hover)',
+          'sidebar-active':'var(--claude-sidebar-active)',
+          error:           'var(--claude-error, #dc2626)',
+          'error-light':   'var(--claude-error-light, #fef2f2)',
+          success:         'var(--claude-success, #16a34a)',
+          'success-light': 'var(--claude-success-light, #f0fdf4)',
+          warning:         'var(--claude-warning, #d97706)',
+          'warning-light': 'var(--claude-warning-light, #fffbeb)',
+          info:            'var(--claude-info, #2563eb)',
+          'info-light':    'var(--claude-info-light, #eff6ff)',
         },
       },
       borderRadius: {

@@ -50,6 +50,7 @@ export default function Home() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [pageCursors, setPageCursors] = useState<Map<number, QueryDocumentSnapshot<DocumentData> | null>>(
     new Map([[1, null]])
@@ -94,10 +95,12 @@ export default function Home() {
           setTotalItems(results.length);
           const start = (currentPage - 1) * itemsPerPage;
           setLessons(results.slice(start, start + itemsPerPage) as Lesson[]);
+          setHasMore(start + itemsPerPage < results.length);
         } else {
           const cursor = pageCursors.get(currentPage) || null;
           const result: PaginatedLessonsResult = await lessonService.getLessonsPaginated(itemsPerPage, cursor, true);
           setLessons(result.lessons as Lesson[]);
+          setHasMore(result.hasMore);
           if (result.hasMore && result.lastVisible) {
             setPageCursors(prev => { const m = new Map(prev); m.set(currentPage + 1, result.lastVisible); return m; });
           }
@@ -157,7 +160,9 @@ export default function Home() {
     return filtered;
   }, [lessons, sortField, sortOrder]);
 
-  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const totalPages = debouncedTerm.trim()
+    ? Math.ceil(totalItems / itemsPerPage) || 1
+    : currentPage + (hasMore ? 1 : 0);
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-claude-text-3" />;
@@ -188,7 +193,7 @@ export default function Home() {
 
         {foldersLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {[1,2,3,4,5,6].map(i => (
+            {[1, 2, 3, 4, 5, 6].map(i => (
               <div key={i} className="h-24 bg-claude-surface border border-claude-border rounded-claude-md skeleton" />
             ))}
           </div>
@@ -322,19 +327,19 @@ export default function Home() {
                               <div className="flex justify-end items-center gap-1">
                                 <button
                                   onClick={() => navigate(`/study/${lesson.id}`, { state: { from: location.pathname } })}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-claude-sm"
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude text-blue-500 hover:bg-blue-500/10 dark:hover:bg-blue-400/10 transition-colors"
                                 >
                                   Học
                                 </button>
                                 <button
                                   onClick={() => setSelectedLessonForReview(lesson.id)}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-claude-success-light text-claude-success hover:bg-claude-success hover:text-white transition-all shadow-claude-sm"
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
                                 >
                                   Ôn tập
                                 </button>
                                 <button
                                   onClick={() => navigate(`/test/${lesson.id}`, { state: { from: location.pathname } })}
-                                  className="px-2.5 py-1 text-xs font-medium rounded-claude bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white transition-all shadow-claude-sm"
+                                  className="px-2.5 py-1 text-xs font-medium rounded-claude text-claude-accent hover:bg-claude-accent/10 transition-colors"
                                 >
                                   Kiểm tra
                                 </button>

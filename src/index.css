@@ -20,11 +20,47 @@
     --claude-accent: #d97706;
     --claude-accent-2: #b45309;
     --claude-accent-light: #fef3c7;
+    --claude-accent-lighter: #fffbeb;
     --claude-sidebar: #f0efe9;
     --claude-sidebar-hover: #e8e7e1;
     --claude-sidebar-active: #e2e0d8;
+    --claude-error: #dc2626;
+    --claude-error-light: #fef2f2;
+    --claude-success: #16a34a;
+    --claude-success-light: #f0fdf4;
+    --claude-warning: #d97706;
+    --claude-warning-light: #fffbeb;
+    --claude-info: #2563eb;
+    --claude-info-light: #eff6ff;
     --sidebar-width: 240px;
     --sidebar-collapsed: 64px;
+  }
+
+  /* ─── Dark Theme Variables ─── */
+  html.dark {
+    --claude-bg: #0f0e0c;
+    --claude-surface: #1c1b18;
+    --claude-surface-2: #232220;
+    --claude-border: #2e2d2a;
+    --claude-border-strong: #3d3c38;
+    --claude-text: #f0ede8;
+    --claude-text-2: #a8a49e;
+    --claude-text-3: #6b6864;
+    --claude-accent: #f59e0b;
+    --claude-accent-2: #fbbf24;
+    --claude-accent-light: #2d1f06;
+    --claude-accent-lighter: #1c1505;
+    --claude-sidebar: #161512;
+    --claude-sidebar-hover: #1f1e1b;
+    --claude-sidebar-active: #262420;
+    --claude-error: #f87171;
+    --claude-error-light: #1f0f0f;
+    --claude-success: #4ade80;
+    --claude-success-light: #0a1f0f;
+    --claude-warning: #fbbf24;
+    --claude-warning-light: #1f1505;
+    --claude-info: #60a5fa;
+    --claude-info-light: #0a1020;
   }
 
   html {
@@ -39,6 +75,21 @@
     color: var(--claude-text);
     line-height: 1.6;
     font-size: 15px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Global smooth transition for theme switching */
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
+  }
+
+  /* Ensure animations still work – don't block transform/opacity transitions */
+  [class*='animate-'] {
+    transition: none;
   }
 
   /* Focus ring consistent with Claude design */
@@ -71,15 +122,27 @@
     border-radius: 4px;
   }
 
+  html.dark .skeleton {
+    background: linear-gradient(
+      90deg,
+      #2e2d2a 25%,
+      #3a3835 50%,
+      #2e2d2a 75%
+    );
+    background-size: 200% 100%;
+  }
+
   /* Page transition base */
   .page-enter {
     animation: fade-in 0.2s ease-out;
   }
 
-  /* Sidebar transition */
+  /* Sidebar transition – explicit multi-property to override global rule */
   .sidebar-transition {
     transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s ease,
+                border-color 0.2s ease !important;
   }
 
   /* Claude table row hover */
@@ -96,5 +159,41 @@
 
   .claude-nav-item.active {
     @apply bg-claude-sidebar-active text-claude-text font-semibold;
+  }
+
+  /* Theme toggle button */
+  .theme-toggle-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-toggle-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    background: radial-gradient(circle at center, var(--claude-accent), transparent 70%);
+    transition: opacity 0.3s ease;
+  }
+
+  .theme-toggle-btn:hover::before {
+    opacity: 0.15;
+  }
+
+  .theme-icon-enter {
+    animation: theme-icon-spin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes theme-icon-spin {
+    from {
+      transform: rotate(-90deg) scale(0.5);
+      opacity: 0;
+    }
+    to {
+      transform: rotate(0deg) scale(1);
+      opacity: 1;
+    }
   }
 }
