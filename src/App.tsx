@@ -24,6 +24,7 @@ import FolderView from './pages/FolderView';
 import AsteroidMatch from './pages/AsteroidMatch';
 import NotificationModal from './components/modal/NotificationModal';
 import AppLayout from './components/layout/AppLayout';
+import { useSRSNotification } from './hooks/useSRSNotification';
 
 // Layout wrapper that provides sidebar for authenticated routes
 const AuthenticatedLayout = () => (
@@ -34,6 +35,9 @@ const AuthenticatedLayout = () => (
 
 function App() {
   const [showNotification, setShowNotification] = useState(false);
+
+  // Trigger SRS push notification (once per day, non-blocking)
+  useSRSNotification();
 
   return (
     <div className="min-h-screen bg-claude-bg font-sans">

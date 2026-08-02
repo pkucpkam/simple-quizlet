@@ -33,3 +33,5 @@ a.cjs
 restore.cjs
 seed-fake-users.cjs
 delete-fake-users.cjs
+firestore-backup-19-6-2026.json
+    
