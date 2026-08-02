@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { StudyAggregateStats } from '../types/history';
 import { historyService } from '../service/historyService';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import { Layers, Brain, FileText, Clock, Loader2, BookOpen, Repeat2 } from 'lucide-react';
+import { Layers, Brain, FileText, Clock, Loader2, Repeat2 } from 'lucide-react';
 import { srsService } from '../service/srsService';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
