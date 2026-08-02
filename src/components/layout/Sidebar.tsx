@@ -3,12 +3,16 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../service/authService';
 import { useTheme } from '../../hooks/useTheme';
+import { collection, query, where, Timestamp, getCountFromServer } from 'firebase/firestore';
+import { db } from '../../service/firebase_setup';
+import { auth } from '../../service/firebase_setup';
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  badge?: number;
 }
 
 import {
@@ -68,6 +72,31 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     return saved === 'true';
   });
 
+  // Due SRS card count for badge
+  const [dueCount, setDueCount] = useState(0);
+
+  useEffect(() => {
+    const fetchDueCount = async () => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+      try {
+        const q = query(
+          collection(db, 'srsCards'),
+          where('userId', '==', userId),
+          where('nextReview', '<=', Timestamp.now())
+        );
+        const snapshot = await getCountFromServer(q);
+        setDueCount(snapshot.data().count);
+      } catch (err) {
+        // Silently ignore — badge is non-critical
+        console.warn('[Sidebar] Could not fetch SRS due count:', err);
+      }
+    };
+
+    fetchDueCount();
+    // Re-fetch when user navigates (e.g. back from /srs-review)
+  }, [location.pathname]);
+
   const handleToggleTheme = () => {
     toggleTheme();
     setIconKey(prev => prev + 1);
@@ -90,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     { to: '/', label: 'Trang chủ', icon: <HomeIcon /> },
     { to: '/my-lessons', label: 'Bài học của tôi', icon: <BookIcon /> },
     { to: '/create-lesson', label: 'Tạo bài học', icon: <PlusIcon /> },
-    { to: '/srs-review', label: 'Ôn tập', icon: <BrainIcon /> },
+    { to: '/srs-review', label: 'Ôn tập', icon: <BrainIcon />, badge: dueCount },
     { to: '/study-history', label: 'Lịch sử học', icon: <HistoryIcon /> },
     { to: '/leaderboard', label: 'Bảng xếp hạng', icon: <TrophyIcon /> },
     ...(isAdmin ? [{ to: '/admin', label: 'Admin Console', icon: <AdminIcon />, adminOnly: true }] : []),
@@ -151,7 +180,7 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
               <Link
                 key={item.to}
                 to={item.to}
-                title={collapsed ? item.label : undefined}
+                title={collapsed ? (item.badge && item.badge > 0 ? `${item.label} (${item.badge})` : item.label) : undefined}
                 className={`claude-nav-item w-full ${active ? 'active' : ''} ${item.adminOnly ? 'text-claude-accent' : ''} ${collapsed ? 'justify-center p-0 h-10 w-10 mx-auto rounded-claude' : ''
                   }`}
               >
@@ -162,6 +191,11 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                 {!collapsed && item.adminOnly && (
                   <span className="ml-auto text-[10px] font-bold bg-claude-accent-light text-claude-accent px-1.5 py-0.5 rounded-full uppercase tracking-wide">
                     Admin
+                  </span>
+                )}
+                {!collapsed && item.badge != null && item.badge > 0 && !item.adminOnly && (
+                  <span className="ml-auto min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold bg-claude-error text-white rounded-full">
+                    {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </Link>

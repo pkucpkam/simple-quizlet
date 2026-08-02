@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateNextReview, initializeSRSCard } from "./srsAlgorithm";
+import { calculateNextReview } from "./srsAlgorithm";
 import type { SRSCard } from "../types/srs";
 
 // Helper: build a minimal SRSCard for testing
