@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import type { StudyAggregateStats } from '../types/history';
 import { historyService } from '../service/historyService';
 import { SkeletonCard } from '../components/ui/Skeleton';
-import { Layers, Brain, FileText, Clock, Loader2, TrendingDown, TrendingUp, Play, BookOpen } from 'lucide-react';
-import { lessonScoreService, type LessonScore } from '../service/lessonScoreService';
+import { Layers, Brain, FileText, Clock, Loader2, Repeat2 } from 'lucide-react';
+import { srsService } from '../service/srsService';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 
@@ -97,8 +97,8 @@ const StudyHistory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [migrating, setMigrating] = useState(false);
-  const [scores, setScores] = useState<LessonScore[]>([]);
-  const [loadingScores, setLoadingScores] = useState(true);
+  const [dueCount, setDueCount] = useState<number | null>(null);
+  const [loadingDue, setLoadingDue] = useState(true);
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -126,19 +126,20 @@ const StudyHistory: React.FC = () => {
     };
     init();
 
-    const fetchScores = async () => {
+    const fetchDue = async () => {
       if (!user) return;
       try {
-        setLoadingScores(true);
-        const userScores = await lessonScoreService.getUserScores(user.uid);
-        setScores(userScores);
+        setLoadingDue(true);
+        const due = await srsService.getDueCardsForUser(user.uid);
+        setDueCount(due.length);
       } catch (error) {
-        console.error("Error fetching lesson scores:", error);
+        console.error("Error fetching due SRS cards:", error);
+        setDueCount(0);
       } finally {
-        setLoadingScores(false);
+        setLoadingDue(false);
       }
     };
-    fetchScores();
+    fetchDue();
   }, [user]);
 
   if (!user) {
@@ -222,76 +223,47 @@ const StudyHistory: React.FC = () => {
         </div>
       )}
 
-      {/* Lesson Scores Section */}
+      {/* SRS Due Cards Section */}
       <div className="mt-12 pt-8 border-t border-claude-border">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-claude-text">Cân Bằng Học Tập</h2>
+          <h2 className="text-xl font-semibold text-claude-text">Ôn Tập Thông Minh (SRS)</h2>
           <p className="text-sm text-claude-text-2 mt-0.5">
-            Các bài đã kiểm tra. Mỗi bài kiểm tra hoàn thành cộng 1 điểm, mỗi ngày trừ 1 điểm. Ưu tiên ôn tập bài điểm thấp.
+            Hệ thống lặp lại ngắt quãng SM-2 nhắc bạn ôn đúng thời điểm sắp quên.
           </p>
         </div>
 
-        {loadingScores ? (
-          <div className="h-40 skeleton rounded-claude-md" />
-        ) : scores.length === 0 ? (
-          <div className="bg-claude-surface border border-claude-border rounded-claude-md py-12 text-center">
-            <BookOpen className="h-8 w-8 text-claude-text-3 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-sm font-medium text-claude-text">Chưa có bài kiểm tra nào</p>
-            <p className="text-xs text-claude-text-3 mt-1">Hãy làm bài kiểm tra để hệ thống gợi ý cân bằng học tập.</p>
-          </div>
+        {loadingDue ? (
+          <div className="h-32 skeleton rounded-claude-md" />
         ) : (
-          <div className="bg-claude-surface border border-claude-border rounded-claude-md shadow-claude-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-claude-surface-2 border-b border-claude-border">
-                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider">Bài Học</th>
-                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-center">Điểm Hiện Tại</th>
-                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-center">Cập Nhật Gần Nhất</th>
-                    <th className="py-3 px-4 font-semibold text-claude-text-2 text-xs uppercase tracking-wider text-right">Hành Động</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-claude-border">
-                  {scores.map((score) => {
-                    const effectivePoints = score.effectivePoints ?? 0;
-                    const isLow = effectivePoints <= 0;
-                    
-                    return (
-                      <tr key={score.lessonId} className="hover:bg-claude-surface-2/50 transition-colors">
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-claude-text text-sm truncate max-w-[200px] md:max-w-[350px]">
-                            {score.lessonTitle}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className={`inline-flex items-center justify-center font-bold px-2.5 py-0.5 rounded-full text-xs ${
-                            isLow 
-                              ? 'bg-claude-error-light text-claude-error border border-claude-error/20' 
-                              : 'bg-claude-success-light text-claude-success border border-claude-success/20'
-                          }`}>
-                            {effectivePoints}
-                            {isLow ? <TrendingDown className="w-3 h-3 ml-1" /> : <TrendingUp className="w-3 h-3 ml-1" />}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center text-xs text-claude-text-3">
-                          {score.updatedAt.toLocaleDateString('vi-VN')}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <Button 
-                            onClick={() => navigate(`/test/${score.lessonId}`)}
-                            variant={isLow ? "primary" : "secondary"}
-                            className="py-1.5 px-3 text-xs inline-flex items-center gap-1.5"
-                          >
-                            <Play className="w-3 h-3" />
-                            Kiểm tra lại
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <div className="bg-claude-surface border border-claude-border rounded-claude-md p-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-claude-sm">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-claude bg-claude-accent-light">
+                <Repeat2 className="h-6 w-6 text-claude-accent" strokeWidth={2} />
+              </div>
+              <div>
+                {dueCount === 0 ? (
+                  <>
+                    <p className="font-semibold text-claude-text text-sm">Bạn đã ôn hết rồi! 🎉</p>
+                    <p className="text-xs text-claude-text-3 mt-0.5">Không có thẻ nào cần ôn hôm nay.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-claude-text text-sm">
+                      <span className="text-claude-accent font-bold text-lg">{dueCount}</span> thẻ cần ôn hôm nay
+                    </p>
+                    <p className="text-xs text-claude-text-3 mt-0.5">Ôn ngay để không bị quên từ vựng.</p>
+                  </>
+                )}
+              </div>
             </div>
+            <Button
+              onClick={() => navigate('/srs-review')}
+              variant={dueCount && dueCount > 0 ? 'primary' : 'secondary'}
+              className="py-2 px-5 text-sm inline-flex items-center gap-2 shrink-0"
+            >
+              <Repeat2 className="w-4 h-4" />
+              {dueCount && dueCount > 0 ? 'Bắt đầu ôn tập' : 'Xem thẻ SRS'}
+            </Button>
           </div>
         )}
       </div>
